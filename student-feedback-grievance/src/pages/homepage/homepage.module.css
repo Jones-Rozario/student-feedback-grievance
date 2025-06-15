@@ -1,0 +1,27 @@
+.homepageWrapper {
+  position: relative;
+  min-height: 100vh;
+  font-family: 'Montserrat', Arial, sans-serif;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+.backgroundImage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url('/src/assests/Red_Building.jpg') center center/cover no-repeat;
+  filter: blur(7px) brightness(0.9);
+  opacity: 0.7;
+  z-index: 0;
+}
+
+:global(.header-bar),
+:global(.greeting-section),
+:global(.forms-section),
+:global(.footer-bar) {
+  position: relative;
+  z-index: 1;
+} 

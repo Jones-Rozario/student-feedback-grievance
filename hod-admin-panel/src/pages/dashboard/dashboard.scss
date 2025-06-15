@@ -1,0 +1,31 @@
+.dashboard {
+  margin-left: 220px;
+  padding: 2rem;
+  background: #f4f6fb;
+  min-height: 100vh;
+  @media (max-width: 900px) { margin-left: 0; }
+  &__stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    .dashboard__pie { flex: 1; display: flex; align-items: center; justify-content: center; }
+  }
+  &__main {
+    display: flex;
+    gap: 2rem;
+    .dashboard__bar { flex: 2; background: #fff; padding: 1rem; border-radius: 12px; }
+    .dashboard__recent {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem;
+      h3 { margin-bottom: 1rem; }
+      table {
+        width: 100%;
+        th, td { padding: 0.5rem; text-align: left; }
+        th { color: #888; }
+        tr:nth-child(even) { background: #f8f9fa; }
+      }
+    }
+  }
+}

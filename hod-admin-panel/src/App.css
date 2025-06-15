@@ -1,0 +1,17 @@
+.app {
+  display: flex;
+}
+
+.right-content {
+  flex: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.icons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+}

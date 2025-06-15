@@ -1,0 +1,89 @@
+.login-container {
+  display: flex;
+  gap: 1rem;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.login-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 350px;
+
+}
+
+.login-shape {
+  background: #9341c8;
+  position: absolute;
+}
+
+.login-image-circle {
+  background: #fff;
+  border-radius: 50%;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.login-phone-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+.login-right {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding-left: 60px;
+}
+
+.login-welcome {
+  color: #6b3cc9;
+  font-weight: 600;
+  font-size: 24px;
+  margin-bottom: 32px;
+  margin-top: 0;
+}
+
+.login-input {
+  width: 320px;
+  padding: 12px 16px;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-bottom: 18px;
+  outline: none;
+  transition: all 0.5s;
+}
+
+.login-input:focus {
+  border: 1px solid #9341c8;
+  box-shadow: 0 0 0 2px #e9d8fd;
+}
+
+.login-button {
+  background: #9341c8;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 18px 60px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.login-button:hover {
+  background: #502d6c;
+
+}
