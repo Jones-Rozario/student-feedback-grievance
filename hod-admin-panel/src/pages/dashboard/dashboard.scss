@@ -1,7 +1,7 @@
 .dashboard {
-  margin-left: 220px;
   padding: 2rem;
   background: #f4f6fb;
+  flex: 6;
   min-height: 100vh;
   @media (max-width: 900px) { margin-left: 0; }
   &__stats {

@@ -1,0 +1,269 @@
+.facultyTableWrapper {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .headerRow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    h2 {
+      margin: 0 1.5rem 0 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #444;
+    }
+  }
+  
+  .searchInput, .filterSelect {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    font-size: 1rem;
+    background: #f7f7f7;
+    transition: border 0.2s;
+    &:focus {
+      border: 1.5px solid #4e73df;
+      outline: none;
+    }
+  }
+  
+  .facultyTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 1rem;
+    }
+    th {
+      color: #6c757d;
+      font-weight: 600;
+      background: #f4f6fa;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    td {
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+  }
+  
+  .tableRow {
+    transition: box-shadow 0.2s, transform 0.2s;
+    &:hover {
+      box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+      transform: translateY(-2px) scale(1.01);
+    }
+  }
+  
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e3e6f3;
+    color: #4e73df;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+    box-shadow: 0 1px 4px rgba(78,115,223,0.08);
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 0.3em 0.9em;
+    border-radius: 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #fff;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .badgeHigh {
+    background: #1cc88a;
+  }
+  .badgeMedium {
+    background: #f6c23e;
+    color: #222;
+  }
+  .badgeLow {
+    background: #e74a3b;
+  }
+  
+  .starFilled {
+    color: #f6c23e;
+    font-size: 1.1em;
+    transition: color 0.2s;
+  }
+  .starEmpty {
+    color: #e0e0e0;
+    font-size: 1.1em;
+    transition: color 0.2s;
+  }
+
+.performanceViewWrapper {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  padding: 2.5rem 2rem 2rem 2rem;
+  margin: 2.5rem auto;
+  max-width: 90%;
+  animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: none; }
+}
+
+.performanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.performanceAvatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #e3e6f3;
+  color: #4e73df;
+  font-size: 2.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(78,115,223,0.13);
+  transition: box-shadow 0.3s;
+  margin-bottom: 0.2rem;
+}
+.performanceName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #222;
+}
+.performanceDesignation {
+  color: #888;
+  font-size: 1.1rem;
+  margin-top: 0.2rem;
+}
+.performanceCourseRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+.performanceCourseSelect {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
+  background: #f7f7f7;
+  transition: border 0.2s;
+  &:focus {
+    border: 1.5px solid #4e73df;
+    outline: none;
+  }
+}
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-bottom: 2.2rem;
+}
+.metricCard {
+  background: #f4f6fa;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.07);
+  padding: 1.1rem 0.7rem 0.8rem 0.7rem;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  animation: fadeInUp 0.7s cubic-bezier(.4,2,.6,1);
+  &:hover {
+    box-shadow: 0 4px 16px rgba(78,115,223,0.13);
+    transform: translateY(-2px) scale(1.03);
+  }
+}
+.metricLabel {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #4e73df;
+  font-size: 1.08rem;
+}
+.metricStars {
+  margin: 0.2rem 0 0.1rem 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+}
+.metricValue {
+  font-weight: 700;
+  color: #222;
+  margin-top: 0.2rem;
+  font-size: 1.1rem;
+}
+.barChartWrapper {
+  margin-top: 1.5rem;
+  padding: 1.2rem 1rem 0.7rem 1rem;
+  background: #f7f7f7;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.07);
+}
+.barChartTitle {
+  font-weight: 600;
+  color: #4e73df;
+  margin-bottom: 0.7rem;
+  font-size: 1.1rem;
+}
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  height: 120px;
+  margin-bottom: 0.5rem;
+}
+.barChartBarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.barChartBar {
+  width: 28px;
+  border-radius: 8px 8px 4px 4px;
+  background: #4e73df;
+  margin-bottom: 0.3rem;
+  transition: height 0.6s cubic-bezier(.4,2,.6,1), background 0.2s;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.10);
+}
+.barChartYear {
+  font-size: 0.98rem;
+  color: #888;
+  margin-top: 0.1rem;
+}
+.backButton {
+  background: #e3e6f3;
+  color: #4e73df;
+  border: none;
+  border-radius: 18px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(78,115,223,0.08);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  &:hover {
+    background: #4e73df;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(78,115,223,0.13);
+  }
+} 

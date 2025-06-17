@@ -1,13 +1,12 @@
 .sidebar {
-  width: 220px;
   background: #f8f9fa;
   height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 0;
+  flex: none;
   transition: transform 0.3s;
+  width: 220px;
+  display: none;
   z-index: 100;
-  &.open { transform: translateX(0); }
+  &.open { transform: translateX(0); transition: transform 0.3s; flex: 1; display: block; }
   @media (max-width: 900px) { transform: translateX(-100%); }
   .sidebar__profile {
     display: flex;
