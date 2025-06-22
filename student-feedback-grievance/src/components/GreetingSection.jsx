@@ -1,11 +1,15 @@
 import React from "react";
 import StatsCard from "./StatsCard";
 import "./GreetingSection.css";
-import { FaList, FaCheck, FaUserCheck } from "react-icons/fa";
+import { FaList, FaCheck, FaUserCheck, FaGraduationCap, FaCalendar, FaUsers, FaClipboardCheck } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
 
 const GreetingSection = () => {
-  const stats = [
+  const { currentUser } = useAuth();
+  
+  // Default stats for all users
+  const defaultStats = [
     {
       icon: <FaList />,
       label: "Total Grievances:",
@@ -23,7 +27,34 @@ const GreetingSection = () => {
     },
   ];
 
-  const helloJones = "Hello Jones,";
+  // Student-specific stats
+  const studentStats = [
+    {
+      icon: <FaGraduationCap />,
+      label: "Current Semester:",
+      value: currentUser?.current_semester || "N/A",
+    },
+    {
+      icon: <FaUsers />,
+      label: "Batch:",
+      value: currentUser?.batch || "N/A",
+    },
+    {
+      icon: <FaCalendar />,
+      label: "Joined Year:",
+      value: currentUser?.joined_year || "N/A",
+    },
+    {
+      icon: <FaClipboardCheck />,
+      label: "Feedback Status:",
+      value: currentUser?.isFeedbackGiven ? "Completed" : "Pending",
+    },
+  ];
+
+  // Choose stats based on user role
+  const stats = currentUser?.role === "student" ? studentStats : defaultStats;
+
+  const greeting = `Hello ${currentUser?.name},`;
 
   const hoverEffect = {
     initial: { scale: 1 },
@@ -37,7 +68,7 @@ const GreetingSection = () => {
         <div className="head-typo">
           <h1>
             <AnimatePresence>
-              {helloJones.split("").map((char, index) => (
+              {greeting.split("").map((char, index) => (
                 <motion.span
                   key={index}
                   initial={{ opacity: 0, x: 20 }}
@@ -50,7 +81,12 @@ const GreetingSection = () => {
               ))}
             </AnimatePresence>
           </h1>
-          <p>Manage Your Grievances with ease</p>
+          <p>
+            {currentUser?.role === "student" 
+              ? `Welcome to Semester ${currentUser?.current_semester}, Batch ${currentUser?.batch}`
+              : "Manage Your Grievances with ease"
+            }
+          </p>
         </div>
         <div className="stats-row">
           {stats.map((stat, index) => (

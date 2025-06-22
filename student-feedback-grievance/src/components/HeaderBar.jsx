@@ -1,20 +1,13 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FaBell,
-  FaUser,
-  FaSignOutAlt,
-  FaCog,
-  FaMoon,
-  FaSun,
-  FaForm,
-  FaForumbee,
-  FaList,
-} from "react-icons/fa";
+
 import { useNavigate } from "react-router-dom";
 import "./HeaderBar.css";
 import { FaNoteSticky } from "react-icons/fa6";
+import { useAuth } from "../contexts/AuthContext";
+import LogoutButton from "./LogoutButton";
+import Notifications from "./Notifications/Notifications";
 
 const slideDown = keyframes`
   from {
@@ -178,11 +171,12 @@ const FormButton = styled(motion.button)`
 `;
 
 const HeaderBar = () => {
+  const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(3);
   const navigate = useNavigate();
-
+  const { currentUser } = useAuth();
   const menuVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: {
@@ -202,6 +196,7 @@ const HeaderBar = () => {
 
   const handleLogout = () => {
     // Add logout logic here
+    logout();
     navigate("/login");
   };
 
@@ -214,6 +209,10 @@ const HeaderBar = () => {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     }, 100);
+  };
+
+  const handleLoginClick = () => {
+    navigate("/login");
   };
 
   return (
@@ -236,49 +235,20 @@ const HeaderBar = () => {
             <FaNoteSticky />
           </FormButton>
 
-          <IconButton
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setNotifications(0)}
-          >
-            <FaBell />
-            {notifications > 0 && (
-              <NotificationBadge>{notifications}</NotificationBadge>
-            )}
-          </IconButton>
-
-          <UserMenu>
-            <UserAvatar
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <FaUser />
-            </UserAvatar>
-
-            <AnimatePresence>
-              {isMenuOpen && (
-                <DropdownMenu
-                  variants={menuVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                >
-                  <MenuItem variants={menuItemVariants} whileHover={{ x: 5 }}>
-                    <FaUser /> 2023103077
-                  </MenuItem>
-
-                  <MenuItem
-                    variants={menuItemVariants}
-                    whileHover={{ x: 5 }}
-                    onClick={handleLogout}
-                  >
-                    <FaSignOutAlt /> Logout
-                  </MenuItem>
-                </DropdownMenu>
+          {currentUser ? (
+            <>
+              {currentUser.role === "student" && (
+                <>
+                  <Notifications />
+                </>
               )}
-            </AnimatePresence>
-          </UserMenu>
+              <LogoutButton />
+            </>
+          ) : (
+            <button onClick={handleLoginClick} className="login-button">
+              Login
+            </button>
+          )}
         </NavSection>
       </HeaderContent>
     </HeaderContainer>

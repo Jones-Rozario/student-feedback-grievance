@@ -1,0 +1,123 @@
+.grievanceTableWrapper {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  padding: 2.5rem 2rem 2rem 2rem;
+  margin: 2.5rem auto;
+ width: 100%;
+  animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: none; }
+}
+.grievanceTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+  margin-top: 1rem;
+}
+.grievanceTable th, .grievanceTable td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 1rem;
+}
+.grievanceTable th {
+  color: #6c757d;
+  font-weight: 600;
+  background: #f4f6fa;
+  border-bottom: 2px solid #e0e0e0;
+}
+.grievanceTable td {
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.tableRow {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.tableRow:hover {
+  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+  transform: translateY(-2px) scale(1.01);
+}
+.status {
+  padding: 0.3em 0.9em;
+  border-radius: 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #fff;
+  transition: background 0.3s, transform 0.2s;
+}
+.statusOpen {
+  background: #1cc88a;
+}
+.statusIn\ Progress {
+  background: #f6c23e;
+  color: #222;
+}
+.statusClosed {
+  background: #e74a3b;
+}
+.statusProgress {
+  background: #f6c23e;
+  color: #222;
+}
+.detailWrapper {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+  padding: 2rem 2.5rem;
+  max-width: 600px;
+  margin: 2rem auto;
+  animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
+}
+.backButton {
+  background: none;
+  border: none;
+  color: #4e73df;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.backButton:hover {
+  color: #2e59d9;
+}
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.detailId {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #4e73df;
+}
+.detailStatus {
+  padding: 0.3em 0.9em;
+  border-radius: 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #fff;
+  transition: background 0.3s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.detailBody {
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  box-shadow: 0 1px 4px rgba(78,115,223,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  font-size: 1.05rem;
+  color: #444;
+}
+.detailBody strong {
+  color: #4e73df;
+  font-weight: 600;
+} 

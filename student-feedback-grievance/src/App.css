@@ -1,0 +1,11 @@
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: auto;
+  }
+  
+  .right-content {
+    height: 100vh;
+    flex: 6;
+  }
+  

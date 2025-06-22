@@ -1,0 +1,422 @@
+.facultyTableWrapper {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  padding: 2rem;
+  margin: 2rem 0;
+}
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.headerRow h2 {
+  margin: 0 1.5rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #444;
+}
+.searchInput, .filterSelect {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
+  background: #f7f7f7;
+  transition: border 0.2s;
+}
+.searchInput:focus, .filterSelect:focus {
+  border: 1.5px solid #4e73df;
+  outline: none;
+}
+.facultyTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+.facultyTable th, .facultyTable td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 1rem;
+}
+.facultyTable th {
+  color: #6c757d;
+  font-weight: 600;
+  background: #f4f6fa;
+  border-bottom: 2px solid #e0e0e0;
+}
+.facultyTable td {
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.tableRow {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.tableRow:hover {
+  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+  transform: translateY(-2px) scale(1.01);
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e3e6f3;
+  color: #4e73df;
+  font-weight: 700;
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+  box-shadow: 0 1px 4px rgba(78,115,223,0.08);
+}
+.badge {
+  display: inline-block;
+  padding: 0.3em 0.9em;
+  border-radius: 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #fff;
+  transition: background 0.3s, transform 0.2s;
+}
+.badgeHigh {
+  background: #1cc88a;
+}
+.badgeMedium {
+  background: #f6c23e;
+  color: #222;
+}
+.badgeLow {
+  background: #e74a3b;
+}
+.performanceViewWrapper {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+  padding: 2rem 2.5rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
+}
+.backButton {
+  background: none;
+  border: none;
+  color: #4e73df;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.backButton:hover {
+  color: #2e59d9;
+}
+.performanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.performanceAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #e3e6f3;
+  color: #4e73df;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(78,115,223,0.08);
+}
+.performanceName {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #444;
+}
+.performanceDesignation {
+  font-size: 1rem;
+  color: #888;
+}
+.performanceCourseRow {
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.performanceCourseSelect {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
+  background: #f7f7f7;
+  transition: border 0.2s;
+}
+.performanceCourseSelect:focus {
+  border: 1.5px solid #4e73df;
+  outline: none;
+}
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+.metricCard {
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 1.2rem 1rem;
+  box-shadow: 0 1px 4px rgba(78,115,223,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 120px;
+}
+.metricLabel {
+  font-size: 1rem;
+  color: #4e73df;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+.metricStars {
+  font-size: 1.1rem;
+  color: #f6c23e;
+  letter-spacing: 2px;
+}
+.starFilled {
+  color: #f6c23e !important;
+}
+.starEmpty {
+  color: #e0e0e0;
+}
+.metricValue {
+  font-size: 1.1rem;
+  color: #444;
+  font-weight: 600;
+}
+.barChartWrapper {
+  margin-top: 1.5rem;
+}
+.barChartTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4e73df;
+  margin-bottom: 0.7rem;
+}
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.2rem;
+  height: 120px;
+  background: #f8f9fc;
+  border-radius: 8px;
+  padding: 1rem 0.5rem 0 0.5rem;
+}
+.barChartBarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24px;
+}
+.barChartBar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: #4e73df;
+  transition: height 0.6s cubic-bezier(.4,2,.6,1);
+}
+.barChartYear {
+  font-size: 0.95rem;
+  color: #888;
+  margin-top: 0.3rem;
+}
+
+/* New styles for enhanced FacultyPerformanceView */
+.performanceId {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.overallScoreSection {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.overallScoreSection h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.scoreCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.scoreValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+}
+
+.scoreMax {
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-left: 0.3rem;
+  opacity: 0.8;
+}
+
+.scoreLabel {
+  display: flex;
+  align-items: center;
+}
+
+.section {
+  margin: 2rem 0;
+}
+
+.section h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.coursesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.2rem;
+}
+
+.courseCard {
+  background: #f8f9fc;
+  border-radius: 10px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+  border: 1px solid #e3e6f3;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.courseCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(78,115,223,0.12);
+}
+
+.courseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.courseHeader h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4e73df;
+  flex: 1;
+}
+
+.courseCode {
+  background: #4e73df;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.courseDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.courseInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.courseInfo span {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.courseRating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ratingStars {
+  font-size: 1rem;
+  color: #f6c23e;
+  letter-spacing: 1px;
+}
+
+.ratingValue {
+  font-size: 0.9rem;
+  color: #444;
+  font-weight: 600;
+}
+
+.loadingMessage {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.noDataMessage {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  background: #f8f9fc;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.noDataMessage p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.barChartValue {
+  font-size: 0.8rem;
+  color: #444;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+
+/* Animation for fadeInUp */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 
