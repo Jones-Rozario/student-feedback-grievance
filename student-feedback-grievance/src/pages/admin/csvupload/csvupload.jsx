@@ -95,10 +95,10 @@ const CSVUpload = () => {
     let template = "";
     let filename = "";
     if (uploadType === "student") {
-      template = `Student_ID,Student_Name,Email,Semester,Batch,Joined_Year\n2023103001,John Doe,john.doe@example.com,5,A,2021\n2023103002,Jane Smith,jane.smith@example.com,5,A,2021`;
+      template = `id,name,batch,joined_Year\n`;
       filename = "student_template.csv";
     } else {
-      template = `Faculty_ID,Faculty_Name,Email,Designation\nF001,Dr. Smith,smith@example.com,Professor\nF002,Prof. Johnson,johnson@example.com,Associate Professor`;
+      template = `id,name,designation\n`;
       filename = "faculty_template.csv";
     }
     const blob = new Blob([template], { type: "text/csv" });
@@ -154,10 +154,13 @@ const CSVUpload = () => {
     try {
       const formData = new FormData();
       formData.append("file", courseFile);
-      const response = await fetch("http://localhost:5000/api/courses/upload-csv", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/courses/upload-csv",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       if (response.ok) {
         setCourseUploadStatus(
           "Courses uploaded successfully for Semester " + courseSemester + "!"
@@ -178,7 +181,7 @@ const CSVUpload = () => {
   };
 
   const downloadCourseTemplate = () => {
-    const template = `Course_Code,Course_Name,Credits,Department\nCS101,Mathematics I,4,Computer Science\nCS102,Physics,3,Computer Science\nCS103,Chemistry,3,Computer Science`;
+    const template = `code,name,batch\n`;
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -420,9 +423,7 @@ const CSVUpload = () => {
             style={{ marginTop: "1rem" }}
           >
             <ul>
-              <li>
-                CSV file should contain columns: code, name, semester
-              </li>
+              <li>CSV file should contain columns: code, name, semester</li>
               <li>First row should contain column headers</li>
               <li>
                 Each subsequent row should contain course data for the selected

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./dashboard.css";
 import StatCard from "../../../components/statcard/statcard";
 import BarChart from "../../../components/barchart.jsx";
@@ -7,6 +7,43 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const [stats, setStats] = useState({
+    feedbacks: 0,
+    grievances: 0,
+    students: 0,
+    faculties: 0,
+    grievanceDetails: {},
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      fetch("http://localhost:5000/api/feedback").then((res) => res.json()),
+      fetch("http://localhost:5000/api/grievances/stats/overview").then((res) => res.json()),
+      fetch("http://localhost:5000/api/students").then((res) => res.json()),
+      fetch("http://localhost:5000/api/faculties").then((res) => res.json()),
+    ])
+      .then(([feedbacks, grievanceStats, students, faculties]) => {
+        setStats({
+          feedbacks: Array.isArray(feedbacks) ? feedbacks.length : 0,
+          grievances: grievanceStats.total || 0,
+          students: Array.isArray(students) ? students.length : 0,
+          faculties: Array.isArray(faculties) ? faculties.length : 0,
+          grievanceDetails: grievanceStats,
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Failed to load dashboard stats");
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div style={{padding: 40}}>Loading dashboard stats...</div>;
+  if (error) return <div style={{padding: 40, color: 'red'}}>{error}</div>;
 
   return (
     <div className="dashboard">
@@ -52,31 +89,32 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard__stats">
-        <StatCard title="Feedbacks Submitted" value={235} icon="fa-users" color="green" />
-        <StatCard title="Grievances Filed" value={235} icon="fa-comments" color="red" />
-        <div className="dashboard__pie">
+        <StatCard title="Feedbacks Submitted" value={stats.feedbacks} icon="fa-users" color="green" />
+        <StatCard title="Grievances Filed" value={stats.grievances} icon="fa-comments" color="red" />
+        <StatCard title="Students" value={stats.students} icon="fa-graduation-cap" color="blue" />
+        <StatCard title="Faculties" value={stats.faculties} icon="fa-chalkboard-teacher" color="purple" />
+        {/* <div className="dashboard__pie">
           <PieChart />
-        </div>
+        </div> */}
       </div>
       <div className="dashboard__main">
-        <div className="dashboard__bar">
+        {/* <div className="dashboard__bar">
           <BarChart />
-        </div>
+        </div> */}
         <div className="dashboard__recent">
           <h3>Recent Grievances:</h3>
           <table>
             <thead>
               <tr>
-                <th>S.No</th>
-                <th>Register No</th>
-                <th>Category</th>
+                <th>Status</th>
+                <th>Count</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>1.</td><td>2023103077</td><td>Academic</td></tr>
-              <tr><td>2.</td><td>2023103071</td><td>Hostel</td></tr>
-              <tr><td>3.</td><td>2023103077</td><td>Academic</td></tr>
-              <tr><td>4.</td><td>Anonymous</td><td>Academic</td></tr>
+              <tr><td>Pending</td><td>{stats.grievanceDetails.pending}</td></tr>
+              <tr><td>In Progress</td><td>{stats.grievanceDetails.inProgress}</td></tr>
+              <tr><td>Resolved</td><td>{stats.grievanceDetails.resolved}</td></tr>
+              <tr><td>Rejected</td><td>{stats.grievanceDetails.rejected}</td></tr>
             </tbody>
           </table>
         </div>

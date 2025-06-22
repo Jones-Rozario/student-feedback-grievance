@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import './Courses.css';
+import React, { useState, useEffect } from "react";
+import "./Courses.css";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
+  const [error, setError] = useState("");
+
   // Filter states
-  const [nameFilter, setNameFilter] = useState('');
-  const [codeFilter, setCodeFilter] = useState('');
-  const [semesterFilter, setSemesterFilter] = useState('');
-  
+  const [nameFilter, setNameFilter] = useState("");
+  const [codeFilter, setCodeFilter] = useState("");
+  const [semesterFilter, setSemesterFilter] = useState("");
+
   // Edit states
   const [editingCourse, setEditingCourse] = useState(null);
   const [editForm, setEditForm] = useState({
-    name: '',
-    code: '',
-    semester: ''
+    name: "",
+    code: "",
+    semester: "",
   });
-  
+
   // Bulk delete state
-  const [bulkDeleteSemester, setBulkDeleteSemester] = useState('');
+  const [bulkDeleteSemester, setBulkDeleteSemester] = useState("");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -35,16 +35,16 @@ const Courses = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/courses');
+      const response = await fetch("http://localhost:5000/api/courses");
       if (!response.ok) {
-        throw new Error('Failed to fetch courses');
+        throw new Error("Failed to fetch courses");
       }
       const data = await response.json();
       setCourses(data);
-      setError('');
+      setError("");
     } catch (err) {
-      setError('Failed to fetch courses');
-      console.error('Error fetching courses:', err);
+      setError("Failed to fetch courses");
+      console.error("Error fetching courses:", err);
     } finally {
       setLoading(false);
     }
@@ -54,20 +54,20 @@ const Courses = () => {
     let filtered = courses;
 
     if (nameFilter) {
-      filtered = filtered.filter(course =>
+      filtered = filtered.filter((course) =>
         course.name.toLowerCase().includes(nameFilter.toLowerCase())
       );
     }
 
     if (codeFilter) {
-      filtered = filtered.filter(course =>
+      filtered = filtered.filter((course) =>
         course.code.toLowerCase().includes(codeFilter.toLowerCase())
       );
     }
 
-    if (semesterFilter && semesterFilter !== '') {
-      filtered = filtered.filter(course =>
-        course.semester === parseInt(semesterFilter)
+    if (semesterFilter && semesterFilter !== "") {
+      filtered = filtered.filter(
+        (course) => course.semester === parseInt(semesterFilter)
       );
     }
 
@@ -79,81 +79,94 @@ const Courses = () => {
     setEditForm({
       name: course.name,
       code: course.code,
-      semester: course.semester
+      semester: course.semester,
     });
   };
 
   const handleUpdate = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/courses/${editingCourse}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editForm)
-      });
-      
+      const response = await fetch(
+        `http://localhost:5000/api/courses/${editingCourse}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editForm),
+        }
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to update course');
+        throw new Error("Failed to update course");
       }
-      
+
       setEditingCourse(null);
-      setEditForm({ name: '', code: '', semester: '' });
+      setEditForm({ name: "", code: "", semester: "" });
       fetchCourses();
     } catch (err) {
-      setError('Failed to update course');
-      console.error('Error updating course:', err);
+      setError("Failed to update course");
+      console.error("Error updating course:", err);
     }
   };
 
   const handleDelete = async (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
+    if (window.confirm("Are you sure you want to delete this course?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/courses/${courseId}`, {
-          method: 'DELETE'
-        });
-        
+        const response = await fetch(
+          `http://localhost:5000/api/courses/${courseId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
         if (!response.ok) {
-          throw new Error('Failed to delete course');
+          throw new Error("Failed to delete course");
         }
-        
+
         fetchCourses();
       } catch (err) {
-        setError('Failed to delete course');
-        console.error('Error deleting course:', err);
+        setError("Failed to delete course");
+        console.error("Error deleting course:", err);
       }
     }
   };
 
   const handleBulkDelete = async () => {
     if (!bulkDeleteSemester) {
-      setError('Please select a semester');
+      setError("Please select a semester");
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete all courses from semester ${bulkDeleteSemester}?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete all courses from semester ${bulkDeleteSemester}?`
+      )
+    ) {
       try {
-        const response = await fetch(`http://localhost:5000/api/courses/semester/${bulkDeleteSemester}`, {
-          method: 'DELETE'
-        });
-        
+        const response = await fetch(
+          `http://localhost:5000/api/courses/semester/${bulkDeleteSemester}`,
+          {
+            method: "DELETE",
+          }
+        );
+
         if (!response.ok) {
-          throw new Error('Failed to delete courses');
+          throw new Error("Failed to delete courses");
         }
-        
+
         setShowBulkDeleteModal(false);
-        setBulkDeleteSemester('');
+        setBulkDeleteSemester("");
         fetchCourses();
       } catch (err) {
-        setError('Failed to delete courses');
-        console.error('Error bulk deleting courses:', err);
+        setError("Failed to delete courses");
+        console.error("Error bulk deleting courses:", err);
       }
     }
   };
 
   const cancelEdit = () => {
     setEditingCourse(null);
-    setEditForm({ name: '', code: '', semester: '' });
+    setEditForm({ name: "", code: "", semester: "" });
   };
 
   if (loading) {
@@ -164,7 +177,7 @@ const Courses = () => {
     <div className="courses-container">
       <div className="header">
         <h1>Course Management</h1>
-        <button 
+        <button
           className="bulk-delete-btn"
           onClick={() => setShowBulkDeleteModal(true)}
         >
@@ -201,8 +214,10 @@ const Courses = () => {
             onChange={(e) => setSemesterFilter(e.target.value)}
           >
             <option value="">All Semesters</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-              <option key={sem} value={sem}>Semester {sem}</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+              <option key={sem} value={sem}>
+                Semester {sem}
+              </option>
             ))}
           </select>
         </div>
@@ -213,6 +228,7 @@ const Courses = () => {
         <table className="courses-table">
           <thead>
             <tr>
+              <th>S.No</th>
               <th>Name</th>
               <th>Code</th>
               <th>Semester</th>
@@ -220,14 +236,17 @@ const Courses = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredCourses.map(course => (
+            {filteredCourses.map((course, i) => (
               <tr key={course._id}>
+                <td>{i + 1} </td>
                 <td>
                   {editingCourse === course._id ? (
                     <input
                       type="text"
                       value={editForm.name}
-                      onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, name: e.target.value })
+                      }
                     />
                   ) : (
                     course.name
@@ -238,7 +257,9 @@ const Courses = () => {
                     <input
                       type="text"
                       value={editForm.code}
-                      onChange={(e) => setEditForm({...editForm, code: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, code: e.target.value })
+                      }
                     />
                   ) : (
                     course.code
@@ -248,10 +269,14 @@ const Courses = () => {
                   {editingCourse === course._id ? (
                     <select
                       value={editForm.semester}
-                      onChange={(e) => setEditForm({...editForm, semester: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, semester: e.target.value })
+                      }
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                        <option key={sem} value={sem}>{sem}</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                        <option key={sem} value={sem}>
+                          {sem}
+                        </option>
                       ))}
                     </select>
                   ) : (
@@ -261,13 +286,27 @@ const Courses = () => {
                 <td>
                   {editingCourse === course._id ? (
                     <div className="action-buttons">
-                      <button onClick={handleUpdate} className="save-btn">Save</button>
-                      <button onClick={cancelEdit} className="cancel-btn">Cancel</button>
+                      <button onClick={handleUpdate} className="save-btn">
+                        Save
+                      </button>
+                      <button onClick={cancelEdit} className="cancel-btn">
+                        Cancel
+                      </button>
                     </div>
                   ) : (
                     <div className="action-buttons">
-                      <button onClick={() => handleEdit(course)} className="edit-btn">Edit</button>
-                      <button onClick={() => handleDelete(course._id)} className="delete-btn">Delete</button>
+                      <button
+                        onClick={() => handleEdit(course)}
+                        className="edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(course._id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
                     </div>
                   )}
                 </td>
@@ -282,7 +321,10 @@ const Courses = () => {
         <div className="modal-overlay">
           <div className="modal">
             <h3>Bulk Delete Courses by Semester</h3>
-            <p>This will permanently delete all courses from the selected semester.</p>
+            <p>
+              This will permanently delete all courses from the selected
+              semester.
+            </p>
             <div className="modal-content">
               <label>Select Semester:</label>
               <select
@@ -290,14 +332,23 @@ const Courses = () => {
                 onChange={(e) => setBulkDeleteSemester(e.target.value)}
               >
                 <option value="">Choose semester...</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                  <option key={sem} value={sem}>Semester {sem}</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                  <option key={sem} value={sem}>
+                    Semester {sem}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="modal-actions">
-              <button onClick={handleBulkDelete} className="delete-btn">Delete All</button>
-              <button onClick={() => setShowBulkDeleteModal(false)} className="cancel-btn">Cancel</button>
+              <button onClick={handleBulkDelete} className="delete-btn">
+                Delete All
+              </button>
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -306,4 +357,4 @@ const Courses = () => {
   );
 };
 
-export default Courses; 
+export default Courses;

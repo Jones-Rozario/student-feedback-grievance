@@ -4,6 +4,7 @@ import CourseFacultyAssignment from "../models/courseFacultyAssignment.js";
 import multer from "multer";
 import { parse } from "csv-parse";
 import fs from "fs";
+import Feedback from "../models/feedback.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -53,13 +54,15 @@ router.delete("/:id", async (req, res) => {
     if (!faculty) {
       return res.status(404).json({ error: "Faculty not found" });
     }
-    
+
     // Delete related assignments
-    const deletedAssignments = await CourseFacultyAssignment.deleteMany({ faculty: String(faculty._id) });
-    
-    res.status(200).json({ 
+    const deletedAssignments = await CourseFacultyAssignment.deleteMany({
+      faculty: String(faculty._id),
+    });
+
+    res.status(200).json({
       message: "Faculty deleted successfully",
-      deletedAssignments: deletedAssignments.deletedCount
+      deletedAssignments: deletedAssignments.deletedCount,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -88,7 +91,7 @@ router.post("/upload-csv", upload.single("file"), (req, res) => {
         email: row["Email"] || row["email"],
         designation: row["Designation"] || row["designation"],
       };
-      
+
       if (facultyData.id) {
         allFacultyIdsInCsv.push(facultyData.id);
         facultiesToInsert.push(facultyData);
@@ -102,9 +105,7 @@ router.post("/upload-csv", upload.single("file"), (req, res) => {
           id: { $in: allFacultyIdsInCsv },
         }).select("id");
 
-        const existingFacultyIds = new Set(
-          existingFaculties.map((f) => f.id)
-        );
+        const existingFacultyIds = new Set(existingFaculties.map((f) => f.id));
 
         // Filter out faculties that already exist
         const newFaculties = facultiesToInsert.filter(
@@ -112,19 +113,24 @@ router.post("/upload-csv", upload.single("file"), (req, res) => {
         );
 
         if (newFaculties.length > 0) {
-          const created = await Faculty.insertMany(newFaculties, { ordered: false });
+          const created = await Faculty.insertMany(newFaculties, {
+            ordered: false,
+          });
           res.status(201).json({
             message: `${created.length} new faculties uploaded successfully.`,
             faculties: created,
           });
         } else {
           res.status(200).json({
-            message: "No new faculties to upload. All faculties in the CSV already exist.",
+            message:
+              "No new faculties to upload. All faculties in the CSV already exist.",
           });
         }
       } catch (err) {
         console.error("Database error:", err);
-        res.status(500).json({ error: "Failed to insert faculties into database." });
+        res
+          .status(500)
+          .json({ error: "Failed to insert faculties into database." });
       } finally {
         // Clean up the uploaded file
         fs.unlinkSync(req.file.path);
@@ -139,6 +145,80 @@ router.post("/upload-csv", upload.single("file"), (req, res) => {
   };
 
   processFile();
+});
+
+// Get faculty performance (self-view)
+router.get("/:id/performance", async (req, res) => {
+  try {
+    const facultyId = String(req.params.id);
+    const faculty = await Faculty.findById(facultyId);
+    if (!faculty) {
+      return res.status(404).json({ error: "Faculty not found" });
+    }
+
+    // Get average score
+    const feedbacks = await Feedback.find({ faculty: facultyId });
+    let avgScore = 0;
+    if (feedbacks.length > 0) {
+      avgScore =
+        feedbacks.reduce((sum, f) => sum + f.score, 0) / feedbacks.length;
+    }
+
+    // Get average ratings for each question
+    let questionRatings = [];
+    let questionTexts = [];
+    if (feedbacks.length > 0) {
+      const questionCount = feedbacks[0].questionRating.length;
+      for (let i = 0; i < questionCount; i++) {
+        const totalRating = feedbacks.reduce((sum, feedback) => {
+          return sum + (feedback.questionRating[i]?.rating || 0);
+        }, 0);
+        questionRatings[i] = totalRating / feedbacks.length;
+      }
+      questionTexts = feedbacks[0].questionRating.map((q) => q.question);
+    }
+
+    // Get courses taken
+    const assignments = await CourseFacultyAssignment.find({
+      faculty: facultyId,
+    }).populate("course", "name code");
+    const courses = assignments.map((a) => ({
+      name: a.course?.name,
+      code: a.course?.code,
+      semester: a.semester,
+      batch: a.batch,
+    }));
+
+    // Yearly performance
+    const yearlyData = {};
+    feedbacks.forEach((feedback) => {
+      const year = new Date(feedback.createdAt).getFullYear();
+      if (!yearlyData[year]) yearlyData[year] = [];
+      yearlyData[year].push(feedback.score);
+    });
+    const yearlyPerformance = {};
+    Object.keys(yearlyData).forEach((year) => {
+      const scores = yearlyData[year];
+      const avg = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+      yearlyPerformance[year] = Math.round(avg * 100) / 100;
+    });
+
+    res.json({
+      faculty: {
+        id: faculty.id,
+        name: faculty.name,
+        designation: faculty.designation,
+      },
+      avgScore,
+      questionRatings,
+      questionTexts,
+      courses,
+      yearlyPerformance,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

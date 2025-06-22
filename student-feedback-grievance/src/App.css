@@ -1,11 +1,12 @@
 .app-container {
     display: flex;
     height: 100vh;
-    overflow: auto;
+    overflow: hidden;
   }
   
   .right-content {
     height: 100vh;
+    overflow: auto;
     flex: 6;
   }
   

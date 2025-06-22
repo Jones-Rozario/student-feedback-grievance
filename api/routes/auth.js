@@ -94,6 +94,16 @@ router.post("/setup-users", async (req, res) => {
   }
 });
 
+// DEV/SETUP ONLY: Delete all users
+router.delete("/setup-users", async (req, res) => {
+  try {
+    await User.deleteMany({});
+    res.json({ message: "All users deleted." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Login endpoint
 router.post("/login", async (req, res) => {
   try {

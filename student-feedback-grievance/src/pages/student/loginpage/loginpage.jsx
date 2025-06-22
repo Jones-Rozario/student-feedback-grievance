@@ -71,7 +71,7 @@ const LoginPage = () => {
           if (data.user.role === "student") {
             navigate("/home");
           } else if (data.user.role === "faculty") {
-            navigate("/faculty/dashboard");
+            navigate("/faculty/performance");
           } else if (data.user.role === "admin") {
             navigate("/admin/dashboard");
           }

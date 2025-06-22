@@ -25,6 +25,7 @@ import Sidebar from "./components/sidebar/sidebar";
 import NavBar from "./components/navbar/navbar";
 import "./App.css";
 import Unauthorized from "./pages/Unauthorized";
+import FacultySelfPerformance from "./pages/faculty/FacultySelfPerformance";
 
 // Admin layout component
 const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
@@ -166,12 +167,12 @@ function App() {
               } 
             />
             
-            {/* Faculty routes (you can add these when faculty components are created) */}
+            {/* Faculty routes */}
             <Route
-              path="/faculty/dashboard"
+              path="/faculty/performance"
               element={
                 <ProtectedRoute requiredRole="faculty">
-                  <div>Faculty Dashboard (Coming Soon)</div>
+                  <FacultySelfPerformance />
                 </ProtectedRoute>
               }
             />
