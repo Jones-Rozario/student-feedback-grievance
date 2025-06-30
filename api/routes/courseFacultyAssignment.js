@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const assignments = await CourseFacultyAssignment.find()
-      .populate("course", "name code")
+      .populate("course", "name code semester")
       .populate("faculty", "name designation");
     res.status(200).json(assignments);
   } catch (err) {
@@ -20,21 +20,23 @@ router.get("/semester/:semester/batch/:batch", async (req, res) => {
   try {
     const semester = Number(req.params.semester);
     const batch = req.params.batch;
-    
+
     // Validate semester
     if (isNaN(semester) || semester < 1 || semester > 8) {
       return res.status(400).json({ error: "Invalid semester. Must be 1-8." });
     }
-    
-    console.log(`Fetching assignments for semester: ${semester}, batch: ${batch}`);
-    
+
+    console.log(
+      `Fetching assignments for semester: ${semester}, batch: ${batch}`
+    );
+
     const assignments = await CourseFacultyAssignment.find({
       semester: semester,
       batch: batch,
     })
-      .populate("course", "name code")
+      .populate("course", "name code semester")
       .populate("faculty", "name designation");
-    
+
     console.log(`Found ${assignments.length} assignments`);
     res.status(200).json(assignments);
   } catch (err) {
@@ -57,7 +59,9 @@ router.post("/assign", async (req, res) => {
       batch: String(batch),
     });
     if (existingAssignment) {
-      return res.status(400).json({ error: "Faculty already assigned to this course" });
+      return res
+        .status(400)
+        .json({ error: "Faculty already assigned to this course" });
     }
     const assignment = new CourseFacultyAssignment({
       course: String(course),
@@ -68,6 +72,7 @@ router.post("/assign", async (req, res) => {
     await assignment.save();
     res.status(201).json({ message: "Faculty assigned to course", assignment });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -76,7 +81,7 @@ router.post("/assign", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { course, faculty, semester, batch } = req.body;
-    
+
     if (!course || !faculty || !semester || !batch) {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -87,11 +92,14 @@ router.put("/:id", async (req, res) => {
       faculty: String(faculty),
       semester: Number(semester),
       batch: String(batch),
-      _id: { $ne: req.params.id }
+      _id: { $ne: req.params.id },
     });
 
     if (existingAssignment) {
-      return res.status(400).json({ error: "Faculty already assigned to this course for this semester and batch" });
+      return res.status(400).json({
+        error:
+          "Faculty already assigned to this course for this semester and batch",
+      });
     }
 
     const assignment = await CourseFacultyAssignment.findByIdAndUpdate(
@@ -100,16 +108,20 @@ router.put("/:id", async (req, res) => {
         course: String(course),
         faculty: String(faculty),
         semester: Number(semester),
-        batch: String(batch)
+        batch: String(batch),
       },
       { new: true }
-    ).populate("course", "name code").populate("faculty", "name designation");
+    )
+      .populate("course", "name code semester")
+      .populate("faculty", "name designation");
 
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
     }
 
-    res.status(200).json({ message: "Assignment updated successfully", assignment });
+    res
+      .status(200)
+      .json({ message: "Assignment updated successfully", assignment });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -118,8 +130,10 @@ router.put("/:id", async (req, res) => {
 // Delete assignment
 router.delete("/:id", async (req, res) => {
   try {
-    const assignment = await CourseFacultyAssignment.findByIdAndDelete(req.params.id);
-    
+    const assignment = await CourseFacultyAssignment.findByIdAndDelete(
+      req.params.id
+    );
+
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
     }
@@ -133,9 +147,11 @@ router.delete("/:id", async (req, res) => {
 // Delete assignments by course (for cascading delete)
 router.delete("/course/:courseId", async (req, res) => {
   try {
-    const result = await CourseFacultyAssignment.deleteMany({ course: req.params.courseId });
-    res.status(200).json({ 
-      message: `${result.deletedCount} assignments deleted for course ${req.params.courseId}` 
+    const result = await CourseFacultyAssignment.deleteMany({
+      course: req.params.courseId,
+    });
+    res.status(200).json({
+      message: `${result.deletedCount} assignments deleted for course ${req.params.courseId}`,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -145,9 +161,11 @@ router.delete("/course/:courseId", async (req, res) => {
 // Delete assignments by faculty (for cascading delete)
 router.delete("/faculty/:facultyId", async (req, res) => {
   try {
-    const result = await CourseFacultyAssignment.deleteMany({ faculty: req.params.facultyId });
-    res.status(200).json({ 
-      message: `${result.deletedCount} assignments deleted for faculty ${req.params.facultyId}` 
+    const result = await CourseFacultyAssignment.deleteMany({
+      faculty: req.params.facultyId,
+    });
+    res.status(200).json({
+      message: `${result.deletedCount} assignments deleted for faculty ${req.params.facultyId}`,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -158,12 +176,42 @@ router.delete("/faculty/:facultyId", async (req, res) => {
 router.get("/faculty/:facultyId", async (req, res) => {
   try {
     const { facultyId } = req.params;
-    
-    const assignments = await CourseFacultyAssignment.find({ faculty: facultyId })
-      .populate("course", "name code")
+    const removeDup = req.query.removedup === "true";
+
+    let assignments = await CourseFacultyAssignment.find({
+      faculty: facultyId,
+    })
+      .populate("course", "name code semester")
       .populate("faculty", "name designation")
       .sort({ semester: 1, batch: 1 });
-    
+
+    if (removeDup) {
+      const courseBatches = [];
+      for (const assignment of assignments) {
+        const courses = await CourseFacultyAssignment.find({
+          faculty: facultyId,
+          course: assignment.course._id,
+        })
+          .populate("course", "name code semester")
+          .sort({ semester: 1, batch: 1 });
+
+        if (!courses.length) continue;
+
+        // Check if this course is already in courseBatches
+        let existing = courseBatches.find(
+          (cb) => cb.course._id.toString() === courses[0].course._id.toString()
+        );
+        if (!existing) {
+          courseBatches.push({
+            course: courses[0].course,
+            batches: courses.map((c) => c.batch),
+          });
+        }
+      }
+      console.log(courseBatches);
+      return res.status(200).json(courseBatches);
+    }
+
     res.status(200).json(assignments);
   } catch (err) {
     console.error("Error getting faculty assignments:", err);

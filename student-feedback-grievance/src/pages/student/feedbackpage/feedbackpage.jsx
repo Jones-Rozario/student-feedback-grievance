@@ -239,8 +239,8 @@ const FeedbackPage = () => {
       try {
         setLoading(true);
         const response = await fetch(
-        `http://localhost:5000/api/assignments/semester/${currentUser?.current_semester}/batch/${currentUser?.batch}`
-      );
+          `http://localhost:5000/api/assignments/semester/${currentUser?.current_semester}/batch/${currentUser?.batch}`
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch assignments");
@@ -263,9 +263,64 @@ const FeedbackPage = () => {
         setCourseFacultyMapping(mapping);
         setCourses(courseList);
 
+        // Fetch elective assignments
+        const electiveResponse = await fetch(
+          `http://localhost:5000/api/elective-student-assignments/student/${currentUser?.id}`
+        );
+
+        if (!electiveResponse.ok) {
+          throw new Error("Failed to fetch elective assignments");
+        }
+
+        const electiveData = await electiveResponse.json();
+        // Gather all {electiveCourse, batch} pairs
+        const electivePairs = electiveData.flatMap((assignment) =>
+          assignment.electives.map((elective) => ({
+            course: elective.electiveCourse,
+            batch: elective.batch,
+          }))
+        );
+
+        // Fetch faculty for each elective course+batch
+        const electiveWithFaculty = await Promise.all(
+          electivePairs.map(async ({ course, batch }) => {
+            if (!course || !batch) return null;
+            const res = await fetch(
+              `http://localhost:5000/api/electiveCourseFacultyAssignment/electiveCourse/${course._id}/batch/${batch}`
+            );
+            if (!res.ok) throw new Error("Faculties not getting");
+            const data = await res.json();
+            // data is an array, take the first assignment (if any)
+            const faculty = data[0]?.faculty || null;
+            return faculty
+              ? { course, faculty, isElective: true, batch }
+              : null;
+          })
+        );
+        // Remove nulls
+        const validElectiveAssignments = electiveWithFaculty.filter(Boolean);
+        // Combine with regular courses
+        const combinedCourses = [
+          ...courseList.map((c) => ({ ...c, isElective: false })),
+          ...validElectiveAssignments.map((e) => ({
+            ...e.course,
+            isElective: true,
+            batch: e.batch,
+          })),
+        ];
+
+        const combinedMapping = { ...mapping };
+        validElectiveAssignments.forEach((e) => {
+          if (e.course && e.faculty) {
+            combinedMapping[e.course._id] = e.faculty;
+          }
+        });
+        setCourses(combinedCourses);
+        setCourseFacultyMapping(combinedMapping);
+
         // Check feedback status for each course
         const statusMap = {};
-        for (const course of courseList) {
+        for (const course of combinedCourses) {
           try {
             const studentId = currentUser?.studentRef || currentUser?._id;
             const feedbackResponse = await fetch(
@@ -289,19 +344,22 @@ const FeedbackPage = () => {
           (s) => s === true
         );
 
-        if (isFeedbackGiven && courseList.length > 0) {
+        if (isFeedbackGiven && combinedCourses.length > 0) {
           try {
             console.log("Attempting to update student feedback status...");
-            console.log("Current user ID:", currentUser?.studentRef || currentUser?._id);
+            console.log(
+              "Current user ID:",
+              currentUser?.studentRef || currentUser?._id
+            );
             console.log("Current user object:", currentUser);
-            
+
             const studentId = currentUser?.studentRef || currentUser?._id;
-            
+
             if (!studentId) {
               console.error("No valid student ID found");
               return;
             }
-            
+
             const response = await fetch(
               `http://localhost:5000/api/students/${studentId}`,
               {
@@ -320,7 +378,10 @@ const FeedbackPage = () => {
               currentUser.isFeedbackGiven = true;
             } else {
               const errorData = await response.json();
-              console.error("Failed to update student feedback status:", errorData);
+              console.error(
+                "Failed to update student feedback status:",
+                errorData
+              );
             }
           } catch (error) {
             console.error("Error updating student feedback status:", error);
@@ -328,9 +389,9 @@ const FeedbackPage = () => {
         }
 
         // Set default course and faculty if available
-        if (courseList.length > 0) {
-          const defaultCourse = courseList[0];
-          const defaultFaculty = mapping[defaultCourse._id];
+        if (combinedCourses.length > 0) {
+          const defaultCourse = combinedCourses[0];
+          const defaultFaculty = combinedMapping[defaultCourse._id];
 
           setFormData((prev) => ({
             ...prev,
@@ -348,9 +409,11 @@ const FeedbackPage = () => {
     };
 
     if (currentUser?.current_semester && currentUser?.batch) {
-    fetchAssignments();
+      fetchAssignments();
     }
   }, [currentUser]);
+
+  console.log("form data ", formData);
 
   const handleCourseChange = (courseId) => {
     const selectedCourse = courses.find((course) => course._id === courseId);
@@ -414,7 +477,7 @@ const FeedbackPage = () => {
           student: studentId,
           faculty: formData.faculty._id,
           course: formData.course._id,
-          batch: currentUser.batch,
+          batch: String(formData.course.batch || currentUser.batch),
           semester: currentUser.current_semester,
           questionRating: formData.questionRating,
           additionalComments: formData.additionalComments,
@@ -441,7 +504,7 @@ const FeedbackPage = () => {
         ...feedbackStatus,
         [formData.course._id]: true,
       };
-      
+
       const allFeedbackGiven = Object.values(updatedStatus).every(
         (status) => status === true
       );
@@ -462,11 +525,17 @@ const FeedbackPage = () => {
 
           if (updateResponse.ok) {
             const result = await updateResponse.json();
-            console.log("Updated student feedback status to completed:", result);
+            console.log(
+              "Updated student feedback status to completed:",
+              result
+            );
             currentUser.isFeedbackGiven = true;
           } else {
             const errorData = await updateResponse.json();
-            console.error("Failed to update student feedback status:", errorData);
+            console.error(
+              "Failed to update student feedback status:",
+              errorData
+            );
           }
         } catch (error) {
           console.error("Error updating student feedback status:", error);
@@ -547,9 +616,10 @@ const FeedbackPage = () => {
   }
 
   // Check if all feedback is given (only after loading is complete)
-  const allFeedbackGiven = !loading && Object.values(feedbackStatus).every(
-    (status) => status === true
-  ) && courses.length > 0;
+  const allFeedbackGiven =
+    !loading &&
+    Object.values(feedbackStatus).every((status) => status === true) &&
+    courses.length > 0;
 
   if (allFeedbackGiven) {
     return (
@@ -612,7 +682,7 @@ const FeedbackPage = () => {
                 <option value="">Select Course</option>
                 {courses.map((course) => (
                   <option key={course._id} value={course._id}>
-                    {course.name}{" "}
+                    {course.name} {course.isElective ? "(Elective)" : ""}{" "}
                     {feedbackStatus[course._id] ? "(Feedback Given)" : ""}
                   </option>
                 ))}
@@ -620,12 +690,12 @@ const FeedbackPage = () => {
             </FormGroup>
 
             {formData.course && formData.faculty && (
-            <FormGroup
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Label>Faculty Name</Label>
+              <FormGroup
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Label>Faculty Name</Label>
                 <FacultyInfo>
                   <strong>{formData.faculty.name}</strong>
                   <br />
@@ -643,19 +713,19 @@ const FeedbackPage = () => {
                   transition={{ duration: 0.5, delay: 0.1 }}
                 >
                   <div
-                style={{
+                    style={{
                       background: "#e8f5e8",
                       padding: "15px",
                       borderRadius: "8px",
                       border: "2px solid #4caf50",
-                  textAlign: "center",
+                      textAlign: "center",
                       color: "#2e7d32",
                       fontWeight: "bold",
                     }}
                   >
                     ✓ Feedback already given for this course
                   </div>
-            </FormGroup>
+                </FormGroup>
               )}
 
             {formData.course &&
@@ -663,54 +733,54 @@ const FeedbackPage = () => {
               !feedbackStatus[formData.course._id] && (
                 <>
                   {formData.questionRating.map((question, index) => (
-              <FormGroup
+                    <FormGroup
                       key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * (index + 2) }}
-              >
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 * (index + 2) }}
+                    >
                       <Label>{question.question}</Label>
-                <RatingContainer>
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <StarButton
-                      key={rating}
-                      type="button"
+                      <RatingContainer>
+                        {[1, 2, 3, 4, 5].map((rating) => (
+                          <StarButton
+                            key={rating}
+                            type="button"
                             selected={question.rating >= rating}
                             onClick={() => handleRatingChange(index, rating)}
-                    >
-                      <FaStar />
-                    </StarButton>
+                          >
+                            <FaStar />
+                          </StarButton>
+                        ))}
+                      </RatingContainer>
+                    </FormGroup>
                   ))}
-                </RatingContainer>
-              </FormGroup>
-            ))}
 
-            <FormGroup
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              <Label>Additional Comments</Label>
-              <TextArea
-                value={formData.additionalComments}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    additionalComments: e.target.value,
-                  }))
-                }
-                placeholder="Share your thoughts and suggestions..."
-              />
-            </FormGroup>
+                  <FormGroup
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    <Label>Additional Comments</Label>
+                    <TextArea
+                      value={formData.additionalComments}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          additionalComments: e.target.value,
+                        }))
+                      }
+                      placeholder="Share your thoughts and suggestions..."
+                    />
+                  </FormGroup>
 
-            <SubmitButton
-              type="submit"
-              disabled={isSubmitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isSubmitting ? "Submitting..." : "Submit Feedback"}
-            </SubmitButton>
+                  <SubmitButton
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Feedback"}
+                  </SubmitButton>
                 </>
               )}
           </Form>

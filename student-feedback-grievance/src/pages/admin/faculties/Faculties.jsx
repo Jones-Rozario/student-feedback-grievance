@@ -1,123 +1,123 @@
 import React, { useEffect, useState } from "react";
 import styles from "./FacultyTable.module.css";
 
-const facultyData = [
-  {
-    id: "622356",
-    name: "Priya",
-    avatar: "A",
-    course: "Database Management System",
-    batch: "P",
-    designation: "Teaching Faculty",
-    performance: "Low",
-    rating: 2,
-    courses: [
-      {
-        name: "Course 1",
-        metrics: {
-          "Teaching Efficiency": 4,
-          "Course Content Quality": 4,
-          "Communication Skills": 4,
-          "Student Engagement": 4,
-          Innovative: 4,
-        },
-        yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
-      },
-    ],
-  },
-  {
-    id: "622356",
-    name: "Amudha",
-    avatar: "A",
-    course: "Database Management System",
-    batch: "P",
-    designation: "Teaching Faculty",
-    performance: "High",
-    rating: 5,
-    courses: [
-      {
-        name: "Course 1",
-        metrics: {
-          "Teaching Efficiency": 5,
-          "Course Content Quality": 5,
-          "Communication Skills": 5,
-          "Student Engagement": 5,
-          Innovative: 5,
-        },
-        yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
-      },
-    ],
-  },
-  {
-    id: "622356",
-    name: "Saradha",
-    avatar: "S",
-    course: "Database Management System",
-    batch: "P",
-    designation: "Teaching Faculty",
-    performance: "High",
-    rating: 5,
-    courses: [
-      {
-        name: "Course 1",
-        metrics: {
-          "Teaching Efficiency": 5,
-          "Course Content Quality": 5,
-          "Communication Skills": 5,
-          "Student Engagement": 5,
-          Innovative: 5,
-        },
-        yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
-      },
-    ],
-  },
-  {
-    id: "622356",
-    name: "Ganesh",
-    avatar: "G",
-    course: "Database Management System",
-    batch: "P",
-    designation: "Teaching Faculty",
-    performance: "Medium",
-    rating: 3,
-    courses: [
-      {
-        name: "Course 1",
-        metrics: {
-          "Teaching Efficiency": 3,
-          "Course Content Quality": 3,
-          "Communication Skills": 3,
-          "Student Engagement": 3,
-          Innovative: 3,
-        },
-        yearlyStats: { 2020: 2, 2021: 3, 2022: 3 },
-      },
-    ],
-  },
-  {
-    id: "622356",
-    name: "Kirthicka",
-    avatar: "K",
-    course: "Database Management System",
-    batch: "P",
-    designation: "Teaching Faculty",
-    performance: "Medium",
-    rating: 4,
-    courses: [
-      {
-        name: "Course 1",
-        metrics: {
-          "Teaching Efficiency": 4,
-          "Course Content Quality": 4,
-          "Communication Skills": 4,
-          "Student Engagement": 4,
-          Innovative: 4,
-        },
-        yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
-      },
-    ],
-  },
-];
+// const facultyData = [
+//   {
+//     id: "622356",
+//     name: "Priya",
+//     avatar: "A",
+//     course: "Database Management System",
+//     batch: "P",
+//     designation: "Teaching Faculty",
+//     performance: "Low",
+//     rating: 2,
+//     courses: [
+//       {
+//         name: "Course 1",
+//         metrics: {
+//           "Teaching Efficiency": 4,
+//           "Course Content Quality": 4,
+//           "Communication Skills": 4,
+//           "Student Engagement": 4,
+//           Innovative: 4,
+//         },
+//         yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
+//       },
+//     ],
+//   },
+//   {
+//     id: "622356",
+//     name: "Amudha",
+//     avatar: "A",
+//     course: "Database Management System",
+//     batch: "P",
+//     designation: "Teaching Faculty",
+//     performance: "High",
+//     rating: 5,
+//     courses: [
+//       {
+//         name: "Course 1",
+//         metrics: {
+//           "Teaching Efficiency": 5,
+//           "Course Content Quality": 5,
+//           "Communication Skills": 5,
+//           "Student Engagement": 5,
+//           Innovative: 5,
+//         },
+//         yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
+//       },
+//     ],
+//   },
+//   {
+//     id: "622356",
+//     name: "Saradha",
+//     avatar: "S",
+//     course: "Database Management System",
+//     batch: "P",
+//     designation: "Teaching Faculty",
+//     performance: "High",
+//     rating: 5,
+//     courses: [
+//       {
+//         name: "Course 1",
+//         metrics: {
+//           "Teaching Efficiency": 5,
+//           "Course Content Quality": 5,
+//           "Communication Skills": 5,
+//           "Student Engagement": 5,
+//           Innovative: 5,
+//         },
+//         yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
+//       },
+//     ],
+//   },
+//   {
+//     id: "622356",
+//     name: "Ganesh",
+//     avatar: "G",
+//     course: "Database Management System",
+//     batch: "P",
+//     designation: "Teaching Faculty",
+//     performance: "Medium",
+//     rating: 3,
+//     courses: [
+//       {
+//         name: "Course 1",
+//         metrics: {
+//           "Teaching Efficiency": 3,
+//           "Course Content Quality": 3,
+//           "Communication Skills": 3,
+//           "Student Engagement": 3,
+//           Innovative: 3,
+//         },
+//         yearlyStats: { 2020: 2, 2021: 3, 2022: 3 },
+//       },
+//     ],
+//   },
+//   {
+//     id: "622356",
+//     name: "Kirthicka",
+//     avatar: "K",
+//     course: "Database Management System",
+//     batch: "P",
+//     designation: "Teaching Faculty",
+//     performance: "Medium",
+//     rating: 4,
+//     courses: [
+//       {
+//         name: "Course 1",
+//         metrics: {
+//           "Teaching Efficiency": 4,
+//           "Course Content Quality": 4,
+//           "Communication Skills": 4,
+//           "Student Engagement": 4,
+//           Innovative: 4,
+//         },
+//         yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
+//       },
+//     ],
+//   },
+// ];
 
 const performanceColors = {
   High: styles.badgeHigh,
@@ -130,22 +130,48 @@ function FacultyPerformanceView({ faculty, onBack }) {
   const [courseRatings, setCourseRatings] = useState({});
   const [yearlyPerformance, setYearlyPerformance] = useState({});
   const [loading, setLoading] = useState(true);
+  const [courseBatchStats, setCourseBatchStats] = useState({});
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   useEffect(() => {
     const fetchFacultyData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch courses assigned to this faculty
+
+        // Fetch courses assigned to this faculty (regular)
         const coursesResponse = await fetch(
           `http://localhost:5000/api/assignments/faculty/${faculty._id}`
         );
+        let coursesData = [];
         if (coursesResponse.ok) {
-          const coursesData = await coursesResponse.json();
-          setFacultyCourses(coursesData);
+          coursesData = await coursesResponse.json();
         }
 
-        // Fetch yearly performance data
+        // Fetch elective courses assigned to this faculty
+        const electiveCoursesResponse = await fetch(
+          `http://localhost:5000/api/electiveCourseFacultyAssignment/faculty/${faculty._id}`
+        );
+        let electiveCoursesData = [];
+        if (electiveCoursesResponse.ok) {
+          electiveCoursesData = await electiveCoursesResponse.json();
+        }
+
+        // Map elective courses to match the regular assignment structure
+        const mappedElectives = electiveCoursesData.map((e) => ({
+          course: e.electiveCourse,
+          batch: e.batch,
+          semester: e.electiveCourse?.semester,
+          isElective: true,
+        }));
+
+        // Combine regular and elective courses
+        const allCourses = [
+          ...coursesData.map((c) => ({ ...c, isElective: false })),
+          ...mappedElectives,
+        ];
+        setFacultyCourses(allCourses);
+
+        // Fetch yearly performance data (already includes all feedbacks)
         const yearlyResponse = await fetch(
           `http://localhost:5000/api/feedback/faculty/yearly/${faculty._id}`
         );
@@ -154,14 +180,19 @@ function FacultyPerformanceView({ faculty, onBack }) {
           setYearlyPerformance(yearlyData);
         }
 
-        // Fetch course-specific ratings
-        const courseRatingsResponse = await fetch(
-          `http://localhost:5000/api/feedback/faculty/courses/${faculty._id}`
-        );
-        if (courseRatingsResponse.ok) {
-          const courseRatingsData = await courseRatingsResponse.json();
-          setCourseRatings(courseRatingsData);
+        // Fetch per-course, per-batch stats for all courses
+        const stats = {};
+        for (const assignment of allCourses) {
+          if (!assignment.course?._id || !assignment.batch) continue;
+          const res = await fetch(
+            `http://localhost:5000/api/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            stats[`${assignment.course._id}_${assignment.batch}`] = data;
+          }
         }
+        setCourseBatchStats(stats);
       } catch (error) {
         console.error("Error fetching faculty data:", error);
       } finally {
@@ -173,13 +204,15 @@ function FacultyPerformanceView({ faculty, onBack }) {
   }, [faculty._id]);
 
   const years = Object.keys(yearlyPerformance).sort();
+  console.log(courseRatings);
 
   // Convert question ratings array to object with actual question text
-  const questionRatingsWithLabels = faculty.questionRatings ? 
-    faculty.questionRatings.map((rating, index) => ({
-      label: faculty.questionTexts?.[index] || `Question ${index + 1}`,
-      value: rating
-    })) : [];
+  const questionRatingsWithLabels = faculty.questionRatings
+    ? faculty.questionRatings.map((rating, index) => ({
+        label: faculty.questionTexts?.[index] || `Question ${index + 1}`,
+        value: rating,
+      }))
+    : [];
 
   // Helper function to get performance level
   const getPerformanceLevel = (score) => {
@@ -211,7 +244,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
       <button className={styles.backButton} onClick={onBack}>
         &larr; Back to List
       </button>
-      
+
       {/* Faculty Header */}
       <div className={styles.performanceHeader}>
         <div className={styles.performanceAvatar}>
@@ -235,7 +268,11 @@ function FacultyPerformanceView({ faculty, onBack }) {
             <span className={styles.scoreMax}>/25</span>
           </div>
           <div className={styles.scoreLabel}>
-            <span className={`${styles.badge} ${styles[`badge${getPerformanceLevel(faculty.avgScore)}`]}`}>
+            <span
+              className={`${styles.badge} ${
+                styles[`badge${getPerformanceLevel(faculty.avgScore)}`]
+              }`}
+            >
               {getPerformanceLevel(faculty.avgScore)} Performance
             </span>
           </div>
@@ -254,7 +291,9 @@ function FacultyPerformanceView({ faculty, onBack }) {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <span
                       key={i}
-                      className={i < value ? styles.starFilled : styles.starEmpty}
+                      className={
+                        i < value ? styles.starFilled : styles.starEmpty
+                      }
                     >
                       ★
                     </span>
@@ -273,35 +312,128 @@ function FacultyPerformanceView({ faculty, onBack }) {
           <h3>Courses Taken</h3>
           <div className={styles.coursesGrid}>
             {facultyCourses.map((assignment, index) => {
-              const courseRating = courseRatings[assignment.course?._id] || 0;
+              const stat =
+                courseBatchStats[
+                  `${assignment.course?._id}_${assignment.batch}`
+                ];
+              const avgRating =
+                stat && stat.questionRatings && stat.questionRatings.length > 0
+                  ? stat.questionRatings.reduce((a, b) => a + b, 0) /
+                    stat.questionRatings.length
+                  : 0;
+              const isExpanded = expandedIndex === index;
               return (
-                <div className={styles.courseCard} key={index}>
+                <div
+                  className={
+                    styles.courseCard +
+                    (isExpanded ? " " + styles.expandedCourseCard : "")
+                  }
+                  key={index}
+                  onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                  style={{
+                    cursor: "pointer",
+                    boxShadow: isExpanded
+                      ? "0 4px 16px rgba(52, 152, 219, 0.25)"
+                      : "0 2px 4px rgba(0,0,0,0.08)",
+                    border: isExpanded
+                      ? "2px solid #3498db"
+                      : "1px solid #e0e0e0",
+                    transition: "all 0.3s cubic-bezier(.4,2,.6,1)",
+                    marginBottom: "1rem",
+                  }}
+                >
                   <div className={styles.courseHeader}>
-                    <h4>{assignment.course?.name || 'Unknown Course'}</h4>
+                    <h4 style={{ color: isExpanded ? "#3498db" : undefined }}>
+                      {assignment.course?.name || "Unknown Course"}
+                      {assignment.isElective && (
+                        <span
+                          style={{
+                            color: "#e67e22",
+                            fontSize: 13,
+                            marginLeft: 8,
+                          }}
+                        >
+                          (Elective)
+                        </span>
+                      )}
+                    </h4>
                     <span className={styles.courseCode}>
-                      {assignment.course?.code || 'N/A'}
+                      {assignment.course?.code || "N/A"}
                     </span>
                   </div>
                   <div className={styles.courseDetails}>
                     <div className={styles.courseInfo}>
-                      <span>Semester: {assignment.semester}</span>
+                      {!assignment.isElective && (
+                        <span>Semester: {assignment.semester}</span>
+                      )}
                       <span>Batch: {assignment.batch}</span>
+                      <span>
+                        Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
+                      </span>
                     </div>
                     <div className={styles.courseRating}>
                       <div className={styles.ratingStars}>
                         {Array.from({ length: 5 }).map((_, i) => (
                           <span
                             key={i}
-                            className={i < courseRating ? styles.starFilled : styles.starEmpty}
+                            className={
+                              i < avgRating
+                                ? styles.starFilled
+                                : styles.starEmpty
+                            }
                           >
                             ★
                           </span>
                         ))}
                       </div>
                       <div className={styles.ratingValue}>
-                        {courseRating.toFixed(1)}/5
+                        {avgRating.toFixed(1)}/5
                       </div>
                     </div>
+                  </div>
+                  {/* Per-course, per-batch stats, only show if expanded */}
+                  {isExpanded && stat && (
+                    <div
+                      className={styles.courseBatchStats}
+                      style={{
+                        background: "#f4faff",
+                        borderRadius: "8px",
+                        marginTop: "1rem",
+                        padding: "1rem",
+                        border: "1px solid #d0e6f7",
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, color: "#2980b9" }}>
+                        Batch Avg Score:{" "}
+                        {stat.avgScore ? stat.avgScore.toFixed(2) : "N/A"}/25
+                      </div>
+                      {stat.questionRatings &&
+                        stat.questionRatings.length > 0 && (
+                          <div style={{ marginTop: "0.5rem" }}>
+                            <strong>Question Ratings:</strong>
+                            <ol style={{ margin: 0, paddingLeft: 20 }}>
+                              {stat.questionRatings.map((rating, i) => (
+                                <li key={i} style={{ marginBottom: 4 }}>
+                                  <span style={{ color: "#34495e" }}>
+                                    {stat.questionTexts[i]}
+                                  </span>
+                                  :
+                                  <span
+                                    style={{ color: "black", fontWeight: 500 }}
+                                  >
+                                    {"  " + rating.toFixed(1)}/5
+                                  </span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                    </div>
+                  )}
+                  <div style={{ textAlign: "right", marginTop: 8 }}>
+                    <span style={{ color: "#3498db", fontSize: 13 }}>
+                      {isExpanded ? "Click to collapse ▲" : "Click to expand ▼"}
+                    </span>
                   </div>
                 </div>
               );
@@ -318,20 +450,24 @@ function FacultyPerformanceView({ faculty, onBack }) {
             <div className={styles.barChart}>
               {years.map((year) => {
                 const value = yearlyPerformance[year];
-                const displayValue = typeof value === 'number' && !isNaN(value) ? value.toFixed(1) : 'N/A';
+                const displayValue =
+                  typeof value === "number" && !isNaN(value)
+                    ? value.toFixed(1)
+                    : "N/A";
                 return (
                   <div className={styles.barChartBarWrapper} key={year}>
                     <div
                       className={styles.barChartBar}
                       style={{
-                        height: value && typeof value === 'number' ? `${(value / 25) * 100}%` : '0%',
+                        height:
+                          value && typeof value === "number"
+                            ? `${(value / 25) * 100}%`
+                            : "0%",
                         background: getPerformanceColor(value),
                         transition: "height 0.6s cubic-bezier(.4,2,.6,1)",
                       }}
                     ></div>
-                    <div className={styles.barChartValue}>
-                      {displayValue}
-                    </div>
+                    <div className={styles.barChartValue}>{displayValue}</div>
                     <div className={styles.barChartYear}>{year}</div>
                   </div>
                 );
@@ -342,11 +478,16 @@ function FacultyPerformanceView({ faculty, onBack }) {
       )}
 
       {/* No Data Message */}
-      {facultyCourses.length === 0 && years.length === 0 && questionRatingsWithLabels.length === 0 && (
-        <div className={styles.noDataMessage}>
-          <p>No course assignments or performance data available for this faculty.</p>
-        </div>
-      )}
+      {facultyCourses.length === 0 &&
+        years.length === 0 &&
+        questionRatingsWithLabels.length === 0 && (
+          <div className={styles.noDataMessage}>
+            <p>
+              No course assignments or performance data available for this
+              faculty.
+            </p>
+          </div>
+        )}
     </div>
   );
 }
@@ -359,6 +500,7 @@ const FacultyTable = () => {
     performance: "",
   });
   const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getFaculties = async () => {
@@ -394,6 +536,7 @@ const FacultyTable = () => {
                   questionRatings = ratingsData.ratings || [];
                   questionTexts = ratingsData.questions || [];
                 }
+                setLoading(false);
 
                 return {
                   ...faculty,
@@ -466,7 +609,7 @@ const FacultyTable = () => {
     return total / questionRatings.length;
   };
 
-  console.log(selectedFaculty);
+  // console.log(selectedFaculty);
 
   if (selectedFaculty) {
     return (
@@ -474,6 +617,22 @@ const FacultyTable = () => {
         faculty={selectedFaculty}
         onBack={() => setSelectedFaculty(null)}
       />
+    );
+  }
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <h3 style={{ color: "grey", fontWeight: "400" }}>
+          Loading faculties...
+        </h3>
+      </div>
     );
   }
 

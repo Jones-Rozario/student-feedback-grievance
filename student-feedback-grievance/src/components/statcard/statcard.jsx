@@ -1,8 +1,8 @@
 import React from 'react';
 import "./statcard.css";
 
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <div className={`statcard statcard--${color}`}>
+const StatCard = ({ title, value, icon: Icon, color, highlight }) => (
+  <div className={`statcard statcard--${color}${highlight ? ' statcard--highlight' : ''}`}>
     <div className="statcard__icon">{Icon && <Icon />}</div>
     <div>
       <div className="statcard__title">{title}</div>

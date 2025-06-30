@@ -383,31 +383,6 @@ const GrievancePage = () => {
             <FormGroup
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Label>
-                <FaExclamationCircle />
-                Department
-              </Label>
-              <Select
-                value={formData.department}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, department: e.target.value }))
-                }
-                required
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </Select>
-            </FormGroup>
-
-            <FormGroup
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <Label>

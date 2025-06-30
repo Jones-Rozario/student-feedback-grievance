@@ -117,13 +117,13 @@ const AssignCourses = () => {
       if (response.ok) {
         const data = await response.json();
         setSuccess("Faculty assigned successfully!");
-        setForm({
-          year: 1,
-          batch: "N",
-          semester: 1,
-          course: courses[0] || "",
-          faculty: faculties[0] || "",
-        });
+        // setForm({
+        //   year: 1,
+        //   batch: "N",
+        //   semester: 1,
+        //   course: courses[0] || "",
+        //   faculty: faculties[0] || "",
+        // });
         fetchAssignments();
       } else {
         const errorData = await response.json();

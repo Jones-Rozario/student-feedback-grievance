@@ -26,6 +26,10 @@ import NavBar from "./components/navbar/navbar";
 import "./App.css";
 import Unauthorized from "./pages/Unauthorized";
 import FacultySelfPerformance from "./pages/faculty/FacultySelfPerformance";
+import AssignElectiveFaculties from "./pages/admin/assigncourses/assignElectiveFaculties";
+import ElectiveCourses from "./pages/admin/electivecourses/ElectiveCoursesStudentAssignment";
+import AllElectiveCourses from "./pages/admin/electivecourses/AllElectiveCourses";
+import ElectiveCoursesStudentAssignment from "./pages/admin/electivecourses/ElectiveCoursesStudentAssignment";
 
 // Admin layout component
 const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
@@ -96,77 +100,137 @@ function App() {
             />
 
             {/* Protected admin routes */}
-            <Route 
-              path="/admin/dashboard" 
+            <Route
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <Dashboard />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/csvupload" 
+            <Route
+              path="/admin/csvupload"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <CSVUpload />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/assigncourses" 
+            <Route
+              path="/admin/assigncourses"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <AssignCourses />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/faculties" 
+            <Route
+              path="/admin/assign-elective-faculties"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
+                    <AssignElectiveFaculties />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/faculties"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <FacultyTable />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/grievances" 
+            <Route
+              path="/admin/grievances"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <Grievances />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/courses" 
+            <Route
+              path="/admin/courses"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <Courses />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin/students" 
+            <Route
+              path="/admin/students"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
                     <Students />
                   </AdminLayout>
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+            <Route
+              path="/admin/elective-student-assignments"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
+                    <ElectiveCoursesStudentAssignment />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/elective-courses"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                  >
+                    <AllElectiveCourses />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Faculty routes */}
             <Route
               path="/faculty/performance"

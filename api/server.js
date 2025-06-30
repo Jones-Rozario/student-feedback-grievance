@@ -9,6 +9,9 @@ import authRoutes from "./routes/auth.js";
 import feedbackRoutes from "./routes/feedback.js";
 import grievanceRoutes from "./routes/grievance.js";
 import notificationRoutes from "./routes/notification.js";
+import electiveCourseRoutes from "./routes/electiveCourse.js";
+import electiveStudentAssignmentRoutes from './routes/electiveStudentAssignment.js';
+import electiveCourseFacultyAssignmentRoutes from './routes/electiveCourseFacultyAssignment.js';
 import cors from "cors";
 
 dotenv.config();
@@ -35,6 +38,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/grievances", grievanceRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/electives", electiveCourseRoutes);
+app.use('/api/elective-student-assignments', electiveStudentAssignmentRoutes);
+app.use('/api/electiveCourseFacultyAssignment', electiveCourseFacultyAssignmentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");

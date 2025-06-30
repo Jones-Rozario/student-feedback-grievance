@@ -221,4 +221,60 @@ router.get("/:id/performance", async (req, res) => {
   }
 });
 
+// Get faculty performance (self-view) along with their course and Batch
+router.get(
+  "/:id/performance/course/:courseId/batch/:batch",
+  async (req, res) => {
+    try {
+      const facultyId = String(req.params.id);
+      const courseId = String(req.params.courseId);
+      const faculty = await Faculty.findById(facultyId);
+      if (!faculty) {
+        return res.status(404).json({ error: "Faculty not found" });
+      }
+
+      // Get average score
+      const feedbacks = await Feedback.find({
+        faculty: facultyId,
+        course: courseId,
+        batch: req.params.batch,
+      });
+      let avgScore = 0;
+      if (feedbacks.length > 0) {
+        avgScore =
+          feedbacks.reduce((sum, f) => sum + f.score, 0) / feedbacks.length;
+      }
+
+      // Get average ratings for each question
+      let questionRatings = [];
+      let questionTexts = [];
+      if (feedbacks.length > 0) {
+        const questionCount = feedbacks[0].questionRating.length;
+        for (let i = 0; i < questionCount; i++) {
+          const totalRating = feedbacks.reduce((sum, feedback) => {
+            return sum + (feedback.questionRating[i]?.rating || 0);
+          }, 0);
+          questionRatings[i] = totalRating / feedbacks.length;
+        }
+        questionTexts = feedbacks[0].questionRating.map((q) => q.question);
+      }
+
+      res.json({
+        faculty: {
+          id: faculty.id,
+          name: faculty.name,
+          designation: faculty.designation,
+        },
+        avgScore,
+        questionRatings,
+        questionTexts,
+        totalFeedbacks: feedbacks.length,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 export default router;

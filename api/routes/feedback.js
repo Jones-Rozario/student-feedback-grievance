@@ -213,7 +213,6 @@ router.get("/faculty/yearly/:facultyId", async (req, res) => {
   try {
     const { facultyId } = req.params;
     const feedbacks = await Feedback.find({ faculty: facultyId })
-      .populate("course", "name code")
       .sort({ createdAt: -1 });
 
     if (feedbacks.length === 0) {

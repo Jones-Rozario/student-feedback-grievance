@@ -73,4 +73,219 @@ ul {
 }
 ul li {
   margin-bottom: 0.5rem;
+}
+
+.performanceViewWrapper {
+  max-width: 900px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(52, 73, 94, 0.08);
+  padding: 32px 24px 40px 24px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.performanceHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.performanceAvatar {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #4e73df 60%, #1cc88a 100%);
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24px;
+  box-shadow: 0 2px 8px rgba(52, 73, 94, 0.10);
+}
+
+.performanceName {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.performanceDesignation {
+  color: #7b8a97;
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+.performanceId {
+  color: #b2bec3;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.overallScoreSection {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.scoreCard {
+  display: inline-block;
+  background: #f4faff;
+  border-radius: 12px;
+  padding: 24px 36px;
+  box-shadow: 0 2px 8px rgba(52, 73, 94, 0.07);
+  margin-top: 8px;
+}
+
+.scoreValue {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4e73df;
+}
+
+.scoreMax {
+  font-size: 1.1rem;
+  color: #7b8a97;
+  margin-left: 4px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.coursesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.courseCard {
+  background: #fafdff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(52, 73, 94, 0.07);
+  padding: 20px 18px 16px 18px;
+  transition: box-shadow 0.2s, border 0.2s;
+  border: 1.5px solid #e0e0e0;
+  cursor: pointer;
+  position: relative;
+}
+
+.courseCard:hover {
+  box-shadow: 0 6px 24px rgba(52, 152, 219, 0.13);
+  border-color: #4e73df;
+}
+
+.expandedCourseCard {
+  border: 2px solid #3498db;
+  box-shadow: 0 8px 32px rgba(52, 152, 219, 0.18);
+  background: #f4faff;
+}
+
+.courseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.courseCode {
+  background: #eaf1fb;
+  color: #4e73df;
+  font-size: 0.95rem;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.courseDetails {
+  margin-bottom: 8px;
+}
+
+.courseInfo {
+  display: flex;
+  gap: 18px;
+  color: #7b8a97;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+.courseRating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ratingStars {
+  color: #f1c40f;
+  font-size: 1.2rem;
+}
+
+.ratingValue {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.courseBatchStats {
+  background: #f4faff;
+  border-radius: 8px;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d0e6f7;
+}
+
+.barChartWrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  height: 180px;
+  margin-top: 18px;
+}
+
+.barChartBarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 38px;
+}
+
+.barChartBar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: #4e73df;
+  transition: height 0.6s cubic-bezier(.4,2,.6,1);
+}
+
+.barChartValue {
+  font-size: 1.05rem;
+  color: #4e73df;
+  margin-top: 4px;
+}
+
+.barChartYear {
+  font-size: 0.98rem;
+  color: #7b8a97;
+  margin-top: 2px;
+}
+
+.noDataMessage {
+  background: #fffbe6;
+  color: #b26a00;
+  border: 1.5px solid #ffe082;
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 24px;
+}
+
+button {
+  font-family: inherit;
 } 
