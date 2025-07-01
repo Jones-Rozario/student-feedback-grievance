@@ -288,4 +288,95 @@ ul li {
 
 button {
   font-family: inherit;
+}
+
+.questionAveragesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+.questionAverageBox {
+  background: #f8f9fc;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+  padding: 1.2rem 1.5rem;
+  min-width: 260px;
+  max-width: 340px;
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #4e73df;
+}
+.questionText {
+  font-size: 1.05rem;
+  color: #34495e;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.ratingValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+  margin-right: 0.5rem;
+}
+.ratingStars {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+.starFilled {
+  color: #f6c23e;
+  font-size: 1.2rem;
+  text-shadow: 0 1px 2px rgba(246,194,62,0.12);
+}
+.starEmpty {
+  color: #e3e6f0;
+  font-size: 1.2rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: linear-gradient(90deg, #f8f9fc 60%, #e3e6f0 100%);
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(78,115,223,0.07);
+  padding: 1.5rem 2.5rem 1.5rem 1.5rem;
+  margin-bottom: 2.5rem;
+  margin-top: 1.5rem;
+}
+.headerLogo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.10);
+  border: 2px solid #4e73df22;
+}
+.headerTextGroup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.pageTitle {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #4e73df;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+.pageSubtitle {
+  font-size: 1.1rem;
+  color: #7b8a97;
+  margin-top: 0.3rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
 } 

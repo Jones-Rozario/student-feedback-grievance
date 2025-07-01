@@ -4,6 +4,7 @@ import StatCard from "../../../components/statcard/statcard";
 import BarChart from "../../../components/barchart.jsx";
 import PieChart from "../../../components/piechart.jsx";
 import { useAuth } from "../../../contexts/AuthContext";
+import { apiFetch } from '../../../utils/api';
 import { 
   FaUsers, 
   FaComments, 
@@ -43,22 +44,22 @@ const Dashboard = () => {
       try {
         // Fetch basic stats
         const [feedbacks, grievanceStats, students, faculties, courses, grievances] = await Promise.all([
-          fetch("http://localhost:5000/api/feedback").then((res) => res.json()),
-          fetch("http://localhost:5000/api/grievances/stats/overview").then((res) => res.json()),
-          fetch("http://localhost:5000/api/students").then((res) => res.json()),
-          fetch("http://localhost:5000/api/faculties").then((res) => res.json()),
-          fetch("http://localhost:5000/api/courses").then((res) => res.json()),
-          fetch("http://localhost:5000/api/grievances").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/feedback").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/grievances/stats/overview").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/students").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/faculties").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/courses").then((res) => res.json()),
+          apiFetch("http://localhost:5000/api/grievances").then((res) => res.json()),
         ]);
 
         // Fetch top rated faculty
         const facultiesWithRatings = await Promise.all(
           faculties.map(async (faculty) => {
             try {
-              const avgResponse = await fetch(
+              const avgResponse = await apiFetch(
                 `http://localhost:5000/api/feedback/faculty/avg/${faculty._id}`
               );
-              const ratingsResponse = await fetch(
+              const ratingsResponse = await apiFetch(
                 `http://localhost:5000/api/feedback/faculty/ratings/${faculty._id}`
               );
               
@@ -101,7 +102,7 @@ const Dashboard = () => {
         const topRatedFaculty = facultiesWithRatings
           .filter(faculty => faculty.averageRating > 0)
           .sort((a, b) => b.averageRating - a.averageRating)
-          .slice(0, 5);
+          .slice(0, 3);
 
         // Calculate overall average rating
         // const overallAverageRating = facultiesWithRatings.length > 0

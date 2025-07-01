@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./assigncourses.module.css";
+import { apiFetch } from "../../../utils/api";
 
 const AssignElectiveFaculties = () => {
   const [assignments, setAssignments] = useState([]);
@@ -23,7 +24,7 @@ const AssignElectiveFaculties = () => {
 
   const fetchElectiveCourses = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/electives");
+      const res = await apiFetch("http://localhost:5000/api/electives");
       const data = await res.json();
       setElectiveCourses(data);
     } catch (err) {
@@ -33,7 +34,7 @@ const AssignElectiveFaculties = () => {
 
   const fetchFaculties = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/faculties");
+      const res = await apiFetch("http://localhost:5000/api/faculties");
       const data = await res.json();
       setFaculties(data);
     } catch (err) {
@@ -43,7 +44,7 @@ const AssignElectiveFaculties = () => {
 
   const fetchAssignments = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/electiveCourseFacultyAssignment");
+      const res = await apiFetch("http://localhost:5000/api/electiveCourseFacultyAssignment");
       const data = await res.json();
       setAssignments(data);
     } catch (err) {
@@ -72,7 +73,7 @@ const AssignElectiveFaculties = () => {
       batch: form.batch,
     };
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         "http://localhost:5000/api/electiveCourseFacultyAssignment/assign",
         {
           method: "POST",
@@ -100,7 +101,7 @@ const AssignElectiveFaculties = () => {
     setError("");
     setSuccess("");
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `http://localhost:5000/api/electiveCourseFacultyAssignment/${assignmentId}`,
         { method: "DELETE" }
       );

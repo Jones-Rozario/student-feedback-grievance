@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Courses.css";
+import { apiFetch } from '../../../utils/api';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -35,7 +36,7 @@ const Courses = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/courses");
+      const response = await apiFetch("http://localhost:5000/api/courses");
       if (!response.ok) {
         throw new Error("Failed to fetch courses");
       }
@@ -85,7 +86,7 @@ const Courses = () => {
 
   const handleUpdate = async () => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `http://localhost:5000/api/courses/${editingCourse}`,
         {
           method: "PUT",
@@ -112,7 +113,7 @@ const Courses = () => {
   const handleDelete = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `http://localhost:5000/api/courses/${courseId}`,
           {
             method: "DELETE",
@@ -143,7 +144,7 @@ const Courses = () => {
       )
     ) {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `http://localhost:5000/api/courses/semester/${bulkDeleteSemester}`,
           {
             method: "DELETE",

@@ -2,6 +2,8 @@ import express from "express";
 import User from "../models/user.js";
 import Student from "../models/student.js";
 import Faculty from "../models/faculty.js";
+import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -22,88 +24,6 @@ function calculateSemester(joinYear) {
   return semester; // cap at 8
 }
 
-// Generate password based on role
-const generatePassword = (role, id, name) => {
-  switch (role) {
-    case "student":
-      // Last digit of student ID
-      return id.slice(-1);
-    case "faculty":
-      // First 4 characters of name + ID + predefined number (123)
-      const namePrefix = name.substring(0, 4).toLowerCase();
-      return `${namePrefix}${id}123`;
-    case "admin":
-      // Predefined admin password
-      return "admin123";
-    default:
-      return "";
-  }
-};
-
-// Create user accounts for existing students and faculties
-router.post("/setup-users", async (req, res) => {
-  try {
-    // Create admin user
-    const existingAdmin = await User.findOne({ id: "admin" });
-    if (!existingAdmin) {
-      const adminUser = new User({
-        id: "admin",
-        name: "Administrator",
-        role: "admin",
-        password: generatePassword("admin"),
-        email: "admin@college.edu",
-      });
-      await adminUser.save();
-    }
-
-    // Create user accounts for all students
-    const students = await Student.find();
-    for (const student of students) {
-      const existingUser = await User.findOne({ id: student.id });
-      if (!existingUser) {
-        const studentUser = new User({
-          id: student.id,
-          name: student.name,
-          role: "student",
-          password: generatePassword("student", student.id),
-          studentRef: student._id,
-        });
-        await studentUser.save();
-      }
-    }
-
-    // Create user accounts for all faculties
-    const faculties = await Faculty.find();
-    for (const faculty of faculties) {
-      const existingUser = await User.findOne({ id: faculty.id });
-      if (!existingUser) {
-        const facultyUser = new User({
-          id: faculty.id,
-          name: faculty.name,
-          role: "faculty",
-          password: generatePassword("faculty", faculty.id, faculty.name),
-          facultyRef: faculty._id,
-        });
-        await facultyUser.save();
-      }
-    }
-
-    res.status(200).json({ message: "User accounts created successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// DEV/SETUP ONLY: Delete all users
-router.delete("/setup-users", async (req, res) => {
-  try {
-    await User.deleteMany({});
-    res.json({ message: "All users deleted." });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Login endpoint
 router.post("/login", async (req, res) => {
   try {
@@ -121,7 +41,8 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    if (user.password !== password) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
@@ -172,9 +93,17 @@ router.post("/login", async (req, res) => {
       ...additionalInfo,
     };
 
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
     res.status(200).json({
       message: "Login successful",
       user: responseData,
+      token,
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -190,8 +119,9 @@ router.get("/password-hint/:id/:role", async (req, res) => {
     if (role === "student") {
       const student = await Student.findOne({ id });
       if (student) {
+        const firstName = student.name.split(" ")[0].toLowerCase();
         res.status(200).json({
-          hint: `Password is the last digit of your ID: ${id.slice(-1)}`,
+          hint: `Your password is your first name (e.g., '${firstName}') followed by the last 4 digits of your ID.`,
         });
       } else {
         res.status(404).json({ error: "Student not found" });
@@ -201,7 +131,7 @@ router.get("/password-hint/:id/:role", async (req, res) => {
       if (faculty) {
         const namePrefix = faculty.name.substring(0, 4).toLowerCase();
         res.status(200).json({
-          hint: `Password format: ${namePrefix}[your_id]123`,
+          hint: `Your password is the first 4 letters of your name (e.g., '${namePrefix}'), your ID, and '123'.`,
         });
       } else {
         res.status(404).json({ error: "Faculty not found" });

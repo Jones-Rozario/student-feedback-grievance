@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import styles from "./ElectiveCourses.module.css";
-import axios from "axios";
+import { apiAxios } from "../../../utils/api";
 
 const AllElectiveCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState(null);
-  const [editForm, setEditForm] = useState({ code: '', name: '', semester: '' });
-  const [filters, setFilters] = useState({ code: '', name: '', semester: '' });
+  const [editForm, setEditForm] = useState({
+    code: "",
+    name: "",
+    semester: "",
+  });
+  const [filters, setFilters] = useState({ code: "", name: "", semester: "" });
 
   useEffect(() => {
     fetchCourses();
@@ -16,9 +20,10 @@ const AllElectiveCourses = () => {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/electives");
+      const res = await apiAxios().get("/electives");
       setCourses(res.data);
     } catch (err) {
+      console.log(err);
       alert("Failed to fetch elective courses");
     } finally {
       setLoading(false);
@@ -27,7 +32,11 @@ const AllElectiveCourses = () => {
 
   const handleEdit = (course) => {
     setEditId(course._id);
-    setEditForm({ code: course.code, name: course.name, semester: course.semester });
+    setEditForm({
+      code: course.code,
+      name: course.name,
+      semester: course.semester,
+    });
   };
 
   const handleEditChange = (e) => {
@@ -36,18 +45,21 @@ const AllElectiveCourses = () => {
 
   const handleUpdate = async (course) => {
     try {
-      await axios.put(`http://localhost:5000/api/electives/${course._id}`, editForm);
+      await apiAxios().put(`/electives/${course._id}`, editForm);
       setEditId(null);
       fetchCourses();
     } catch (err) {
+      console.log(err);
       alert("Failed to update course");
     }
   };
 
   const handleDelete = async (course) => {
-    if (window.confirm("Delete this elective course and all related assignments?")) {
+    if (
+      window.confirm("Delete this elective course and all related assignments?")
+    ) {
       try {
-        await axios.delete(`http://localhost:5000/api/electives/${course._id}`);
+        await apiAxios().delete(`/electives/${course._id}`);
         fetchCourses();
       } catch (err) {
         alert("Failed to delete course");
@@ -61,16 +73,22 @@ const AllElectiveCourses = () => {
 
   const filteredCourses = courses.filter((c) => {
     return (
-      (filters.code === '' || c.code.toLowerCase().includes(filters.code.toLowerCase())) &&
-      (filters.name === '' || c.name.toLowerCase().includes(filters.name.toLowerCase())) &&
-      (filters.semester === '' || String(c.semester) === String(filters.semester))
+      (filters.code === "" ||
+        c.code.toLowerCase().includes(filters.code.toLowerCase())) &&
+      (filters.name === "" ||
+        c.name.toLowerCase().includes(filters.name.toLowerCase())) &&
+      (filters.semester === "" ||
+        String(c.semester) === String(filters.semester))
     );
   });
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>All Elective Courses</h1>
-      <div className={styles.filters} style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div
+        className={styles.filters}
+        style={{ marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap" }}
+      >
         <input
           type="text"
           name="code"
@@ -140,7 +158,12 @@ const AllElectiveCourses = () => {
                       />
                     </td>
                     <td>
-                      <button onClick={() => handleUpdate(course)} style={{ marginRight: 8 }}>Save</button>
+                      <button
+                        onClick={() => handleUpdate(course)}
+                        style={{ marginRight: 8 }}
+                      >
+                        Save
+                      </button>
                       <button onClick={() => setEditId(null)}>Cancel</button>
                     </td>
                   </>
@@ -150,8 +173,15 @@ const AllElectiveCourses = () => {
                     <td>{course.name}</td>
                     <td>{course.semester}</td>
                     <td>
-                      <button onClick={() => handleEdit(course)} style={{ marginRight: 8 }}>Edit</button>
-                      <button onClick={() => handleDelete(course)}>Delete</button>
+                      <button
+                        onClick={() => handleEdit(course)}
+                        style={{ marginRight: 8 }}
+                      >
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(course)}>
+                        Delete
+                      </button>
                     </td>
                   </>
                 )}
@@ -164,4 +194,4 @@ const AllElectiveCourses = () => {
   );
 };
 
-export default AllElectiveCourses; 
+export default AllElectiveCourses;

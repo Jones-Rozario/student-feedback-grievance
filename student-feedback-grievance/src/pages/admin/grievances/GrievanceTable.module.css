@@ -65,9 +65,11 @@
 .detailWrapper {
   background: #fff;
   border-radius: 16px;
+  display: flex;
+  gap: 1rem;
   box-shadow: 0 2px 16px rgba(0,0,0,0.09);
   padding: 2rem 2.5rem;
-  max-width: 600px;
+  max-width: 100%;
   margin: 2rem auto;
   animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
 }
@@ -86,38 +88,175 @@
 }
 .detailHeader {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 .detailId {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #4e73df;
-}
-.detailStatus {
-  padding: 0.3em 0.9em;
-  border-radius: 12px;
-  font-size: 0.95em;
-  font-weight: 600;
-  color: #fff;
-  transition: background 0.3s, transform 0.2s;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #e74a3b;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
 }
-.detailBody {
+.grievanceIcon {
+  font-size: 2rem;
+  margin-right: 0.5rem;
+}
+.statusBadge {
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  background: #f6c23e;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(246,194,62,0.1);
+}
+.statusBadge.resolved {
+  background: #1cc88a;
+  color: #fff;
+}
+.statusBadge.pending {
+  background: #e74a3b;
+  color: #fff;
+}
+.section {
+  margin-bottom: 1rem;
+}
+.descriptionBox, .responseBox {
   background: #f8f9fc;
-  border-radius: 10px;
-  padding: 1.2rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(78,115,223,0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 0.5rem;
   font-size: 1.05rem;
   color: #444;
+  border: 1px solid #e3e6f0;
 }
-.detailBody strong {
+.updateSection {
+  background: #f6f6f6;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.updateSection h4 {
+  margin-bottom: 1rem;
   color: #4e73df;
+}
+.updateButton {
+  background: #4e73df;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.5rem;
   font-weight: 600;
+  margin-right: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.updateButton:hover {
+  background: #2e59d9;
+}
+.closeButton {
+  background: #e74a3b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.closeButton:hover {
+  background: #be2617;
+}
+.grievanceCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  background: #fff;
+  border-left: 8px solid #f6c23e; /* default warning */
+  transition: border-color 0.3s;
+}
+.grievanceCard.resolved {
+  border-left-color: #1cc88a;
+}
+.grievanceCard.pending {
+  border-left-color: #e74a3b;
+}
+.statusUpdateSection {
+  background: #f8f9fc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(78,115,223,0.08);
+  padding: 2rem 2.5rem;
+  flex: 1;
+  border-left: 6px solid #4e73df;
+  transition: border-color 0.3s;
+}
+.statusUpdateSection h3 {
+  color: #4e73df;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.statusUpdateForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.statusSelect {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #d1d3e2;
+  font-size: 1rem;
+  background: #fff;
+  color: #222;
+  transition: border 0.2s;
+}
+.statusSelect:focus {
+  border: 1.5px solid #4e73df;
+  outline: none;
+}
+.responseTextarea {
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #d1d3e2;
+  font-size: 1rem;
+  background: #f6f6f6;
+  color: #222;
+  resize: vertical;
+  min-height: 80px;
+  transition: border 0.2s;
+}
+.responseTextarea:focus {
+  border: 1.5px solid #4e73df;
+  outline: none;
+}
+.updateButton {
+  background: linear-gradient(90deg, #4e73df 60%, #224abe 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 2rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.10);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.updateButton:disabled {
+  background: #b7c3f3;
+  cursor: not-allowed;
+  color: #f8f9fc;
+}
+.updateButton:not(:disabled):hover {
+  background: linear-gradient(90deg, #224abe 60%, #4e73df 100%);
+  box-shadow: 0 4px 16px rgba(78,115,223,0.18);
 } 

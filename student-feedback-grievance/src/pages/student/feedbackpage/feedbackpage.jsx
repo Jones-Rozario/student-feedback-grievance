@@ -7,6 +7,7 @@ import backgroundImage from "../../../assests/Red_Building_Cropped.jpg";
 import HeaderBar from "../../../components/HeaderBar";
 import FooterBar from "../../../components/FooterBar";
 import { useAuth } from "../../../contexts/AuthContext";
+import { apiFetch } from '../../../utils/api';
 
 // Styled components
 const fadeIn = keyframes`
@@ -238,7 +239,7 @@ const FeedbackPage = () => {
     const fetchAssignments = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
+        const response = await apiFetch(
           `http://localhost:5000/api/assignments/semester/${currentUser?.current_semester}/batch/${currentUser?.batch}`
         );
 
@@ -264,7 +265,7 @@ const FeedbackPage = () => {
         setCourses(courseList);
 
         // Fetch elective assignments
-        const electiveResponse = await fetch(
+        const electiveResponse = await apiFetch(
           `http://localhost:5000/api/elective-student-assignments/student/${currentUser?.id}`
         );
 
@@ -285,7 +286,7 @@ const FeedbackPage = () => {
         const electiveWithFaculty = await Promise.all(
           electivePairs.map(async ({ course, batch }) => {
             if (!course || !batch) return null;
-            const res = await fetch(
+            const res = await apiFetch(
               `http://localhost:5000/api/electiveCourseFacultyAssignment/electiveCourse/${course._id}/batch/${batch}`
             );
             if (!res.ok) throw new Error("Faculties not getting");
@@ -323,8 +324,8 @@ const FeedbackPage = () => {
         for (const course of combinedCourses) {
           try {
             const studentId = currentUser?.studentRef || currentUser?._id;
-            const feedbackResponse = await fetch(
-              `http://localhost:5000/api/feedback/check/${studentId}/${course._id}/${currentUser?.batch}/${currentUser?.current_semester}`
+            const feedbackResponse = await apiFetch(
+              `http://localhost:5000/api/feedback/check/${studentId}/${course._id}/${course?.batch || currentUser?.batch}/${currentUser?.current_semester}`
             );
             if (feedbackResponse.ok) {
               const feedbackData = await feedbackResponse.json();
@@ -360,7 +361,7 @@ const FeedbackPage = () => {
               return;
             }
 
-            const response = await fetch(
+            const response = await apiFetch(
               `http://localhost:5000/api/students/${studentId}`,
               {
                 method: "PUT",
@@ -468,7 +469,7 @@ const FeedbackPage = () => {
 
     try {
       const studentId = currentUser?.studentRef || currentUser?._id;
-      const response = await fetch("http://localhost:5000/api/feedback", {
+      const response = await apiFetch("http://localhost:5000/api/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -512,7 +513,7 @@ const FeedbackPage = () => {
       if (allFeedbackGiven) {
         try {
           console.log("All feedback completed, updating student status...");
-          const updateResponse = await fetch(
+          const updateResponse = await apiFetch(
             `http://localhost:5000/api/students/${studentId}`,
             {
               method: "PUT",

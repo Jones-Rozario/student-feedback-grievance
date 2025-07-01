@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./assigncourses.module.css";
+import { apiAxios } from "../../../utils/api";
 
 // Example static data
 
@@ -105,18 +106,10 @@ const AssignCourses = () => {
     };
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/assignments/assign",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await apiAxios().post("/assignments/assign", payload);
 
-      if (response.ok) {
-        const data = await response.json();
-        setSuccess("Faculty assigned successfully!");
+      if (response.data) {
+        setSuccess(response.data.message);
         // setForm({
         //   year: 1,
         //   batch: "N",
@@ -126,12 +119,11 @@ const AssignCourses = () => {
         // });
         fetchAssignments();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to assign faculty");
+        setError(response.data.error || "Failed to assign faculty");
       }
     } catch (err) {
       setError("An error occurred while assigning faculty");
-      console.error("Error assigning faculty:", err);
+      console.error("Error assigning faculty:", err.message);
     } finally {
       setLoading(false);
     }
@@ -169,17 +161,12 @@ const AssignCourses = () => {
     };
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/assignments/${editingAssignment}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
+      const response = await apiAxios().put(
+        `/assignments/${editingAssignment}`,
+        payload
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
         setSuccess("Assignment updated successfully!");
         setEditingAssignment(null);
         setForm({
@@ -191,7 +178,7 @@ const AssignCourses = () => {
         });
         fetchAssignments();
       } else {
-        const errorData = await response.json();
+        const errorData = response.data;
         setError(errorData.error || "Failed to update assignment");
       }
     } catch (err) {
@@ -212,18 +199,13 @@ const AssignCourses = () => {
     setSuccess("");
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/assignments/${assignmentId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await apiAxios().delete(`/assignments/${assignmentId}`);
 
-      if (response.ok) {
+      if (response.data.success) {
         setSuccess("Assignment deleted successfully!");
         fetchAssignments();
       } else {
-        const errorData = await response.json();
+        const errorData = response.data;
         setError(errorData.error || "Failed to delete assignment");
       }
     } catch (err) {
@@ -247,12 +229,15 @@ const AssignCourses = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/assignments/semester/${form.semester}/batch/${form.batch}`
+      const response = await apiAxios().get(
+        `/assignments/semester/${form.semester}/batch/${form.batch}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setAssignments(Array.isArray(data) ? data : []);
+      if (response.data) {
+        setAssignments(
+          Array.isArray(response.data)
+            ? response.data
+            : []
+        );
       } else {
         console.error("Failed to fetch assignments");
         setAssignments([]);
@@ -265,10 +250,10 @@ const AssignCourses = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const response = await fetch(
-        `http://localhost:5000/api/courses/semester/${form.semester}`
+      const response = await apiAxios().get(
+        `/courses/semester/${form.semester}`
       );
-      const data = await response.json();
+      const data = response.data;
       setCourses(data);
       // Set default course to first available after fetch
       setForm((prev) => ({ ...prev, course: data[0] || "" }));
@@ -284,8 +269,8 @@ const AssignCourses = () => {
 
   useEffect(() => {
     const fetchFaculties = async () => {
-      const response = await fetch("http://localhost:5000/api/faculties");
-      const data = await response.json();
+      const response = await apiAxios().get("/faculties");
+      const data = response.data;
       setFaculties(data);
       // Set default faculty to first available after fetch
       setForm((prev) => ({ ...prev, faculty: data[0] || "" }));
@@ -306,34 +291,48 @@ const AssignCourses = () => {
   return (
     <div className={styles.assignCoursesWrapper}>
       <h2 className={styles.assignCoursesTitle}>Assign Courses to Faculties</h2>
-      
+
       {error && (
-        <div style={{ 
-          background: "#f8d7da", 
-          color: "#721c24", 
-          padding: "10px", 
-          borderRadius: "5px", 
-          marginBottom: "20px",
-          border: "1px solid #f5c6cb"
-        }}>
+        <div
+          style={{
+            background: "#f8d7da",
+            color: "#721c24",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "20px",
+            border: "1px solid #f5c6cb",
+          }}
+        >
           {error}
         </div>
       )}
-      
+
       {success && (
-        <div style={{ 
-          background: "#d4edda", 
-          color: "#155724", 
-          padding: "10px", 
-          borderRadius: "5px", 
-          marginBottom: "20px",
-          border: "1px solid #c3e6cb"
-        }}>
+        <div
+          style={{
+            background: "#d4edda",
+            color: "#155724",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "20px",
+            border: "1px solid #c3e6cb",
+          }}
+        >
           {success}
         </div>
       )}
 
-      <form onSubmit={editingAssignment ? (e) => { e.preventDefault(); handleUpdate(); } : handleAssign} className={styles.assignCoursesForm}>
+      <form
+        onSubmit={
+          editingAssignment
+            ? (e) => {
+                e.preventDefault();
+                handleUpdate();
+              }
+            : handleAssign
+        }
+        className={styles.assignCoursesForm}
+      >
         <div>
           <label>
             Year
@@ -416,12 +415,16 @@ const AssignCourses = () => {
           </label>
         </div>
         <div style={{ alignSelf: "end", display: "flex", gap: "0.5rem" }}>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={styles.assignCoursesButton}
             disabled={loading}
           >
-            {loading ? "Processing..." : editingAssignment ? "Update Assignment" : "Assign Faculty"}
+            {loading
+              ? "Processing..."
+              : editingAssignment
+              ? "Update Assignment"
+              : "Assign Faculty"}
           </button>
           {editingAssignment && (
             <button
@@ -436,7 +439,7 @@ const AssignCourses = () => {
           )}
         </div>
       </form>
-      
+
       <h3>Current Assignments</h3>
       <table className={styles.assignCoursesTable}>
         <thead>
@@ -453,14 +456,19 @@ const AssignCourses = () => {
             assignments.map((assignment) => (
               <tr
                 key={assignment._id}
-                style={editingAssignment === assignment._id ? { background: "#e3e6f3" } : {}}
+                style={
+                  editingAssignment === assignment._id
+                    ? { background: "#e3e6f3" }
+                    : {}
+                }
               >
                 <td>{assignment.batch}</td>
                 <td>{assignment.semester}</td>
                 <td>{assignment.course?.name || assignment.course}</td>
                 <td>
                   {assignment.faculty?.name || assignment.faculty}{" "}
-                  {assignment.faculty?.designation && `(${assignment.faculty.designation})`}
+                  {assignment.faculty?.designation &&
+                    `(${assignment.faculty.designation})`}
                 </td>
                 <td>
                   <button

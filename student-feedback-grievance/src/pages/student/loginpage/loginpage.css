@@ -44,7 +44,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-left: 60px;
+  padding: 50px;
 }
 
 .login-welcome {
@@ -156,4 +156,113 @@
   margin: 5px 0;
   color: #6c757d;
   font-size: 14px;
+}
+
+.login-page-header {
+  width: 100%;
+  max-width: 900px;
+  margin: 2.5rem auto 2rem auto;
+  padding: 2rem 2.5rem 1.5rem 2.5rem;
+  background: linear-gradient(90deg, #f8f9fc 60%, #e3e6f0 100%);
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(78,115,223,0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #4e73df;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.login-subtitle {
+  font-size: 1.15rem;
+  color: #7b8a97;
+  margin-bottom: 1.2rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.login-role-descriptions {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.login-role-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
+  padding: 1.2rem 1.5rem;
+  min-width: 220px;
+  max-width: 300px;
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-left: 5px solid #4e73df;
+  margin-bottom: 1rem;
+}
+
+.login-role-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.15rem;
+  color: #4e73df;
+  font-weight: 700;
+}
+
+.login-role-card p {
+  margin: 0;
+  color: #444;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.student-role {
+  border-left-color: #1cc88a;
+}
+
+.faculty-role {
+  border-left-color: #f6c23e;
+}
+
+.admin-role {
+  border-left-color: #e74a3b;
+}
+
+.login-page-header-short {
+  width: 100%;
+  max-width: 700px;
+  margin: 2.2rem auto 1.2rem auto;
+  padding: 1.2rem 1.5rem 0.7rem 1.5rem;
+  background: #f8f9fc;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(78,115,223,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-title-short {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #4e73df;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+.login-subtitle-short {
+  font-size: 1rem;
+  color: #7b8a97;
+  margin-bottom: 0.2rem;
+  font-weight: 500;
+  text-align: center;
 }

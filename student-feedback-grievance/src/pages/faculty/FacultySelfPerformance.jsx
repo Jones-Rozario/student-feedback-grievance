@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoPng from "../../assests/anna_univ_logo.png";
 import LogoutButton from "../../components/LogoutButton";
+import { apiFetch } from "../../utils/api";
 
 const FacultySelfPerformance = () => {
   const { currentUser } = useAuth();
@@ -20,7 +21,7 @@ const FacultySelfPerformance = () => {
       try {
         setLoading(true);
         // Fetch courses assigned to this faculty (regular)
-        const coursesResponse = await fetch(
+        const coursesResponse = await apiFetch(
           `http://localhost:5000/api/assignments/faculty/${currentUser.facultyRef}`
         );
         let coursesData = [];
@@ -28,7 +29,7 @@ const FacultySelfPerformance = () => {
           coursesData = await coursesResponse.json();
         }
         // Fetch elective courses assigned to this faculty
-        const electiveCoursesResponse = await fetch(
+        const electiveCoursesResponse = await apiFetch(
           `http://localhost:5000/api/electiveCourseFacultyAssignment/faculty/${currentUser.facultyRef}`
         );
         let electiveCoursesData = [];
@@ -49,7 +50,7 @@ const FacultySelfPerformance = () => {
         ];
         setFacultyCourses(allCourses);
         // Fetch yearly performance data (already includes all feedbacks)
-        const yearlyResponse = await fetch(
+        const yearlyResponse = await apiFetch(
           `http://localhost:5000/api/feedback/faculty/yearly/${currentUser.facultyRef}`
         );
         if (yearlyResponse.ok) {
@@ -60,7 +61,7 @@ const FacultySelfPerformance = () => {
         const stats = {};
         for (const assignment of allCourses) {
           if (!assignment.course?._id || !assignment.batch) continue;
-          const res = await fetch(
+          const res = await apiFetch(
             `http://localhost:5000/api/faculties/${currentUser.facultyRef}/performance/course/${assignment.course._id}/batch/${assignment.batch}`
           );
           if (res.ok) {
@@ -78,23 +79,39 @@ const FacultySelfPerformance = () => {
     fetchFacultyData();
   }, [currentUser.facultyRef]);
 
+  function getAcademicYear() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // getMonth() is 0-based
+
+    // If current month is June or later, academic year starts this year
+    const startYear = month >= 6 ? year : year - 1;
+    const endYear = String(startYear + 1);
+
+    return `${startYear}-${endYear.substring(2, 4)}`;
+  }
+
   // PDF Download Handler for a course+batch
   const handleDownloadPDF = (assignment, stat) => {
     const doc = new jsPDF();
-    doc.addImage(logoPng, "PNG", 10, 10, 30, 30);
+    doc.addImage(logoPng, "PNG", 10, 10, 30, 28);
     doc.setFontSize(14);
-    doc.text("ANNA UNIVERSITY :: CHENNAI - 600025", 105, 20, { align: "center" });
+    doc.text("ANNA UNIVERSITY :: CHENNAI - 600025", 105, 20, {
+      align: "center",
+    });
     doc.setFontSize(12);
     doc.text("STUDENTS FEEDBACK FORM", 105, 28, { align: "center" });
     doc.setFontSize(10);
-    doc.text("(Based on Higher Education G.O(Ms).No.19, dt 14/1/20)", 105, 34, { align: "center" });
+    doc.text("(Based on Higher Education G.O(Ms).No.19, dt 14/1/20)", 105, 34, {
+      align: "center",
+    });
     // Build the body rows for the course details
     const bodyRows = [
       ["Course", ":", "B.E - COMPUTER SCIENCE ENGINEERING [FULL TIME]"],
       [
-        "Year & Semester",
+        "Academic Year & Semester",
         ":",
-        new Date().getFullYear() + "-" + (assignment.semester || "-")
+        getAcademicYear() + "- " + (assignment.semester || "-"),
       ],
       ["Subject", ":", assignment.course?.name || "-"],
       ["Instructor", ":", currentUser?.name || "-"],
@@ -140,9 +157,13 @@ const FacultySelfPerformance = () => {
         fontStyle: "bold",
       },
       columnStyles: { 1: { halign: "center" } },
-      margin: { left: 20, right: 20 },
+      margin: { left: 20, right: 20, top: 20 },
     });
-    doc.save(`${currentUser?.name || "faculty"}_${assignment.course?.name || "course"}_${assignment.batch}_performance.pdf`);
+    doc.save(
+      `${currentUser?.name || "faculty"}_${
+        assignment.course?.name || "course"
+      }_${assignment.batch}_performance.pdf`
+    );
   };
 
   // Helper function to get performance color
@@ -155,7 +176,31 @@ const FacultySelfPerformance = () => {
   const years = Object.keys(yearlyPerformance).sort();
 
   // Compute total feedbacks given
-  const totalFeedbacks = Object.values(courseBatchStats).reduce((sum, stat) => sum + (stat?.totalFeedbacks || 0), 0);
+  const totalFeedbacks = Object.values(courseBatchStats).reduce(
+    (sum, stat) => sum + (stat?.totalFeedbacks || 0),
+    0
+  );
+
+  // Compute overall average question-wise ratings
+  const questionSums = [];
+  const questionCounts = [];
+  let questionTexts = [];
+  Object.values(courseBatchStats).forEach((stat) => {
+    if (stat?.questionRatings && stat?.questionTexts) {
+      stat.questionRatings.forEach((rating, i) => {
+        if (!questionSums[i]) {
+          questionSums[i] = 0;
+          questionCounts[i] = 0;
+          questionTexts[i] = stat.questionTexts[i];
+        }
+        questionSums[i] += rating;
+        questionCounts[i] += 1;
+      });
+    }
+  });
+  const overallQuestionAverages = questionSums.map((sum, i) =>
+    questionCounts[i] ? (sum / questionCounts[i]).toFixed(2) : "N/A"
+  );
 
   if (loading) {
     return <div className={styles.performanceViewWrapper}>Loading...</div>;
@@ -166,7 +211,30 @@ const FacultySelfPerformance = () => {
 
   return (
     <div className={styles.performanceViewWrapper}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 16 }}>
+      {/* Page Heading */}
+      <div className={styles.pageHeader}>
+        <img
+          src={logoPng}
+          alt="Anna University Logo"
+          className={styles.headerLogo}
+        />
+        <div className={styles.headerTextGroup}>
+          <h1 className={styles.pageTitle}>
+            Faculty Self Performance Dashboard
+          </h1>
+          <div className={styles.pageSubtitle}>
+            Empowering Excellence through Feedback
+          </div>
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
         <LogoutButton />
       </div>
       {/* Faculty Header */}
@@ -176,34 +244,82 @@ const FacultySelfPerformance = () => {
         </div>
         <div>
           <div className={styles.performanceName}>{currentUser?.name}</div>
-          <div className={styles.performanceDesignation}>{currentUser?.designation}</div>
+          <div className={styles.performanceDesignation}>
+            {currentUser?.designation}
+          </div>
           <div className={styles.performanceId}>ID: {currentUser?.id}</div>
         </div>
       </div>
       {/* Overall Performance Score */}
       <div className={styles.overallScoreSection}>
         <h3>Overall Performance Score</h3>
-        <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "32px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <div className={styles.scoreCard}>
             <div className={styles.scoreValue}>
               {(() => {
-                const scores = Object.values(yearlyPerformance || {}).filter(v => typeof v === 'number');
+                const scores = Object.values(yearlyPerformance || {}).filter(
+                  (v) => typeof v === "number"
+                );
                 if (!scores.length) return "0.00";
-                return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
+                return (
+                  scores.reduce((a, b) => a + b, 0) / scores.length
+                ).toFixed(2);
               })()}
               <span className={styles.scoreMax}>/25</span>
             </div>
-            <div style={{ color: '#7b8a97', fontSize: '1rem', marginTop: 4 }}>Overall Score</div>
+            <div style={{ color: "#7b8a97", fontSize: "1rem", marginTop: 4 }}>
+              Overall Score
+            </div>
           </div>
           <div className={styles.scoreCard}>
             <div className={styles.scoreValue}>{totalFeedbacks}</div>
-            <div style={{ color: '#7b8a97', fontSize: '1rem', marginTop: 4 }}>Total Feedbacks</div>
+            <div style={{ color: "#7b8a97", fontSize: "1rem", marginTop: 4 }}>
+              Total Feedbacks
+            </div>
           </div>
           <div className={styles.scoreCard}>
             <div className={styles.scoreValue}>{facultyCourses.length}</div>
-            <div style={{ color: '#7b8a97', fontSize: '1rem', marginTop: 4 }}>Courses Taught</div>
+            <div style={{ color: "#7b8a97", fontSize: "1rem", marginTop: 4 }}>
+              Courses Taught
+            </div>
           </div>
         </div>
+        {overallQuestionAverages.length > 0 && (
+          <div className={styles.section} style={{ marginTop: 24 }}>
+            <h4>Average Question-wise Ratings (All Courses & Batches)</h4>
+            <div className={styles.questionAveragesGrid}>
+              {overallQuestionAverages.map((avg, i) => (
+                <div key={i} className={styles.questionAverageBox}>
+                  <div className={styles.questionText}>{questionTexts[i]}</div>
+                  <div className={styles.ratingRow}>
+                    <span className={styles.ratingValue}>{avg}/5</span>
+                    <span className={styles.ratingStars}>
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <span
+                          key={j}
+                          className={
+                            j < Math.round(Number(avg))
+                              ? styles.starFilled
+                              : styles.starEmpty
+                          }
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       {/* Courses Taken */}
       {facultyCourses.length > 0 && (
@@ -211,7 +327,10 @@ const FacultySelfPerformance = () => {
           <h3>Courses Taken</h3>
           <div className={styles.coursesGrid}>
             {facultyCourses.map((assignment, index) => {
-              const stat = courseBatchStats[`${assignment.course?._id}_${assignment.batch}`];
+              const stat =
+                courseBatchStats[
+                  `${assignment.course?._id}_${assignment.batch}`
+                ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0
                   ? stat.questionRatings.reduce((a, b) => a + b, 0) /
@@ -242,7 +361,13 @@ const FacultySelfPerformance = () => {
                     <h4 style={{ color: isExpanded ? "#3498db" : undefined }}>
                       {assignment.course?.name || "Unknown Course"}
                       {assignment.isElective && (
-                        <span style={{ color: '#e67e22', fontSize: 13, marginLeft: 8 }}>
+                        <span
+                          style={{
+                            color: "#e67e22",
+                            fontSize: 13,
+                            marginLeft: 8,
+                          }}
+                        >
                           (Elective)
                         </span>
                       )}
@@ -255,7 +380,9 @@ const FacultySelfPerformance = () => {
                     <div className={styles.courseInfo}>
                       <span>Semester: {assignment.semester}</span>
                       <span>Batch: {assignment.batch}</span>
-                      <span>Total Feedbacks: {stat?.totalFeedbacks ?? 'N/A'}</span>
+                      <span>
+                        Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
+                      </span>
                     </div>
                     <div className={styles.courseRating}>
                       <div className={styles.ratingStars}>
@@ -290,7 +417,8 @@ const FacultySelfPerformance = () => {
                       }}
                     >
                       <div style={{ fontWeight: 600, color: "#2980b9" }}>
-                        Batch Avg Score: {stat.avgScore ? stat.avgScore.toFixed(2) : "N/A"}/25
+                        Batch Avg Score:{" "}
+                        {stat.avgScore ? stat.avgScore.toFixed(2) : "N/A"}/25
                       </div>
                       {stat.questionRatings &&
                         stat.questionRatings.length > 0 && (
@@ -314,7 +442,7 @@ const FacultySelfPerformance = () => {
                           </div>
                         )}
                       <button
-                        onClick={e => {
+                        onClick={(e) => {
                           e.stopPropagation();
                           handleDownloadPDF(assignment, stat);
                         }}

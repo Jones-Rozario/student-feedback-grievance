@@ -1,10 +1,11 @@
 import express from "express";
 import CourseFacultyAssignment from "../models/courseFacultyAssignment.js";
+import { requireRole, requireRoles, verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Get all assignments
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const assignments = await CourseFacultyAssignment.find()
       .populate("course", "name code semester")
@@ -16,37 +17,43 @@ router.get("/", async (req, res) => {
 });
 
 // Get assignments by semester and batch
-router.get("/semester/:semester/batch/:batch", async (req, res) => {
-  try {
-    const semester = Number(req.params.semester);
-    const batch = req.params.batch;
+router.get(
+  "/semester/:semester/batch/:batch",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const semester = Number(req.params.semester);
+      const batch = req.params.batch;
 
-    // Validate semester
-    if (isNaN(semester) || semester < 1 || semester > 8) {
-      return res.status(400).json({ error: "Invalid semester. Must be 1-8." });
+      // Validate semester
+      if (isNaN(semester) || semester < 1 || semester > 8) {
+        return res
+          .status(400)
+          .json({ error: "Invalid semester. Must be 1-8." });
+      }
+
+      console.log(
+        `Fetching assignments for semester: ${semester}, batch: ${batch}`
+      );
+
+      const assignments = await CourseFacultyAssignment.find({
+        semester: semester,
+        batch: batch,
+      })
+        .populate("course", "name code semester")
+        .populate("faculty", "name designation");
+
+      console.log(`Found ${assignments.length} assignments`);
+      res.status(200).json(assignments);
+    } catch (err) {
+      console.error("Error in semester/batch route:", err);
+      res.status(500).json({ error: err.message });
     }
-
-    console.log(
-      `Fetching assignments for semester: ${semester}, batch: ${batch}`
-    );
-
-    const assignments = await CourseFacultyAssignment.find({
-      semester: semester,
-      batch: batch,
-    })
-      .populate("course", "name code semester")
-      .populate("faculty", "name designation");
-
-    console.log(`Found ${assignments.length} assignments`);
-    res.status(200).json(assignments);
-  } catch (err) {
-    console.error("Error in semester/batch route:", err);
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
 // Assign faculty to course for a semester and batch
-router.post("/assign", async (req, res) => {
+router.post("/assign", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const { course, faculty, semester, batch } = req.body;
     if (!course || !faculty || !semester || !batch) {
@@ -78,7 +85,7 @@ router.post("/assign", async (req, res) => {
 });
 
 // Update assignment
-router.put("/:id", async (req, res) => {
+router.put("/:id", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const { course, faculty, semester, batch } = req.body;
 
@@ -128,7 +135,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete assignment
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const assignment = await CourseFacultyAssignment.findByIdAndDelete(
       req.params.id
@@ -145,7 +152,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Delete assignments by course (for cascading delete)
-router.delete("/course/:courseId", async (req, res) => {
+router.delete("/course/:courseId",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const result = await CourseFacultyAssignment.deleteMany({
       course: req.params.courseId,
@@ -159,7 +166,7 @@ router.delete("/course/:courseId", async (req, res) => {
 });
 
 // Delete assignments by faculty (for cascading delete)
-router.delete("/faculty/:facultyId", async (req, res) => {
+router.delete("/faculty/:facultyId",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const result = await CourseFacultyAssignment.deleteMany({
       faculty: req.params.facultyId,
@@ -173,7 +180,7 @@ router.delete("/faculty/:facultyId", async (req, res) => {
 });
 
 // Get assignments by faculty
-router.get("/faculty/:facultyId", async (req, res) => {
+router.get("/faculty/:facultyId",verifyToken, async (req, res) => {
   try {
     const { facultyId } = req.params;
     const removeDup = req.query.removedup === "true";

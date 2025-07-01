@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaBell, FaCheckCircle, FaTrash } from "react-icons/fa";
 import styles from "./Notifications.module.css";
 import { useAuth } from "../../contexts/AuthContext";
+import { apiFetch } from '../../utils/api';
 
 const Notifications = () => {
   const { currentUser } = useAuth();
@@ -18,7 +19,7 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `http://localhost:5000/api/notifications/student/${currentUser.studentRef}`
       );
       if (response.ok) {
@@ -36,7 +37,7 @@ const Notifications = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+      await apiFetch(`http://localhost:5000/api/notifications/${id}/read`, {
         method: "PUT",
       });
       // Refresh notifications after marking one as read
@@ -54,7 +55,7 @@ const Notifications = () => {
     if (!confirmed) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/notifications/${id}`, {
+      const response = await apiFetch(`http://localhost:5000/api/notifications/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -81,7 +82,7 @@ const Notifications = () => {
     try {
       // Delete all notifications one by one
       const deletePromises = notifications.map(notification =>
-        fetch(`http://localhost:5000/api/notifications/${notification._id}`, {
+        apiFetch(`http://localhost:5000/api/notifications/${notification._id}`, {
           method: "DELETE",
         })
       );

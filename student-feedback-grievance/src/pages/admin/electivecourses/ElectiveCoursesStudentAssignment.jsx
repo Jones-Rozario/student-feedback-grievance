@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./ElectiveCourses.module.css";
-import axios from "axios";
+import { apiAxios } from '../../../utils/api';
 
 const ElectiveCoursesStudentAssignment = () => {
   const [electiveCourses, setElectiveCourses] = useState([]);
@@ -17,9 +17,7 @@ const ElectiveCoursesStudentAssignment = () => {
   const fetchElectiveCourses = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/elective-student-assignments"
-      );
+      const response = await apiAxios().get("/elective-student-assignments");
       setElectiveCourses(response.data);
     } catch (error) {
       console.error("Error fetching elective courses:", error);
@@ -30,7 +28,7 @@ const ElectiveCoursesStudentAssignment = () => {
 
   const fetchAllElectiveCourses = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/electives");
+      const response = await apiAxios().get("/electives");
       setAllElectiveCourses(response.data);
     } catch (error) {
       console.error("Error fetching all elective courses:", error);
@@ -51,8 +49,8 @@ const ElectiveCoursesStudentAssignment = () => {
 
   const handleUpdate = async (assignment) => {
     try {
-      await axios.patch(
-        `http://localhost:5000/api/elective-student-assignments/${assignment.student.registerNumber}/${assignment.electiveCourse._id}`,
+      await apiAxios().patch(
+        `/elective-student-assignments/${assignment.student.registerNumber}/${assignment.electiveCourse._id}`,
         {
           batch: editForm.batch,
           newElectiveCourseId: editForm.electiveCourseId,
@@ -68,8 +66,8 @@ const ElectiveCoursesStudentAssignment = () => {
   const handleDelete = async (assignment) => {
     if (window.confirm("Are you sure you want to delete this assignment?")) {
       try {
-        await axios.delete(
-          `http://localhost:5000/api/elective-student-assignments/${assignment.student.registerNumber}/${assignment.electiveCourse._id}`
+        await apiAxios().delete(
+          `/elective-student-assignments/${assignment.student.registerNumber}/${assignment.electiveCourse._id}`
         );
         fetchElectiveCourses();
       } catch (error) {

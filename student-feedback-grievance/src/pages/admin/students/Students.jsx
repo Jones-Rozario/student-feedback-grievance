@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Students.css";
+import { apiFetch } from '../../../utils/api';
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -38,7 +39,7 @@ const Students = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/students");
+      const response = await apiFetch("http://localhost:5000/api/students");
       if (!response.ok) {
         throw new Error("Failed to fetch students");
       }

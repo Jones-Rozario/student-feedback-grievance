@@ -7,6 +7,7 @@ import backgroundImage from "../../../assests/Red_Building_Cropped.jpg";
 import HeaderBar from "../../../components/HeaderBar";
 import FooterBar from "../../../components/FooterBar";
 import { useAuth } from "../../../contexts/AuthContext";
+import { apiFetch } from '../../../utils/api';
 // Animations
 const slideIn = keyframes`
   from {
@@ -207,56 +208,54 @@ const GrievancePage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [courseFacultyMapping, setCourseFacultyMapping] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  // useEffect(() => {
+  //   const fetchAssignments = async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError("");
 
-        // Fetch course assignments for the student
-        const response = await fetch(
-          `http://localhost:5000/api/assignments/semester/${currentUser.current_semester}/batch/${currentUser.batch}`
-        );
+  //       // Fetch course assignments for the student
+  //       const response = await fetch(
+  //         `http://localhost:5000/api/assignments/semester/${currentUser.current_semester}/batch/${currentUser.batch}`
+  //       );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch course assignments");
-        }
+  //       if (!response.ok) {
+  //         throw new Error("Failed to fetch course assignments");
+  //       }
 
-        const assignments = await response.json();
-        console.log("Course assignments:", assignments);
+  //       const assignments = await response.json();
+  //       console.log("Course assignments:", assignments);
 
-        // Extract unique courses and create faculty mapping
-        const uniqueCourses = [];
-        const facultyMapping = {};
+  //       // Extract unique courses and create faculty mapping
+  //       const uniqueCourses = [];
+  //       const facultyMapping = {};
 
-        assignments.forEach((assignment) => {
-          const courseId = assignment.course._id;
-          if (!uniqueCourses.find((c) => c._id === courseId)) {
-            uniqueCourses.push(assignment.course);
-          }
-          facultyMapping[courseId] = assignment.faculty;
-        });
+  //       assignments.forEach((assignment) => {
+  //         const courseId = assignment.course._id;
+  //         if (!uniqueCourses.find((c) => c._id === courseId)) {
+  //           uniqueCourses.push(assignment.course);
+  //         }
+  //         facultyMapping[courseId] = assignment.faculty;
+  //       });
 
-        setCourses(uniqueCourses);
-        setCourseFacultyMapping(facultyMapping);
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-        setError("Failed to load course assignments. Please try again later.");
-        toast.error("Failed to load course assignments");
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setCourses(uniqueCourses);
+  //       setCourseFacultyMapping(facultyMapping);
+  //     } catch (error) {
+  //       console.error("Error fetching assignments:", error);
+  //       setError("Failed to load course assignments. Please try again later.");
+  //       toast.error("Failed to load course assignments");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    if (currentUser?.current_semester && currentUser?.batch) {
-      fetchAssignments();
-    }
-  }, [currentUser]);
+  //   if (currentUser?.current_semester && currentUser?.batch) {
+  //     fetchAssignments();
+  //   }
+  // }, [currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -265,7 +264,7 @@ const GrievancePage = () => {
     try {
       const studentId = currentUser?.studentRef || currentUser?._id;
       
-      const response = await fetch("http://localhost:5000/api/grievances", {
+      const response = await apiFetch("http://localhost:5000/api/grievances", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,13 +315,13 @@ const GrievancePage = () => {
     "Other"
   ];
 
-  const departments = [
-    "Computer Science",
-    "Electrical Engineering",
-    "Mechanical Engineering",
-    "Civil Engineering",
-    "Administration"
-  ];
+  // const departments = [
+  //   "Computer Science",
+  //   "Electrical Engineering",
+  //   "Mechanical Engineering",
+  //   "Civil Engineering",
+  //   "Administration"
+  // ];
 
   return (
     <>
@@ -336,7 +335,7 @@ const GrievancePage = () => {
         
         {loading && (
           <div style={{ textAlign: "center", padding: "2rem" }}>
-            Loading course assignments...
+            Loading...
           </div>
         )}
 

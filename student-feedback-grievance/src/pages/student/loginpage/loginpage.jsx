@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     id: "",
     password: "",
-    role: "student"
+    role: "student",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -23,7 +23,7 @@ const LoginPage = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
     setError("");
     setSuccess("");
@@ -55,9 +55,9 @@ const LoginPage = () => {
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -65,7 +65,7 @@ const LoginPage = () => {
       if (response.ok) {
         setSuccess("Login successful!");
         // Use AuthContext login function
-        login(data.user);
+        login(data.user, data.token);
         // Redirect based on role
         setTimeout(() => {
           if (data.user.role === "student") {
@@ -86,6 +86,22 @@ const LoginPage = () => {
 
   return (
     <div className="login-container">
+      {/* Page Heading and Role Descriptions */}
+
+      {/* <div className="login-role-descriptions">
+        <div className="login-role-card student-role">
+          <h3>Students</h3>
+          <p>Submit feedback and grievances, and track responses.</p>
+        </div>
+        <div className="login-role-card faculty-role">
+          <h3>Faculty</h3>
+          <p>View feedback, respond to grievances, and download reports.</p>
+        </div>
+        <div className="login-role-card admin-role">
+          <h3>Admins</h3>
+          <p>Manage users, courses, feedback, and grievances.</p>
+        </div>
+      </div> */}
       <div className="login-left">
         <motion.div
           initial={{
@@ -126,12 +142,18 @@ const LoginPage = () => {
         }}
         className="login-right"
       >
+        <div className="login-page-header-short">
+          <h2 className="login-title-short">
+            Welcome to the Grievance & Feedback Portal
+          </h2>
+          <div className="login-subtitle-short">Login to continue</div>
+        </div>
         <h2 className="login-welcome">
           Hey,
           <br />
           Welcome Back
         </h2>
-        <div style={{ marginBottom: 18, width: '100%' }}>
+        <div style={{ marginBottom: 18, width: "100%" }}>
           <select
             className="login-input"
             name="role"
@@ -162,16 +184,14 @@ const LoginPage = () => {
           onChange={handleChange}
           required
         />
-        <button
-          type="button"
-          onClick={getPasswordHint}
-          className="hint-btn"
-        >
+        <button type="button" onClick={getPasswordHint} className="hint-btn">
           Get Password Hint
         </button>
         {showPasswordHint && (
           <div className="password-hint">
-            <p><strong>Password Hint:</strong> {passwordHint}</p>
+            <p>
+              <strong>Password Hint:</strong> {passwordHint}
+            </p>
           </div>
         )}
         {error && <div className="error-message">{error}</div>}

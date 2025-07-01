@@ -2,11 +2,12 @@ import express from "express";
 import ElectiveCourseFacultyAssignment from "../models/electiveCourseFacultyAssignment.js";
 import ElectiveCourse from "../models/electiveCourse.js";
 import Faculty from "../models/faculty.js";
+import { requireRole, requireRoles, verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // Get all assignments
-router.get("/", async (req, res) => {
+router.get("/",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const assignments = await ElectiveCourseFacultyAssignment.find()
       .populate("electiveCourse")
@@ -18,7 +19,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get elective assignments by faculty
-router.get("/faculty/:facultyId", async (req, res) => {
+router.get("/faculty/:facultyId",verifyToken, requireRoles("faculty", "admin"), async (req, res) => {
   const facultyId = String(req.params.facultyId);
   // console.log(facultyId);
   try {
@@ -35,7 +36,7 @@ router.get("/faculty/:facultyId", async (req, res) => {
 });
 
 // Assign faculty to elective course and batch
-router.post("/assign", async (req, res) => {
+router.post("/assign",verifyToken, requireRole("admin"), async (req, res) => {
   const { electiveCourse, faculty, batch } = req.body;
   if (!electiveCourse || !faculty || !batch) {
     return res.status(400).json({ error: "All fields are required" });
@@ -63,7 +64,7 @@ router.post("/assign", async (req, res) => {
 });
 
 // Delete assignment
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     await ElectiveCourseFacultyAssignment.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Assignment deleted" });
@@ -73,7 +74,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get faculties assigned to elective courses by batch
-router.get("/electiveCourse/:electiveId/batch/:batch", async (req, res) => {
+router.get("/electiveCourse/:electiveId/batch/:batch",verifyToken, async (req, res) => {
   const electiveId = String(req.params.electiveId);
   const batch = Number(req.params.batch);
   const faculty = await ElectiveCourseFacultyAssignment.find({

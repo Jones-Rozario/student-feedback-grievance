@@ -4,12 +4,13 @@ import CourseFacultyAssignment from "../models/courseFacultyAssignment.js";
 import multer from "multer";
 import { parse } from "csv-parse";
 import fs from "fs";
+import { requireRole, verifyToken } from "../middleware/auth.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 // Get all courses
-router.get("/", async (req, res) => {
+router.get("/",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const courses = await Course.find();
     res.status(200).json(courses);
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get courses by semester
-router.get("/semester/:semester", async (req, res) => {
+router.get("/semester/:semester",verifyToken, async (req, res) => {
   try {
     const courses = await Course.find({ semester: req.params.semester });
     res.status(200).json(courses);
@@ -29,7 +30,7 @@ router.get("/semester/:semester", async (req, res) => {
 });
 
 // Get course by id
-router.get("/:id", async (req, res) => {
+router.get("/:id",verifyToken, async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
     res.status(200).json(course);
@@ -39,7 +40,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update course
-router.put("/:id", async (req, res) => {
+router.put("/:id",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const { name, code, semester } = req.body;
     const course = await Course.findByIdAndUpdate(
@@ -57,7 +58,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete course
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const course = await Course.findByIdAndDelete(req.params.id);
     if (!course) {
@@ -77,7 +78,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Bulk delete courses by semester
-router.delete("/semester/:semester", async (req, res) => {
+router.delete("/semester/:semester",verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const courses = await Course.find({ semester: req.params.semester });
     const courseCodes = courses.map(course => String(course._id));
@@ -99,7 +100,7 @@ router.delete("/semester/:semester", async (req, res) => {
 });
 
 // Bulk upload courses from CSV
-router.post("/upload-csv", upload.single("file"), async (req, res) => {
+router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }

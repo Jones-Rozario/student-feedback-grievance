@@ -13,6 +13,8 @@ import electiveCourseRoutes from "./routes/electiveCourse.js";
 import electiveStudentAssignmentRoutes from './routes/electiveStudentAssignment.js';
 import electiveCourseFacultyAssignmentRoutes from './routes/electiveCourseFacultyAssignment.js';
 import cors from "cors";
+import User from './models/user.js';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -21,10 +23,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+const createAdminUser = async () => {
+  try {
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const adminUser = new User({
+        id: 'admin',
+        name: 'Administrator',
+        role: 'admin',
+        password: hashedPassword,
+      });
+      await adminUser.save();
+      console.log('Admin user created successfully.');
+    }
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  }
+};
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
+    createAdminUser();
   })
   .catch((err) => {
     console.log("Error connecting to MongoDB", err);

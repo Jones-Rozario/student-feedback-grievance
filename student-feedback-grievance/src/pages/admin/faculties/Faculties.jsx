@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styles from "./FacultyTable.module.css";
+import { apiFetch } from '../../../utils/api';
 
 // const facultyData = [
 //   {
@@ -139,7 +140,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
         setLoading(true);
 
         // Fetch courses assigned to this faculty (regular)
-        const coursesResponse = await fetch(
+        const coursesResponse = await apiFetch(
           `http://localhost:5000/api/assignments/faculty/${faculty._id}`
         );
         let coursesData = [];
@@ -148,7 +149,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
         }
 
         // Fetch elective courses assigned to this faculty
-        const electiveCoursesResponse = await fetch(
+        const electiveCoursesResponse = await apiFetch(
           `http://localhost:5000/api/electiveCourseFacultyAssignment/faculty/${faculty._id}`
         );
         let electiveCoursesData = [];
@@ -172,7 +173,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
         setFacultyCourses(allCourses);
 
         // Fetch yearly performance data (already includes all feedbacks)
-        const yearlyResponse = await fetch(
+        const yearlyResponse = await apiFetch(
           `http://localhost:5000/api/feedback/faculty/yearly/${faculty._id}`
         );
         if (yearlyResponse.ok) {
@@ -184,7 +185,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
         const stats = {};
         for (const assignment of allCourses) {
           if (!assignment.course?._id || !assignment.batch) continue;
-          const res = await fetch(
+          const res = await apiFetch(
             `http://localhost:5000/api/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}`
           );
           if (res.ok) {
@@ -500,77 +501,137 @@ const FacultyTable = () => {
     performance: "",
   });
   const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [editingFaculty, setEditingFaculty] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const getFaculties = async () => {
-      try {
-        // Get all faculties
-        let response = await fetch("http://localhost:5000/api/faculties");
-        if (response.ok) {
-          const facultiesData = await response.json();
-          console.log("Faculties data:", facultiesData);
+  console.log(styles);
 
-          // Fetch average scores and ratings for each faculty
-          const facultiesWithStats = await Promise.all(
-            facultiesData.map(async (faculty) => {
-              try {
-                // Get average score for this faculty
-                const avgResponse = await fetch(
-                  `http://localhost:5000/api/feedback/faculty/avg/${faculty._id}`
-                );
-                let avgScore = 0;
-                if (avgResponse.ok) {
-                  const avgData = await avgResponse.json();
-                  avgScore = avgData.averageScore || 0;
-                }
+  const getFaculties = async () => {
+    try {
+      setLoading(true);
+      // Get all faculties
+      let response = await apiFetch("http://localhost:5000/api/faculties");
+      if (response.ok) {
+        const facultiesData = await response.json();
+        console.log("Faculties data:", facultiesData);
 
-                // Get average ratings for each question
-                const ratingsResponse = await fetch(
-                  `http://localhost:5000/api/feedback/faculty/ratings/${faculty._id}`
-                );
-                let questionRatings = [];
-                let questionTexts = [];
-                if (ratingsResponse.ok) {
-                  const ratingsData = await ratingsResponse.json();
-                  questionRatings = ratingsData.ratings || [];
-                  questionTexts = ratingsData.questions || [];
-                }
-                setLoading(false);
-
-                return {
-                  ...faculty,
-                  avgScore: avgScore,
-                  questionRatings: questionRatings,
-                  questionTexts: questionTexts,
-                };
-              } catch (error) {
-                console.error(
-                  `Error fetching stats for faculty ${faculty._id}:`,
-                  error
-                );
-                return {
-                  ...faculty,
-                  avgScore: 0,
-                  questionRatings: [],
-                  questionTexts: [],
-                };
+        // Fetch average scores and ratings for each faculty
+        const facultiesWithStats = await Promise.all(
+          facultiesData.map(async (faculty) => {
+            try {
+              // Get average score for this faculty
+              const avgResponse = await apiFetch(
+                `http://localhost:5000/api/feedback/faculty/avg/${faculty._id}`
+              );
+              let avgScore = 0;
+              if (avgResponse.ok) {
+                const avgData = await avgResponse.json();
+                avgScore = avgData.averageScore || 0;
               }
-            })
-          );
 
-          setFaculties(facultiesWithStats);
-          console.log("Faculties with stats:", facultiesWithStats);
-        } else {
-          throw new Error("Failed to fetch faculties");
-        }
-      } catch (err) {
-        console.error("Error fetching faculties:", err);
+              // Get average ratings for each question
+              const ratingsResponse = await apiFetch(
+                `http://localhost:5000/api/feedback/faculty/ratings/${faculty._id}`
+              );
+              let questionRatings = [];
+              let questionTexts = [];
+              if (ratingsResponse.ok) {
+                const ratingsData = await ratingsResponse.json();
+                questionRatings = ratingsData.ratings || [];
+                questionTexts = ratingsData.questions || [];
+              }
+              
+              return {
+                ...faculty,
+                avgScore: avgScore,
+                questionRatings: questionRatings,
+                questionTexts: questionTexts,
+              };
+            } catch (error) {
+              console.error(
+                `Error fetching stats for faculty ${faculty._id}:`,
+                error
+              );
+              return {
+                ...faculty,
+                avgScore: 0,
+                questionRatings: [],
+                questionTexts: [],
+              };
+            }
+          })
+        );
+        
+        setFaculties(facultiesWithStats);
+        console.log("Faculties with stats:", facultiesWithStats);
+      } else {
+        throw new Error("Failed to fetch faculties");
       }
-    };
+    } catch (err) {
+      console.error("Error fetching faculties:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     getFaculties();
   }, []);
+
+  const handleEdit = (faculty) => {
+    setEditingFaculty({ ...faculty });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingFaculty) return;
+
+    try {
+      const response = await apiFetch(`http://localhost:5000/api/faculties/${editingFaculty._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingFaculty.name,
+          designation: editingFaculty.designation,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedFaculty = await response.json();
+        setFaculties(faculties.map(f => (f._id === updatedFaculty._id ? updatedFaculty : f)));
+        setEditingFaculty(null);
+        alert("Faculty updated successfully.");
+      } else {
+        const err = await response.json();
+        alert(`Error: ${err.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to update faculty:", error);
+      alert("An error occurred while updating the faculty.");
+    }
+  };
+
+  const handleDelete = async (facultyId) => {
+    if (window.confirm("Are you sure you want to delete this faculty? This will also remove all their feedback scores and course assignments.")) {
+      try {
+        const response = await apiFetch(`http://localhost:5000/api/faculties/${facultyId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setFaculties(faculties.filter(f => f._id !== facultyId));
+          alert("Faculty deleted successfully.");
+        } else {
+          const err = await response.json();
+          alert(`Error: ${err.error}`);
+        }
+      } catch (error) {
+        console.error("Failed to delete faculty:", error);
+        alert("An error occurred while deleting the faculty.");
+      }
+    }
+  };
 
   const filteredData = faculties.filter((fac) => {
     const matchesSearch =
@@ -608,8 +669,6 @@ const FacultyTable = () => {
     const total = questionRatings.reduce((sum, rating) => sum + rating, 0);
     return total / questionRatings.length;
   };
-
-  // console.log(selectedFaculty);
 
   if (selectedFaculty) {
     return (
@@ -670,6 +729,29 @@ const FacultyTable = () => {
           <option value="Teaching Faculty">Teaching Faculty</option>
         </select>
       </div>
+      {editingFaculty && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalContent}>
+            <h2>Edit Faculty</h2>
+            <input
+              type="text"
+              value={editingFaculty.name}
+              onChange={(e) => setEditingFaculty({ ...editingFaculty, name: e.target.value })}
+              placeholder="Name"
+            />
+            <input
+              type="text"
+              value={editingFaculty.designation}
+              onChange={(e) => setEditingFaculty({ ...editingFaculty, designation: e.target.value })}
+              placeholder="Designation"
+            />
+            <div className={styles.modalActions}>
+              <button onClick={handleUpdate}>Save</button>
+              <button onClick={() => setEditingFaculty(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
       <table className={styles.facultyTable}>
         <thead>
           <tr>
@@ -680,6 +762,7 @@ const FacultyTable = () => {
             <th>Avg Score</th>
             <th>Performance</th>
             <th>Rating</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -687,20 +770,18 @@ const FacultyTable = () => {
             <tr
               key={idx}
               className={styles.tableRow}
-              onClick={() => setSelectedFaculty(fac)}
-              style={{ cursor: "pointer" }}
             >
-              <td>{idx + 1}</td>
-              <td>{fac.id}</td>
-              <td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{idx + 1}</td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.id}</td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
                 <span className={styles.avatar}>
                   {fac.name.charAt(0).toUpperCase()}
                 </span>{" "}
                 {fac.name}
               </td>
-              <td>{fac.designation}</td>
-              <td>{fac.avgScore ? fac.avgScore.toFixed(2) : "0.00"}/25</td>
-              <td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.designation}</td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.avgScore ? fac.avgScore.toFixed(2) : "0.00"}/25</td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
                 <span
                   className={`${styles.badge} ${
                     performanceColors[getPerformanceLevel(fac.avgScore)]
@@ -709,7 +790,7 @@ const FacultyTable = () => {
                   {getPerformanceLevel(fac.avgScore)}
                 </span>
               </td>
-              <td>
+              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <span
                     key={i}
@@ -725,6 +806,20 @@ const FacultyTable = () => {
                 <span style={{ marginLeft: "5px", fontSize: "12px" }}>
                   ({getAverageRating(fac.questionRatings).toFixed(1)}/5)
                 </span>
+              </td>
+              <td>
+                <button
+                  className={`${styles.actionButton} ${styles.editButton}`}
+                  onClick={() => handleEdit(fac)}
+                >
+                  Edit
+                </button>
+                <button
+                  className={`${styles.actionButton} ${styles.deleteButton}`}
+                  onClick={() => handleDelete(fac._id)}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
