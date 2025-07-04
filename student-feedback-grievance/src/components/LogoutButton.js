@@ -14,7 +14,7 @@ const LogoutButton = ({ className = "", style = {} }) => {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       {currentUser && (
-        <span style={{ fontSize: '14px', color: '#6c757d' }}>
+        <span className="welcome-message-desktop" style={{ fontSize: '14px', color: '#6c757d' }}>
           Welcome, {currentUser.name} ({currentUser.role})
         </span>
       )}

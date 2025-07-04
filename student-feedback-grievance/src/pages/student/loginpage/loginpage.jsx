@@ -153,7 +153,11 @@ const LoginPage = () => {
           <br />
           Welcome Back
         </h2>
-        <div style={{ marginBottom: 18, width: "100%" }}>
+        <div
+          style={{
+            marginBottom: 18,
+          }}
+        >
           <select
             className="login-input"
             name="role"

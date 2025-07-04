@@ -34,7 +34,7 @@ const FormsSection = () => {
     <section id="your-voice-matter" className="forms-section">
       <div className="forms-bg" />
       <div className="forms-content">
-        <h2 className="forms-title">
+        <div className="forms-title"  >
           {"Your Voice Matters".split("").map((char, index) => {
             return (
               <motion.span
@@ -51,13 +51,15 @@ const FormsSection = () => {
                     stiffness: 100,
                   },
                 }}
+                className="form-title"
+                style={{textAlign: "center"}}
                 exit={{ opacity: 0, x: -20 }}
               >
                 {char}
               </motion.span>
             );
           })}
-        </h2>
+        </div>
         <div className="forms-row">
           {forms.map((form, index) => (
             <FormCard

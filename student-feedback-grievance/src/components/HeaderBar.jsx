@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useNavigate } from "react-router-dom";
 import "./HeaderBar.css";
-import { FaNoteSticky } from "react-icons/fa6";
+import { FaNoteSticky, FaBars } from "react-icons/fa6";
 import { useAuth } from "../contexts/AuthContext";
 import LogoutButton from "./LogoutButton";
 import Notifications from "./Notifications/Notifications";
@@ -177,6 +177,7 @@ const HeaderBar = () => {
   const [notifications, setNotifications] = useState(3);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: {
@@ -216,8 +217,8 @@ const HeaderBar = () => {
   };
 
   return (
-    <HeaderContainer>
-      <HeaderContent>
+    <HeaderContainer className="header-bar">
+      <HeaderContent className="header-content">
         <Logo
           onClick={() => navigate("/home")}
           whileHover={{ scale: 1.05 }}
@@ -225,31 +226,32 @@ const HeaderBar = () => {
         >
           <span>Student</span> Care
         </Logo>
-
-        <NavSection>
-          <FormButton
-            onClick={handleScrollToSection}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+        <div className="nav-section-wrapper">
+          <NavSection className={`nav-section${isMobileMenuOpen ? " open" : ""}`}>
+            <FormButton
+              onClick={handleScrollToSection}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <FaNoteSticky />
+            </FormButton>
+            {currentUser ? (
+              <>
+                {currentUser.role === "student" && <Notifications />}
+                <LogoutButton />
+              </>
+            ) : (
+              <button onClick={handleLoginClick} className="login-button">Login</button>
+            )}
+          </NavSection>
+          <button
+            className="hamburger"
+            aria-label="Toggle menu"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
-            <FaNoteSticky />
-          </FormButton>
-
-          {currentUser ? (
-            <>
-              {currentUser.role === "student" && (
-                <>
-                  <Notifications />
-                </>
-              )}
-              <LogoutButton />
-            </>
-          ) : (
-            <button onClick={handleLoginClick} className="login-button">
-              Login
-            </button>
-          )}
-        </NavSection>
+            <FaBars size={24} />
+          </button>
+        </div>
       </HeaderContent>
     </HeaderContainer>
   );

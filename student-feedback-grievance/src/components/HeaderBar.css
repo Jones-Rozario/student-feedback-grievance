@@ -1,5 +1,47 @@
+:root {
+  font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+  :root {
+    font-size: 15px;
+  }
+}
+@media (max-width: 900px) {
+  :root {
+    font-size: 14px;
+  }
+}
+@media (max-width: 600px) {
+  :root {
+    font-size: 13px;
+  }
+}
+
 .header-bar {
   width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.header-content {
+  width: 100%;
+  margin: 0;
+  padding: 0 2rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 2rem;
+}
+
+.nav-section, .nav-section button, .nav-section a {
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -8,11 +50,37 @@
   }
 
   .nav-section {
-    gap: 1rem;
+    display: none !important;
+    position: absolute;
+    top: 60px;
+    right: 16px;
+    background: #1a252f;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    min-width: 180px;
+    z-index: 1001;
+  }
+  .nav-section.open {
+    display: flex !important;
+  }
+  .hamburger {
+    display: block !important;
+  }
+  .nav-section-wrapper {
+    position: relative;
   }
 
   .logo {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+  }
+  .header-bar {
+    font-size: 0.95rem;
+  }
+  .welcome-message-desktop {
+    display: none !important;
   }
 }
 
@@ -120,8 +188,10 @@
 }
 
 .header-container {
+  width: 100%;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .header-container::after {
@@ -161,4 +231,43 @@
   height: 4px;
   background: #3498db;
   border-radius: 50%;
+}
+
+.hamburger {
+  display: none !important;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  margin-left: 1rem;
+  z-index: 1100;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: block !important;
+  }
+}
+
+.nav-section-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.header-icons-mobile {
+  display: none;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .nav-section.hide-on-mobile {
+    display: none !important;
+  }
+  .header-icons-mobile {
+    display: flex !important;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
+  }
 } 

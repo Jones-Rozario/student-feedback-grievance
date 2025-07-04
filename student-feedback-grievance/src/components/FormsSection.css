@@ -4,8 +4,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  /* height: 100vh; */
+  min-height: 320px;
   z-index: 1;
+  margin-bottom: 2rem;
 }
 .forms-bg {
   position: absolute;
@@ -41,4 +43,7 @@ margin-left: 0;
 }
 @media (max-width: 900px) {
   .forms-row { flex-direction: column; gap: 1.5rem; align-items: center; }
+  .forms-section {
+    margin-bottom: 1.2rem;
+  }
 } 

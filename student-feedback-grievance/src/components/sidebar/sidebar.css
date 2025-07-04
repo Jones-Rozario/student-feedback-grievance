@@ -263,6 +263,36 @@
     width: 100%;
     transform: translateX(-100%);
   }
+
+  /* Cancel button styles for mobile */
+  .sidebar__cancel {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1001;
+  }
+
+  .sidebar__cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  .sidebar__cancel-icon {
+    font-size: 1.2rem;
+  }
+
+  
 }
 
 @media (max-width: 480px) {

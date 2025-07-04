@@ -34,7 +34,7 @@ import ElectiveCoursesStudentAssignment from "./pages/admin/electivecourses/Elec
 // Admin layout component
 const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
   <div className="app-container">
-    <Sidebar open={sidebarOpen} />
+    <Sidebar open={sidebarOpen} setSidebarOpen={setSidebarOpen} />
     <div className="right-content">
       <NavBar onHamburgerClick={() => setSidebarOpen(!sidebarOpen)} />
       {children}

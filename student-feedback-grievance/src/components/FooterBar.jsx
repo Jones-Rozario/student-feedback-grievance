@@ -21,6 +21,10 @@ const FooterContainer = styled.footer`
   padding: 2rem 0;
   position: relative;
   overflow: hidden;
+  min-height: 200px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 
   &::before {
     content: '';
@@ -104,6 +108,58 @@ const ContactText = styled.span`
   opacity: 0.9;
 `;
 
+const TeamMembersGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+`;
+
+const TeamMember = styled(motion.div)`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+`;
+
+const TeamMemberImage = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1rem;
+  flex-shrink: 0;
+`;
+
+const TeamMemberInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const TeamMemberName = styled.span`
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ecf0f1;
+`;
+
+const TeamMemberRole = styled.span`
+  font-size: 0.75rem;
+  color: #95a5a6;
+`;
+
 const FooterBottom = styled.div`
   text-align: center;
   padding-top: 1rem;
@@ -114,6 +170,7 @@ const FooterBottom = styled.div`
 `;
 
 const FooterBar = () => {
+  
   const contactInfo = [
     {
       icon: <FaEnvelope />,
@@ -134,6 +191,29 @@ const FooterBar = () => {
       icon: <FaClock />,
       text: "Mon-Fri: 9:00 AM - 5:00 PM",
       label: "Working Hours"
+    }
+  ];
+
+  const teamMembers = [
+    {
+      name: "John Doe",
+      role: "Team Lead",
+      initials: "JD"
+    },
+    {
+      name: "Jane Smith",
+      role: "Developer",
+      initials: "JS"
+    },
+    {
+      name: "Mike Johnson",
+      role: "Designer",
+      initials: "MJ"
+    },
+    {
+      name: "Sarah Wilson",
+      role: "Analyst",
+      initials: "SW"
     }
   ];
 
@@ -199,11 +279,25 @@ const FooterBar = () => {
         </FooterSection>
 
         <FooterSection variants={itemVariants}>
-          <FooterTitle>Connect With Us</FooterTitle>
-          <ContactText>
-            Stay updated with the latest news and announcements from our institution.
-            Follow us on social media for more information.
-          </ContactText>
+          <FooterTitle>Our Team</FooterTitle>
+          <TeamMembersGrid>
+            {teamMembers.map((member, index) => (
+              <TeamMember
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <TeamMemberImage>
+                  {member.initials}
+                </TeamMemberImage>
+                <TeamMemberInfo>
+                  <TeamMemberName>{member.name}</TeamMemberName>
+                  <TeamMemberRole>{member.role}</TeamMemberRole>
+                </TeamMemberInfo>
+              </TeamMember>
+            ))}
+          </TeamMembersGrid>
         </FooterSection>
       </FooterContent>
 

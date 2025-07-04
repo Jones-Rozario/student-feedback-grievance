@@ -1,10 +1,7 @@
 .grievanceTableWrapper {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-  padding: 2.5rem 2rem 2rem 2rem;
-  margin: 2.5rem auto;
- width: 100%;
+  padding: 2rem;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
 }
 @keyframes fadeInUp {
@@ -16,75 +13,94 @@
   border-collapse: separate;
   border-spacing: 0 0.5rem;
   margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .grievanceTable th, .grievanceTable td {
-  padding: 0.75rem 1rem;
+  padding: 1.25rem 1rem;
   text-align: left;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 .grievanceTable th {
-  color: #6c757d;
+  color: white;
   font-weight: 600;
-  background: #f4f6fa;
-  border-bottom: 2px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
 }
 .grievanceTable td {
-  background: #fff;
-  border-bottom: 1px solid #f0f0f0;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: #333;
   vertical-align: middle;
 }
+.grievanceTable tr:last-child td {
+  border-bottom: none;
+}
 .tableRow {
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: all 0.3s ease;
 }
 .tableRow:hover {
-  box-shadow: 0 2px 8px rgba(78,115,223,0.08);
-  transform: translateY(-2px) scale(1.01);
+  background: rgba(102, 126, 234, 0.05);
+  transform: scale(1.01);
 }
 .status {
-  padding: 0.3em 0.9em;
-  border-radius: 12px;
-  font-size: 0.95em;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
-  transition: background 0.3s, transform 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .statusOpen {
-  background: #1cc88a;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
 }
 .statusIn\ Progress {
-  background: #f6c23e;
-  color: #222;
+  background: linear-gradient(135deg, #ffa726, #ff9800);
 }
 .statusClosed {
-  background: #e74a3b;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
 }
 .statusProgress {
-  background: #f6c23e;
-  color: #222;
+  background: linear-gradient(135deg, #ffa726, #ff9800);
 }
 .detailWrapper {
-  background: #fff;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
   display: flex;
   gap: 1rem;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
-  padding: 2rem 2.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
   max-width: 100%;
   margin: 2rem auto;
   animation: fadeInUp 0.6s cubic-bezier(.4,2,.6,1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .backButton {
-  background: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
   border: none;
-  color: #4e73df;
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 1.2rem;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .backButton:hover {
-  color: #2e59d9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 .detailHeader {
   display: flex;
@@ -108,31 +124,33 @@
   border-radius: 20px;
   font-weight: bold;
   font-size: 1.1rem;
-  background: #f6c23e;
-  color: #222;
-  box-shadow: 0 2px 8px rgba(246,194,62,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 .statusBadge.resolved {
-  background: #1cc88a;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
   color: #fff;
 }
 .statusBadge.pending {
-  background: #e74a3b;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   color: #fff;
 }
 .section {
   margin-bottom: 1rem;
 }
 .descriptionBox, .responseBox {
-  background: #f8f9fc;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
   padding: 1rem;
   margin-top: 0.5rem;
   font-size: 1.05rem;
   color: #444;
-  border: 1px solid #e3e6f0;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  backdrop-filter: blur(10px);
 }
 .updateSection {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
   background: #f6f6f6;
   border-radius: 10px;
   padding: 1.5rem;

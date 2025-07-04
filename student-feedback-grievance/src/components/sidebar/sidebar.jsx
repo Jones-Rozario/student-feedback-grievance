@@ -10,10 +10,11 @@ import {
   FaWpforms,
   FaChevronDown,
   FaChevronRight,
+  FaTimes,
 } from "react-icons/fa";
 import "./sidebar.css";
 
-const Sidebar = ({ open }) => {
+const Sidebar = ({ open, setSidebarOpen }) => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState({
     management: true,
@@ -28,6 +29,19 @@ const Sidebar = ({ open }) => {
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // Function to handle link clicks on mobile
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when a link is clicked
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  };
+
+  // Function to handle cancel button click
+  const handleCancelClick = () => {
+    setSidebarOpen(false);
+  };
 
   const menuGroups = [
     {
@@ -107,6 +121,7 @@ const Sidebar = ({ open }) => {
                         to={item.path}
                         className={`sidebar__link ${isActive(item.path) ? 'active' : ''}`}
                         title={!open ? item.label : ''}
+                        onClick={handleLinkClick}
                       >
                         {React.createElement(item.icon, { className: 'sidebar__icon' })}
                         {open && <span>{item.label}</span>}
@@ -121,6 +136,7 @@ const Sidebar = ({ open }) => {
                 to={group.items[0].path}
                 className={`sidebar__link ${isActive(group.items[0].path) ? 'active' : ''}`}
                 title={!open ? group.items[0].label : ''}
+                onClick={handleLinkClick}
               >
                 {React.createElement(group.items[0].icon, { className: 'sidebar__icon' })}
                 {open && <span>{group.items[0].label}</span>}
@@ -129,6 +145,12 @@ const Sidebar = ({ open }) => {
           </div>
         ))}
       </nav>
+      {/* Cancel button for mobile screens */}
+      {open && (
+        <button className="sidebar__cancel" onClick={handleCancelClick}>
+          <FaTimes className="sidebar__cancel-icon" />
+        </button>
+      )}
     </div>
   );
 };

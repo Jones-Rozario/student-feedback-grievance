@@ -300,14 +300,21 @@ button {
   background: #f8f9fc;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(78,115,223,0.08);
-  padding: 1.2rem 1.5rem;
-  min-width: 260px;
-  max-width: 340px;
-  flex: 1 1 260px;
+  padding: 0.5rem 0.7rem;
+  min-width: 140px;
+  max-width: 220px;
+  flex: 1 1 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 2px solid #4e73df;
+  border: 1.5px solid #4e73df;
+  font-size: 0.95rem;
+  transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
+}
+.questionAverageBox:hover {
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.13);
+  border-color: #1cc88a;
+  transform: translateY(-2px) scale(1.03);
 }
 .questionText {
   font-size: 1.05rem;
@@ -379,4 +386,64 @@ button {
   margin-top: 0.3rem;
   font-weight: 500;
   letter-spacing: 0.2px;
+}
+
+@media (max-width: 768px) {
+  .container, .performanceViewWrapper {
+    padding: 1rem;
+    margin: 1rem 0.5rem;
+  }
+  .header, .performanceHeader, .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 1rem;
+  }
+  .statsRow, .coursesGrid, .questionAveragesGrid {
+    flex-direction: column !important;
+    display: flex !important;
+    gap: 1rem;
+  }
+  .statCard, .courseCard, .questionAverageBox {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+    padding: 1rem;
+  }
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+  .pageSubtitle {
+    font-size: 1rem;
+  }
+  .questionAverageBox {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+    padding: 0.4rem 0.4rem;
+    font-size: 0.92rem;
+  }
+}
+@media (max-width: 480px) {
+  .container, .performanceViewWrapper {
+    padding: 0.5rem;
+    margin: 0.5rem 0.1rem;
+  }
+  .pageHeader {
+    padding: 0.5rem;
+  }
+  .pageTitle {
+    font-size: 1.05rem;
+  }
+  .pageSubtitle {
+    font-size: 0.9rem;
+  }
+  .statCard, .courseCard, .questionAverageBox {
+    padding: 0.7rem;
+    font-size: 0.95rem;
+  }
+  .questionAverageBox {
+    padding: 0.25rem 0.15rem;
+    font-size: 0.88rem;
+  }
 } 
