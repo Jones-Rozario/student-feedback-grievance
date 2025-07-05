@@ -1,8 +1,14 @@
-import React from 'react';
-import styled, { keyframes } from 'styled-components';
-import { motion } from 'framer-motion';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
-import './FooterBar.css';
+import React from "react";
+import styled, { keyframes } from "styled-components";
+import { motion } from "framer-motion";
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import "./FooterBar.css";
+
+// Import team member images
+import mem1 from "../assests/members/mem-1.jpg";
+import mem2 from "../assests/members/mem-2.jpg";
+import mem3 from "../assests/members/mem-3.jpg";
+import mem4 from "../assests/members/mem-4.jpg";
 
 const slideUp = keyframes`
   from {
@@ -27,7 +33,7 @@ const FooterContainer = styled.footer`
   opacity: 1 !important;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -38,9 +44,15 @@ const FooterContainer = styled.footer`
   }
 
   @keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 `;
 
@@ -66,7 +78,7 @@ const FooterTitle = styled.h3`
   display: inline-block;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: -5px;
     left: 0;
@@ -130,17 +142,17 @@ const TeamMember = styled(motion.div)`
 `;
 
 const TeamMemberImage = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-  font-size: 1rem;
+  overflow: hidden;
   flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const TeamMemberInfo = styled.div`
@@ -155,10 +167,10 @@ const TeamMemberName = styled.span`
   color: #ecf0f1;
 `;
 
-const TeamMemberRole = styled.span`
-  font-size: 0.75rem;
-  color: #95a5a6;
-`;
+// const TeamMemberRole = styled.span`
+//   font-size: 0.75rem;
+//   color: #95a5a6;
+// `;
 
 const FooterBottom = styled.div`
   text-align: center;
@@ -170,51 +182,41 @@ const FooterBottom = styled.div`
 `;
 
 const FooterBar = () => {
-  
   const contactInfo = [
     {
       icon: <FaEnvelope />,
-      text: "acc@gmail.com",
-      label: "Email"
+      text: "hodcse@annauniv.edu",
+      label: "Email",
     },
     {
       icon: <FaPhone />,
-      text: "+91 1234567890",
-      label: "Phone"
+      text: "044 2235 8801/02",
+      label: "Phone",
     },
     {
       icon: <FaMapMarkerAlt />,
-      text: "123 University Campus, City",
-      label: "Address"
+      text: "CEG Campus, Guindy, Anna University, Chennai 600025",
+      label: "Address",
     },
-    {
-      icon: <FaClock />,
-      text: "Mon-Fri: 9:00 AM - 5:00 PM",
-      label: "Working Hours"
-    }
   ];
 
   const teamMembers = [
     {
-      name: "John Doe",
-      role: "Team Lead",
-      initials: "JD"
+      name: "Mohammed Salih",
+      image: mem1,
     },
     {
-      name: "Jane Smith",
-      role: "Developer",
-      initials: "JS"
+      name: "Trinesh G",
+      image: mem3,
     },
     {
-      name: "Mike Johnson",
-      role: "Designer",
-      initials: "MJ"
+      name: "Nola Thomas Daisy",
+      image: mem2,
     },
     {
-      name: "Sarah Wilson",
-      role: "Analyst",
-      initials: "SW"
-    }
+      name: "Jones Rozario I J",
+      image: mem4,
+    },
   ];
 
   const containerVariants = {
@@ -222,9 +224,9 @@ const FooterBar = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -233,9 +235,9 @@ const FooterBar = () => {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5
-      }
-    }
+        duration: 0.5,
+      },
+    },
   };
 
   return (
@@ -258,7 +260,9 @@ const FooterBar = () => {
             >
               {item.icon}
               <div>
-                <div style={{ fontSize: '0.8rem', color: '#95a5a6' }}>{item.label}</div>
+                <div style={{ fontSize: "0.8rem", color: "#95a5a6" }}>
+                  {item.label}
+                </div>
                 <ContactText>{item.text}</ContactText>
               </div>
             </ContactItem>
@@ -273,9 +277,6 @@ const FooterBar = () => {
           <ContactItem as={motion.a} href="/grievance" variants={itemVariants}>
             File Grievance
           </ContactItem>
-          <ContactItem as={motion.a} href="/about" variants={itemVariants}>
-            About Us
-          </ContactItem>
         </FooterSection>
 
         <FooterSection variants={itemVariants}>
@@ -289,11 +290,10 @@ const FooterBar = () => {
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <TeamMemberImage>
-                  {member.initials}
+                  <img src={member.image} alt={member.name} />
                 </TeamMemberImage>
                 <TeamMemberInfo>
                   <TeamMemberName>{member.name}</TeamMemberName>
-                  <TeamMemberRole>{member.role}</TeamMemberRole>
                 </TeamMemberInfo>
               </TeamMember>
             ))}
@@ -314,4 +314,4 @@ const FooterBar = () => {
   );
 };
 
-export default FooterBar; 
+export default FooterBar;

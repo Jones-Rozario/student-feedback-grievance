@@ -1,10 +1,11 @@
 .form-card {
   background: rgba(44, 62, 80, 0.85);
   border-radius: 18px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.13);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.13);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   color: #fff;
   display: flex;
+  justify-content: space-between;
   flex-direction: column;
   align-items: flex-start;
   gap: 1.1rem;
@@ -50,5 +51,8 @@
   font-size: 1.2rem;
 }
 @media (max-width: 500px) {
-  .form-card { min-width: 90vw; max-width: 98vw; }
-} 
+  .form-card {
+    min-width: 90vw;
+    max-width: 98vw;
+  }
+}

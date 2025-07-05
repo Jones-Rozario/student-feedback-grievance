@@ -111,7 +111,7 @@ const FacultySelfPerformance = () => {
       [
         "Academic Year & Semester",
         ":",
-        getAcademicYear() + "- " + (assignment.semester || "-"),
+        getAcademicYear() + " - " + (assignment.semester || "-"),
       ],
       ["Subject", ":", assignment.course?.name || "-"],
       ["Instructor", ":", currentUser?.name || "-"],
