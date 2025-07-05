@@ -195,7 +195,7 @@ const FooterBar = () => {
     },
     {
       icon: <FaMapMarkerAlt />,
-      text: "CEG Campus, Guindy, Anna University, Chennai 600025",
+      text: "CEG Campus, Guindy, Anna University, Chennai-600025",
       label: "Address",
     },
   ];

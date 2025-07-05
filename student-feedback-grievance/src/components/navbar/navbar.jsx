@@ -16,7 +16,7 @@ const NavBar = ({ onHamburgerClick }) => {
           <span />
           <span />
         </button>
-        <span className="navbar__title">Stats</span>
+        <span className="navbar__title">Admin Panel</span>
       </div>
       <div className="navbar__right">
         <FaBell className="navbar__icon" />
