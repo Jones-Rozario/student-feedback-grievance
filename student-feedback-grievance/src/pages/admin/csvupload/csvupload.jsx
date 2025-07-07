@@ -107,7 +107,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
     let template = "";
     let filename = "";
     if (uploadType === "student") {
-      template = `id,name,batch,joined_Year\n`;
+      template = `id,name,batch,joined_year\n`;
       filename = "student_template.csv";
     } else {
       template = `id,name,designation\n`;
@@ -494,7 +494,6 @@ const CSVUpload = ({ onUploadSuccess }) => {
               )}
               <li>First row should contain column headers</li>
               <li>Make sure all required fields are filled</li>
-              <li>Email addresses should be valid format</li>
               <li>Maximum file size: 10MB</li>
             </ul>
           </div>

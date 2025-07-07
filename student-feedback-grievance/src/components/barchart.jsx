@@ -4,21 +4,38 @@ import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Lege
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const data = {
-  labels: ['Fac 1', 'Fac 2', 'Fac 3', 'Fac 4'],
-  datasets: [
-    { label: '2020', data: [90, 60, 80, 20], backgroundColor: '#4e73df' },
-    { label: '2021', data: [50, 40, 60, 30], backgroundColor: '#1cc88a' },
-    { label: '2022', data: [20, 30, 100, 40], backgroundColor: '#36b9cc' },
-  ],
+const BarChart = ({ labels = [], data = [], label = '', backgroundColor = '#4e73df' }) => {
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label,
+        data,
+        backgroundColor,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom' },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 5,
+        },
+      },
+    },
+  };
+
+  return (
+    <div style={{ width: '100%', maxWidth: 500, height: 300 }}>
+      <Bar data={chartData} options={options} />
+    </div>
+  );
 };
-
-const options = { responsive: true, plugins: { legend: { position: 'bottom' } } };
-
-const BarChart = () => (
-  <div style={{ width: '100%', maxWidth: 500, height: 300 }}>
-    <Bar data={data} options={options} />
-  </div>
-);
 
 export default BarChart;

@@ -129,7 +129,7 @@
 }
 
 .badgeHigh {
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  background: linear-gradient(135deg, #1cc88a, #14d38d);
 }
 
 .badgeMedium {
@@ -138,6 +138,10 @@
 
 .badgeLow {
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+}
+
+.badgeGood {
+  background: linear-gradient(135deg, #36b9cc, #2980b9);
 }
 
 .performanceViewWrapper {

@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable";
 import logoPng from "../../assests/anna_univ_logo.png";
 import LogoutButton from "../../components/LogoutButton";
 import { apiFetch } from "../../utils/api";
+import BarChart from "../../components/barchart";
 
 const FacultySelfPerformance = () => {
   const { currentUser } = useAuth();
@@ -471,40 +472,28 @@ const FacultySelfPerformance = () => {
           </div>
         </div>
       )}
-      {/* Yearly Performance Graph */}
-      {years.length > 0 && (
-        <div className={styles.section}>
-          <h3>Performance by Year</h3>
-          <div className={styles.barChartWrapper}>
-            <div className={styles.barChart}>
-              {years.map((year) => {
-                const value = yearlyPerformance[year];
-                const displayValue =
-                  typeof value === "number" && !isNaN(value)
-                    ? value.toFixed(1)
-                    : "N/A";
-                return (
-                  <div className={styles.barChartBarWrapper} key={year}>
-                    <div
-                      className={styles.barChartBar}
-                      style={{
-                        height:
-                          value && typeof value === "number"
-                            ? `${(value / 25) * 100}%`
-                            : "0%",
-                        background: getPerformanceColor(value),
-                        transition: "height 0.6s cubic-bezier(.4,2,.6,1)",
-                      }}
-                    ></div>
-                    <div className={styles.barChartValue}>{displayValue}</div>
-                    <div className={styles.barChartYear}>{year}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Yearly Performance Section */}
+      <div className={styles.yearlyPerformanceSection}>
+        <h3>Yearly Performance</h3>
+        {/* Show average or latest year as a number */}
+        {/* <div className={styles.yearlyPerformanceNumber}>
+          {(() => {
+            const vals = Object.values(yearlyPerformance).filter(
+              (v) => typeof v === "number"
+            );
+            if (vals.length === 0) return "N/A";
+            const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+            return "Average: " + avg.toFixed(2);
+          })()}
+        </div> */}
+        {/* Show the bar chart for yearly performance */}
+        <BarChart
+          labels={Object.keys(yearlyPerformance)}
+          data={Object.values(yearlyPerformance)}
+          label="Performance"
+          backgroundColor="#4e73df"
+        />
+      </div>
       {/* No Data Message */}
       {facultyCourses.length === 0 && years.length === 0 && (
         <div className={styles.noDataMessage}>

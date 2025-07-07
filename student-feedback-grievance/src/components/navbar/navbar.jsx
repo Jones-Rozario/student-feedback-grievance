@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  FaArrowRight,
-  FaBell,
-} from "react-icons/fa";
+import { FaArrowRight, FaBell } from "react-icons/fa";
 import "./navbar.css";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -18,9 +15,9 @@ const NavBar = ({ onHamburgerClick }) => {
         </button>
         <span className="navbar__title">Admin Panel</span>
       </div>
-      <div className="navbar__right">
-        <FaBell className="navbar__icon" />
-        <FaArrowRight onClick={() => logout()} className="navbar__icon" />
+      <div onClick={() => logout()} className="navbar__right">
+        <span className="navbar__icon" style={{fontWeight: 600}}  >Logout</span>
+        <FaArrowRight  className="navbar__icon" />
       </div>
     </div>
   );

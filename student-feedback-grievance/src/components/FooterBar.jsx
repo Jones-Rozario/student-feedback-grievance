@@ -277,6 +277,9 @@ const FooterBar = () => {
           <ContactItem as={motion.a} href="/grievance" variants={itemVariants}>
             File Grievance
           </ContactItem>
+          <ContactItem as={motion.a} href="/home" variants={itemVariants}>
+            Home
+          </ContactItem>
         </FooterSection>
 
         <FooterSection variants={itemVariants}>

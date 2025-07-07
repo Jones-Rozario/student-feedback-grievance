@@ -41,6 +41,7 @@
 
 .navbar__right {
   display: flex;
+  cursor: pointer;
   align-items: center;
   gap: 1.2rem;
 }

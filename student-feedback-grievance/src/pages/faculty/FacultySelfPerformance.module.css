@@ -389,6 +389,20 @@ button {
   letter-spacing: 0.2px;
 }
 
+.yearlyPerformanceNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #f1c40f;
+  text-shadow: 0 2px 6px #f9e79f, 0 0 10px #f1c40f;
+  margin: 0.5rem 0 1.5rem 0;
+  letter-spacing: 1px;
+  text-align: center;
+  border-radius: 12px;
+  padding: 0.5rem 1.5rem;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(241, 196, 15, 0.08);
+}
+
 @media (max-width: 768px) {
   .container, .performanceViewWrapper {
     padding: 1rem;

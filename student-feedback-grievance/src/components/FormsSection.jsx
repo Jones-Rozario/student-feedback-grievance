@@ -1,7 +1,7 @@
 import React from "react";
 import FormCard from "./FormCard";
 import "./FormsSection.css";
-import { motion } from "framer-motion";
+import { color, motion } from "framer-motion";
 
 const FormsSection = () => {
   const forms = [
@@ -34,7 +34,7 @@ const FormsSection = () => {
     <section id="your-voice-matter" className="forms-section">
       <div className="forms-bg" />
       <div className="forms-content">
-        <div className="forms-title"  >
+        <div className="forms-title">
           {"Your Voice Matters".split("").map((char, index) => {
             return (
               <motion.span
@@ -52,10 +52,14 @@ const FormsSection = () => {
                   },
                 }}
                 className="form-title"
-                style={{textAlign: "center"}}
+                style={{
+                  textAlign: "center",
+                  fontSize: index == 0 ? 70 : 58,
+                  color: [0, 5, 11].includes(index) ? "#f1c40f" : "white",
+                }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                {char}
+                {char || " "}
               </motion.span>
             );
           })}

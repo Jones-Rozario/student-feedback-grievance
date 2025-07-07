@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./FacultyTable.module.css";
 import { apiFetch } from '../../../utils/api';
+import BarChart from '../../../components/barchart';
 
 // const facultyData = [
 //   {
@@ -122,6 +123,7 @@ import { apiFetch } from '../../../utils/api';
 
 const performanceColors = {
   High: styles.badgeHigh,
+  Good: styles.badgeGood,
   Medium: styles.badgeMedium,
   Low: styles.badgeLow,
 };
@@ -217,14 +219,16 @@ function FacultyPerformanceView({ faculty, onBack }) {
 
   // Helper function to get performance level
   const getPerformanceLevel = (score) => {
-    if (score >= 20) return "High";
+    if (score >= 22) return "High";
+    if (score >= 18) return "Good";
     if (score >= 15) return "Medium";
     return "Low";
   };
 
   // Helper function to get performance color
   const getPerformanceColor = (score) => {
-    if (score >= 20) return "#1cc88a";
+    if (score >= 22) return "#1cc88a";
+    if (score >= 18) return "#36b9cc";
     if (score >= 15) return "#f6c23e";
     return "#e74a3b";
   };
@@ -447,33 +451,13 @@ function FacultyPerformanceView({ faculty, onBack }) {
       {years.length > 0 && (
         <div className={styles.section}>
           <h3>Performance by Year</h3>
-          <div className={styles.barChartWrapper}>
-            <div className={styles.barChart}>
-              {years.map((year) => {
-                const value = yearlyPerformance[year];
-                const displayValue =
-                  typeof value === "number" && !isNaN(value)
-                    ? value.toFixed(1)
-                    : "N/A";
-                return (
-                  <div className={styles.barChartBarWrapper} key={year}>
-                    <div
-                      className={styles.barChartBar}
-                      style={{
-                        height:
-                          value && typeof value === "number"
-                            ? `${(value / 25) * 100}%`
-                            : "0%",
-                        background: getPerformanceColor(value),
-                        transition: "height 0.6s cubic-bezier(.4,2,.6,1)",
-                      }}
-                    ></div>
-                    <div className={styles.barChartValue}>{displayValue}</div>
-                    <div className={styles.barChartYear}>{year}</div>
-                  </div>
-                );
-              })}
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <BarChart
+              labels={years}
+              data={years.map((year) => yearlyPerformance[year])}
+              label="Performance"
+              backgroundColor="#4e73df"
+            />
           </div>
         </div>
       )}
@@ -638,17 +622,13 @@ const FacultyTable = () => {
       fac.name.toLowerCase().includes(search.toLowerCase()) ||
       fac.id.toLowerCase().includes(search.toLowerCase());
     const matchesDesignation = filter.designation
-      ? fac.designation === filter.designation
+      ? fac.designation && fac.designation.toLowerCase() === filter.designation.toLowerCase()
       : true;
     const matchesPerformance = filter.performance
       ? (() => {
-          if (filter.performance === "High" && fac.avgScore >= 20) return true;
-          if (
-            filter.performance === "Medium" &&
-            fac.avgScore >= 15 &&
-            fac.avgScore < 20
-          )
-            return true;
+          if (filter.performance === "High" && fac.avgScore >= 22) return true;
+          if (filter.performance === "Good" && fac.avgScore >= 18 && fac.avgScore < 22) return true;
+          if (filter.performance === "Medium" && fac.avgScore >= 15 && fac.avgScore < 18) return true;
           if (filter.performance === "Low" && fac.avgScore < 15) return true;
           return false;
         })()
@@ -658,7 +638,8 @@ const FacultyTable = () => {
 
   // Helper function to get performance level based on average score
   const getPerformanceLevel = (score) => {
-    if (score >= 20) return "High";
+    if (score >= 22) return "High";
+    if (score >= 18) return "Good";
     if (score >= 15) return "Medium";
     return "Low";
   };
@@ -715,6 +696,7 @@ const FacultyTable = () => {
         >
           <option value="">Performance</option>
           <option value="High">High</option>
+          <option value="Good">Good</option>
           <option value="Medium">Medium</option>
           <option value="Low">Low</option>
         </select>
@@ -726,7 +708,9 @@ const FacultyTable = () => {
           }
         >
           <option value="">Designation</option>
-          <option value="Teaching Faculty">Teaching Faculty</option>
+          <option value="Professor">Professor</option>
+          <option value="Assistant Professor">Assistant Professor</option>
+          <option value="HOD">HOD</option>
         </select>
       </div>
       {editingFaculty && (
