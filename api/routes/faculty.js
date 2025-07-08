@@ -2,7 +2,6 @@ import express from "express";
 import Faculty from "../models/faculty.js";
 import User from "../models/user.js";
 import CourseFacultyAssignment from "../models/courseFacultyAssignment.js";
-import ElectiveCourseFacultyAssignment from "../models/electiveCourseFacultyAssignment.js";
 import multer from "multer";
 import { parse } from "csv-parse";
 import fs from "fs";
@@ -78,9 +77,6 @@ router.delete("/:id", verifyToken, requireRole("admin"), async (req, res) => {
 
     // Delete Course Assignments
     await CourseFacultyAssignment.deleteMany({ faculty: facultyId });
-
-    // Delete Elective Course Assignments
-    await ElectiveCourseFacultyAssignment.deleteMany({ faculty: facultyId });
 
     // Finally, delete the faculty
     await Faculty.findByIdAndDelete(facultyId);
@@ -271,58 +267,63 @@ router.get("/:id/performance",verifyToken,requireRoles("admin", "faculty"),async
 );
 
 // Get faculty performance (self-view) along with their course and Batch
-router.get("/:id/performance/course/:courseId/batch/:batch", verifyToken,requireRoles("admin", "faculty"),async (req, res) => {
-    if(req.user.id)
-    try {
-      const facultyId = String(req.params.id);
-      const courseId = String(req.params.courseId);
-      const faculty = await Faculty.findById(facultyId);
-      if (!faculty) {
-        return res.status(404).json({ error: "Faculty not found" });
-      }
-
-      // Get average score
-      const feedbacks = await Feedback.find({
-        faculty: facultyId,
-        course: courseId,
-        batch: req.params.batch,
-      });
-      let avgScore = 0;
-      if (feedbacks.length > 0) {
-        avgScore =
-          feedbacks.reduce((sum, f) => sum + f.score, 0) / feedbacks.length;
-      }
-
-      // Get average ratings for each question
-      let questionRatings = [];
-      let questionTexts = [];
-      if (feedbacks.length > 0) {
-        const questionCount = feedbacks[0].questionRating.length;
-        for (let i = 0; i < questionCount; i++) {
-          const totalRating = feedbacks.reduce((sum, feedback) => {
-            return sum + (feedback.questionRating[i]?.rating || 0);
-          }, 0);
-          questionRatings[i] = totalRating / feedbacks.length;
-        }
-        questionTexts = feedbacks[0].questionRating.map((q) => q.question);
-      }
-
-      res.json({
-        faculty: {
-          id: faculty.id,
-          name: faculty.name,
-          designation: faculty.designation,
-        },
-        avgScore,
-        questionRatings,
-        questionTexts,
-        totalFeedbacks: feedbacks.length,
-      });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({ error: err.message });
+router.get("/:id/performance/course/:courseId/batch/:batch", verifyToken, requireRoles("admin", "faculty"), async (req, res) => {
+  try {
+    const facultyId = String(req.params.id);
+    const courseId = String(req.params.courseId);
+    const batch = req.params.batch;
+    const academicYear = req.query.academic_year;
+    const faculty = await Faculty.findById(facultyId);
+    if (!faculty) {
+      return res.status(404).json({ error: "Faculty not found" });
     }
+
+    // Build feedback query
+    const feedbackQuery = {
+      faculty: facultyId,
+      course: courseId,
+      batch: batch,
+    };
+    if (academicYear) {
+      feedbackQuery["academic_year"] = academicYear;
+    }
+
+    // Get feedbacks for this faculty, course, batch, and academic year (if provided)
+    const feedbacks = await Feedback.find(feedbackQuery);
+    let avgScore = 0;
+    if (feedbacks.length > 0) {
+      avgScore = feedbacks.reduce((sum, f) => sum + f.score, 0) / feedbacks.length;
+    }
+
+    // Get average ratings for each question
+    let questionRatings = [];
+    let questionTexts = [];
+    if (feedbacks.length > 0) {
+      const questionCount = feedbacks[0].questionRating.length;
+      for (let i = 0; i < questionCount; i++) {
+        const totalRating = feedbacks.reduce((sum, feedback) => {
+          return sum + (feedback.questionRating[i]?.rating || 0);
+        }, 0);
+        questionRatings[i] = totalRating / feedbacks.length;
+      }
+      questionTexts = feedbacks[0].questionRating.map((q) => q.question);
+    }
+
+    res.json({
+      faculty: {
+        id: faculty.id,
+        name: faculty.name,
+        designation: faculty.designation,
+      },
+      avgScore,
+      questionRatings,
+      questionTexts,
+      totalFeedbacks: feedbacks.length,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
   }
-);
+});
 
 export default router;

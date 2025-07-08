@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Courses.css";
-import { apiFetch } from '../../../utils/api';
+import { apiFetch } from "../../../utils/api";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -11,14 +11,15 @@ const Courses = () => {
   // Filter states
   const [nameFilter, setNameFilter] = useState("");
   const [codeFilter, setCodeFilter] = useState("");
-  const [semesterFilter, setSemesterFilter] = useState("");
 
   // Edit states
   const [editingCourse, setEditingCourse] = useState(null);
+  // Remove semester from editForm state
   const [editForm, setEditForm] = useState({
     name: "",
     code: "",
-    semester: "",
+    isElective: false,
+    regulation: "",
   });
 
   // Bulk delete state
@@ -31,7 +32,7 @@ const Courses = () => {
 
   useEffect(() => {
     filterCourses();
-  }, [courses, nameFilter, codeFilter, semesterFilter]);
+  }, [courses, nameFilter, codeFilter]);
 
   const fetchCourses = async () => {
     try {
@@ -66,12 +67,6 @@ const Courses = () => {
       );
     }
 
-    if (semesterFilter && semesterFilter !== "") {
-      filtered = filtered.filter(
-        (course) => course.semester === parseInt(semesterFilter)
-      );
-    }
-
     setFilteredCourses(filtered);
   };
 
@@ -80,7 +75,8 @@ const Courses = () => {
     setEditForm({
       name: course.name,
       code: course.code,
-      semester: course.semester,
+      isElective: course.isElective || false,
+      regulation: course.regulation || "",
     });
   };
 
@@ -102,7 +98,7 @@ const Courses = () => {
       }
 
       setEditingCourse(null);
-      setEditForm({ name: "", code: "", semester: "" });
+      setEditForm({ name: "", code: "", isElective: false, regulation: "" });
       fetchCourses();
     } catch (err) {
       setError("Failed to update course");
@@ -132,42 +128,42 @@ const Courses = () => {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (!bulkDeleteSemester) {
-      setError("Please select a semester");
-      return;
-    }
+  // const handleBulkDelete = async () => {
+  //   if (!bulkDeleteSemester) {
+  //     setError("Please select a semester");
+  //     return;
+  //   }
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete all courses from semester ${bulkDeleteSemester}?`
-      )
-    ) {
-      try {
-        const response = await apiFetch(
-          `http://localhost:5000/api/courses/semester/${bulkDeleteSemester}`,
-          {
-            method: "DELETE",
-          }
-        );
+  //   if (
+  //     window.confirm(
+  //       `Are you sure you want to delete all courses from semester ${bulkDeleteSemester}?`
+  //     )
+  //   ) {
+  //     try {
+  //       const response = await apiFetch(
+  //         `http://localhost:5000/api/courses/semester/${bulkDeleteSemester}`,
+  //         {
+  //           method: "DELETE",
+  //         }
+  //       );
 
-        if (!response.ok) {
-          throw new Error("Failed to delete courses");
-        }
+  //       if (!response.ok) {
+  //         throw new Error("Failed to delete courses");
+  //       }
 
-        setShowBulkDeleteModal(false);
-        setBulkDeleteSemester("");
-        fetchCourses();
-      } catch (err) {
-        setError("Failed to delete courses");
-        console.error("Error bulk deleting courses:", err);
-      }
-    }
-  };
+  //       setShowBulkDeleteModal(false);
+  //       setBulkDeleteSemester("");
+  //       fetchCourses();
+  //     } catch (err) {
+  //       setError("Failed to delete courses");
+  //       console.error("Error bulk deleting courses:", err);
+  //     }
+  //   }
+  // };
 
   const cancelEdit = () => {
     setEditingCourse(null);
-    setEditForm({ name: "", code: "", semester: "" });
+    setEditForm({ name: "", code: "", isElective: false, regulation: "" });
   };
 
   if (loading) {
@@ -177,13 +173,7 @@ const Courses = () => {
   return (
     <div className="courses-container">
       <div className="header">
-        <h1>Course Management</h1>
-        <button
-          className="bulk-delete-btn"
-          onClick={() => setShowBulkDeleteModal(true)}
-        >
-          Bulk Delete by Semester
-        </button>
+        <h1 style={{color: "#333"}} >Course Management</h1>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -208,20 +198,6 @@ const Courses = () => {
             onChange={(e) => setCodeFilter(e.target.value)}
           />
         </div>
-        <div className="filter-group">
-          <label>Filter by Semester:</label>
-          <select
-            value={semesterFilter}
-            onChange={(e) => setSemesterFilter(e.target.value)}
-          >
-            <option value="">All Semesters</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-              <option key={sem} value={sem}>
-                Semester {sem}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {/* Courses Table */}
@@ -232,7 +208,8 @@ const Courses = () => {
               <th>S.No</th>
               <th>Name</th>
               <th>Code</th>
-              <th>Semester</th>
+              <th>Elective?</th>
+              <th>Regulation</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -268,20 +245,33 @@ const Courses = () => {
                 </td>
                 <td>
                   {editingCourse === course._id ? (
-                    <select
-                      value={editForm.semester}
+                    <input
+                      type="checkbox"
+                      checked={editForm.isElective}
                       onChange={(e) =>
-                        setEditForm({ ...editForm, semester: e.target.value })
+                        setEditForm({
+                          ...editForm,
+                          isElective: e.target.checked,
+                        })
                       }
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                        <option key={sem} value={sem}>
-                          {sem}
-                        </option>
-                      ))}
-                    </select>
+                    />
+                  ) : course.isElective ? (
+                    "Yes"
                   ) : (
-                    course.semester
+                    "No"
+                  )}
+                </td>
+                <td>
+                  {editingCourse === course._id ? (
+                    <input
+                      type="text"
+                      value={editForm.regulation}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, regulation: e.target.value })
+                      }
+                    />
+                  ) : (
+                    course.regulation || "-"
                   )}
                 </td>
                 <td>
@@ -316,44 +306,6 @@ const Courses = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Bulk Delete Modal */}
-      {showBulkDeleteModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Bulk Delete Courses by Semester</h3>
-            <p>
-              This will permanently delete all courses from the selected
-              semester.
-            </p>
-            <div className="modal-content">
-              <label>Select Semester:</label>
-              <select
-                value={bulkDeleteSemester}
-                onChange={(e) => setBulkDeleteSemester(e.target.value)}
-              >
-                <option value="">Choose semester...</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                  <option key={sem} value={sem}>
-                    Semester {sem}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="modal-actions">
-              <button onClick={handleBulkDelete} className="delete-btn">
-                Delete All
-              </button>
-              <button
-                onClick={() => setShowBulkDeleteModal(false)}
-                className="cancel-btn"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

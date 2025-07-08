@@ -135,45 +135,29 @@ function FacultyPerformanceView({ faculty, onBack }) {
   const [loading, setLoading] = useState(true);
   const [courseBatchStats, setCourseBatchStats] = useState({});
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
 
   useEffect(() => {
     const fetchFacultyData = async () => {
       try {
         setLoading(true);
-
-        // Fetch courses assigned to this faculty (regular)
+        // Fetch all courses assigned to this faculty (regular and elective, unified)
         const coursesResponse = await apiFetch(
           `http://localhost:5000/api/assignments/faculty/${faculty._id}`
         );
-        let coursesData = [];
+        let allAssignments = [];
         if (coursesResponse.ok) {
-          coursesData = await coursesResponse.json();
+          allAssignments = await coursesResponse.json();
         }
-
-        // Fetch elective courses assigned to this faculty
-        const electiveCoursesResponse = await apiFetch(
-          `http://localhost:5000/api/electiveCourseFacultyAssignment/faculty/${faculty._id}`
-        );
-        let electiveCoursesData = [];
-        if (electiveCoursesResponse.ok) {
-          electiveCoursesData = await electiveCoursesResponse.json();
-        }
-
-        // Map elective courses to match the regular assignment structure
-        const mappedElectives = electiveCoursesData.map((e) => ({
-          course: e.electiveCourse,
-          batch: e.batch,
-          semester: e.electiveCourse?.semester,
-          isElective: true,
+        // Map assignments to include academic_year, batch, semester, isElective, etc.
+        const allCourses = allAssignments.map((a) => ({
+          course: a.course,
+          batch: a.batch,
+          semester: a.semester,
+          academic_year: a.academic_year,
+          isElective: a.course?.isElective,
         }));
-
-        // Combine regular and elective courses
-        const allCourses = [
-          ...coursesData.map((c) => ({ ...c, isElective: false })),
-          ...mappedElectives,
-        ];
         setFacultyCourses(allCourses);
-
         // Fetch yearly performance data (already includes all feedbacks)
         const yearlyResponse = await apiFetch(
           `http://localhost:5000/api/feedback/faculty/yearly/${faculty._id}`
@@ -181,18 +165,22 @@ function FacultyPerformanceView({ faculty, onBack }) {
         if (yearlyResponse.ok) {
           const yearlyData = await yearlyResponse.json();
           setYearlyPerformance(yearlyData);
+          // Set default academic year to latest if not set
+          const years = Object.keys(yearlyData).sort();
+          if (years.length > 0 && !selectedAcademicYear) {
+            setSelectedAcademicYear(years[years.length - 1]);
+          }
         }
-
-        // Fetch per-course, per-batch stats for all courses
+        // Fetch per-course, per-batch, per-year stats for all courses
         const stats = {};
         for (const assignment of allCourses) {
-          if (!assignment.course?._id || !assignment.batch) continue;
+          if (!assignment.course?._id || !assignment.batch || !assignment.academic_year) continue;
           const res = await apiFetch(
-            `http://localhost:5000/api/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}`
+            `http://localhost:5000/api/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
           if (res.ok) {
             const data = await res.json();
-            stats[`${assignment.course._id}_${assignment.batch}`] = data;
+            stats[`${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`] = data;
           }
         }
         setCourseBatchStats(stats);
@@ -202,11 +190,48 @@ function FacultyPerformanceView({ faculty, onBack }) {
         setLoading(false);
       }
     };
-
     fetchFacultyData();
+    // eslint-disable-next-line
   }, [faculty._id]);
 
-  const years = Object.keys(yearlyPerformance).sort();
+  // Academic year options
+  const academicYearOptions = Array.from(new Set(facultyCourses.map(c => c.academic_year))).sort();
+
+  // Filter courses and stats by selected academic year
+  const filteredCourses = facultyCourses.filter(
+    (c) => c.academic_year === selectedAcademicYear
+  );
+  // Compute total feedbacks for selected year  
+  const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
+    const stat = courseBatchStats[
+      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+    ];
+    return sum + (stat?.totalFeedbacks || 0);
+  }, 0);
+  // Compute overall average question-wise ratings for selected year
+  const questionSums = [];
+  const questionCounts = [];
+  let questionTexts = [];
+  filteredCourses.forEach((assignment) => {
+    const stat = courseBatchStats[
+      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+    ];
+    if (stat?.questionRatings && stat?.questionTexts) {
+      stat.questionRatings.forEach((rating, i) => {
+        if (!questionSums[i]) {
+          questionSums[i] = 0;
+          questionCounts[i] = 0;
+          questionTexts[i] = stat.questionTexts[i];
+        }
+        questionSums[i] += rating;
+        questionCounts[i] += 1;
+      });
+    }
+  });
+  const overallQuestionAverages = questionSums.map((sum, i) =>
+    questionCounts[i] ? (sum / questionCounts[i]).toFixed(2) : "N/A"
+  );
+
   console.log(courseRatings);
 
   // Convert question ratings array to object with actual question text
@@ -263,13 +288,34 @@ function FacultyPerformanceView({ faculty, onBack }) {
           <div className={styles.performanceId}>ID: {faculty.id}</div>
         </div>
       </div>
-
+      {/* Academic Year Selector */}
+      <div style={{ marginBottom: 24, textAlign: "center" }}>
+        <label htmlFor="academicYearSelect" style={{ fontWeight: 600, marginRight: 8 }}>
+          Academic Year:
+        </label>
+        <select
+          id="academicYearSelect"
+          value={selectedAcademicYear}
+          onChange={(e) => setSelectedAcademicYear(e.target.value)}
+          style={{ padding: "8px 16px", borderRadius: 4, fontSize: 16 }}
+        >
+          {academicYearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
       {/* Overall Performance Score */}
       <div className={styles.overallScoreSection}>
         <h3>Overall Performance Score</h3>
         <div className={styles.scoreCard}>
           <div className={styles.scoreValue}>
-            {faculty.avgScore ? faculty.avgScore.toFixed(2) : "0.00"}
+            {(() => {
+              const score = yearlyPerformance[selectedAcademicYear];
+              if (typeof score !== "number") return "0.00";
+              return Number(score).toFixed(2);
+            })()}
             <span className={styles.scoreMax}>/25</span>
           </div>
           <div className={styles.scoreLabel}>
@@ -283,43 +329,43 @@ function FacultyPerformanceView({ faculty, onBack }) {
           </div>
         </div>
       </div>
-
       {/* Question Ratings */}
-      {questionRatingsWithLabels.length > 0 && (
+      {overallQuestionAverages.length > 0 && (
         <div className={styles.section}>
-          <h3>Question-wise Ratings</h3>
+          <h3>Average Question-wise Ratings (Selected Academic Year)</h3>
           <div className={styles.metricsGrid}>
-            {questionRatingsWithLabels.map(({ label, value }, index) => (
-              <div className={styles.metricCard} key={index}>
-                <div className={styles.metricLabel}>{label}</div>
+            {overallQuestionAverages.map((avg, i) => (
+              <div className={styles.metricCard} key={i}>
+                <div className={styles.metricLabel}>{questionTexts[i]}</div>
                 <div className={styles.metricStars}>
-                  {Array.from({ length: 5 }).map((_, i) => (
+                  {Array.from({ length: 5 }).map((_, j) => (
                     <span
-                      key={i}
+                      key={j}
                       className={
-                        i < value ? styles.starFilled : styles.starEmpty
+                        j < Math.round(Number(avg))
+                          ? styles.starFilled
+                          : styles.starEmpty
                       }
                     >
                       ★
                     </span>
                   ))}
                 </div>
-                <div className={styles.metricValue}>{value.toFixed(1)}/5</div>
+                <div className={styles.metricValue}>{avg}/5</div>
               </div>
             ))}
           </div>
         </div>
       )}
-
       {/* Courses Taken */}
-      {facultyCourses.length > 0 && (
+      {filteredCourses.length > 0 && (
         <div className={styles.section}>
           <h3>Courses Taken</h3>
           <div className={styles.coursesGrid}>
-            {facultyCourses.map((assignment, index) => {
+            {filteredCourses.map((assignment, index) => {
               const stat =
                 courseBatchStats[
-                  `${assignment.course?._id}_${assignment.batch}`
+                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
                 ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0
@@ -372,6 +418,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
                         <span>Semester: {assignment.semester}</span>
                       )}
                       <span>Batch: {assignment.batch}</span>
+                      <span>Academic Year: {assignment.academic_year}</span>
                       <span>
                         Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
                       </span>
@@ -409,7 +456,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
                       }}
                     >
                       <div style={{ fontWeight: 600, color: "#2980b9" }}>
-                        Batch Avg Score:{" "}
+                        Batch Avg Score: {" "}
                         {stat.avgScore ? stat.avgScore.toFixed(2) : "N/A"}/25
                       </div>
                       {stat.questionRatings &&
@@ -446,33 +493,29 @@ function FacultyPerformanceView({ faculty, onBack }) {
           </div>
         </div>
       )}
-
       {/* Yearly Performance Graph */}
-      {years.length > 0 && (
+      {academicYearOptions.length > 0 && (
         <div className={styles.section}>
           <h3>Performance by Year</h3>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <BarChart
-              labels={years}
-              data={years.map((year) => yearlyPerformance[year])}
+              labels={academicYearOptions}
+              data={academicYearOptions.map((year) => yearlyPerformance[year])}
               label="Performance"
               backgroundColor="#4e73df"
             />
           </div>
         </div>
       )}
-
       {/* No Data Message */}
-      {facultyCourses.length === 0 &&
-        years.length === 0 &&
-        questionRatingsWithLabels.length === 0 && (
-          <div className={styles.noDataMessage}>
-            <p>
-              No course assignments or performance data available for this
-              faculty.
-            </p>
-          </div>
-        )}
+      {filteredCourses.length === 0 && (
+        <div className={styles.noDataMessage}>
+          <p>
+            No course assignments or performance data available for the selected
+            academic year.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -35,7 +35,8 @@ const ElectiveCoursesStudentAssignment = () => {
 
   const fetchAllElectiveCourses = async () => {
     try {
-      const response = await apiAxios().get("/electives");
+      // Use the main courses endpoint with isElective=true
+      const response = await apiAxios().get("/courses?isElective=true");
       setAllElectiveCourses(response.data);
     } catch (error) {
       console.error("Error fetching all elective courses:", error);

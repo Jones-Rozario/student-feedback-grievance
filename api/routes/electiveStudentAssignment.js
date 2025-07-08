@@ -6,6 +6,8 @@ import { parse } from "csv-parse";
 import fs from "fs";
 import Student from "../models/student.js";
 import { requireRole, requireRoles, verifyToken } from "../middleware/auth.js";
+import Course from "../models/course.js";
+import CourseFacultyAssignment from "../models/courseFacultyAssignment.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -41,40 +43,28 @@ router.get("/", verifyToken, requireRole("admin"), async (req, res) => {
   }
 });
 
-// POST /upload-csv: Assign students to an elective course via CSV
-// Expects: multipart/form-data with 'file' (CSV) and 'electiveCourseId' (string)
+// POST /upload-csv: Assign students to elective courses via CSV
+// Expects: multipart/form-data with 'file' (CSV)
+// CSV columns: s_id, course_code, batch
 router.post(
   "/upload-csv",
   upload.single("file"),
   verifyToken,
   requireRole("admin"),
   async (req, res) => {
-    const electiveCourseId = req.body.electiveCourseId;
-    if (!req.file || !electiveCourseId) {
-      return res
-        .status(400)
-        .json({ error: "File and electiveCourseId are required" });
-    }
-
-    // Check if elective course exists
-    const electiveCourse = await ElectiveCourse.findById(electiveCourseId);
-    if (!electiveCourse) {
-      fs.unlinkSync(req.file.path);
-      return res.status(404).json({ error: "Elective course not found" });
+    if (!req.file) {
+      return res.status(400).json({ error: "File is required" });
     }
 
     const assignments = [];
+    const errors = [];
     fs.createReadStream(req.file.path)
       .pipe(parse({ columns: true, trim: true }))
       .on("data", (row) => {
-        if (
-          row.s_id &&
-          row.batch &&
-          Number(row.batch) >= 1 &&
-          Number(row.batch) <= 5
-        ) {
+        if (row.s_id && row.course_code && row.batch) {
           assignments.push({
             s_id: String(row.s_id),
+            course_code: String(row.course_code),
             batch: Number(row.batch),
           });
         }
@@ -82,13 +72,29 @@ router.post(
       .on("end", async () => {
         try {
           let successCount = 0;
-          for (const { s_id, batch } of assignments) {
+          for (const { s_id, course_code, batch } of assignments) {
+            // 1. Check course exists and is elective
+            const course = await Course.findOne({ code: course_code, isElective: true });
+            if (!course) {
+              errors.push({ s_id, course_code, batch, error: "Course not found or not elective" });
+              continue;
+            }
+            // 2. Check faculty assignment exists for this course and batch
+            const facultyAssignment = await CourseFacultyAssignment.findOne({
+              course: course._id,
+              batch: batch,
+            });
+            if (!facultyAssignment) {
+              errors.push({ s_id, course_code, batch, error: "No faculty assigned for this course and batch" });
+              continue;
+            }
+            // 3. Assign student to elective
             await ElectiveStudentAssignment.findOneAndUpdate(
               { s_id },
               {
                 $addToSet: {
                   electives: {
-                    electiveCourse: electiveCourseId,
+                    electiveCourse: course._id,
                     batch,
                   },
                 },
@@ -98,9 +104,10 @@ router.post(
             successCount++;
           }
           fs.unlinkSync(req.file.path);
-          res.status(201).json({
+          res.status(errors.length > 0 ? 207 : 201).json({
             message: "Student-elective assignments uploaded",
             count: successCount,
+            errors,
           });
         } catch (err) {
           fs.unlinkSync(req.file.path);

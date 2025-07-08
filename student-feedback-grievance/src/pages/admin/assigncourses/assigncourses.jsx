@@ -41,12 +41,21 @@ import { apiAxios } from "../../../utils/api";
 // ];
 
 const years = [1, 2, 3, 4];
-const batches = ["N", "P", "Q"];
+const batches = [1, 2, 3];
 const yearToSemesters = {
   1: [1, 2],
   2: [3, 4],
   3: [5, 6],
   4: [7, 8],
+};
+
+const defaultAcademicYear = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const startYear = month >= 6 ? year : year - 1;
+  const endYear = startYear + 1;
+  return `${startYear} - ${endYear}`;
 };
 
 const AssignCourses = () => {
@@ -58,10 +67,11 @@ const AssignCourses = () => {
   const [success, setSuccess] = useState("");
   const [form, setForm] = useState({
     year: 1,
-    batch: "N",
+    batch: 1,
     semester: 1,
     course: "",
     faculty: "",
+    academic_year: defaultAcademicYear(),
   });
   const [editingAssignment, setEditingAssignment] = useState(null);
 
@@ -91,32 +101,22 @@ const AssignCourses = () => {
     setLoading(true);
     setError("");
     setSuccess("");
-
-    if (!form.course || !form.faculty) {
-      setError("Please select both course and faculty");
+    if (!form.course || !form.faculty || !form.academic_year) {
+      setError("Please select course, faculty, and enter academic year");
       setLoading(false);
       return;
     }
-
     const payload = {
       course: form.course._id,
       faculty: form.faculty._id,
       semester: form.semester,
       batch: form.batch,
+      academic_year: form.academic_year,
     };
-
     try {
       const response = await apiAxios().post("/assignments/assign", payload);
-
       if (response.data) {
         setSuccess(response.data.message);
-        // setForm({
-        //   year: 1,
-        //   batch: "N",
-        //   semester: 1,
-        //   course: courses[0] || "",
-        //   faculty: faculties[0] || "",
-        // });
         fetchAssignments();
       } else {
         setError(response.data.error || "Failed to assign faculty");
@@ -137,45 +137,35 @@ const AssignCourses = () => {
       semester: assignment.semester,
       course: assignment.course,
       faculty: assignment.faculty,
+      academic_year: assignment.academic_year,
     });
   };
 
   const handleUpdate = async () => {
     if (!editingAssignment) return;
-
     setLoading(true);
     setError("");
     setSuccess("");
-
-    if (!form.course || !form.faculty) {
-      setError("Please select both course and faculty");
+    if (!form.course || !form.faculty || !form.academic_year) {
+      setError("Please select course, faculty, and enter academic year");
       setLoading(false);
       return;
     }
-
     const payload = {
       course: form.course._id,
       faculty: form.faculty._id,
       semester: form.semester,
       batch: form.batch,
+      academic_year: form.academic_year,
     };
-
     try {
       const response = await apiAxios().put(
         `/assignments/${editingAssignment}`,
         payload
       );
-
-      if (response.data.success) {
+      if (response.data && response.data.message) {
         setSuccess("Assignment updated successfully!");
         setEditingAssignment(null);
-        setForm({
-          year: 1,
-          batch: "N",
-          semester: 1,
-          course: courses[0] || "",
-          faculty: faculties[0] || "",
-        });
         fetchAssignments();
       } else {
         const errorData = response.data;
@@ -193,15 +183,12 @@ const AssignCourses = () => {
     if (!window.confirm("Are you sure you want to delete this assignment?")) {
       return;
     }
-
     setLoading(true);
     setError("");
     setSuccess("");
-
     try {
       const response = await apiAxios().delete(`/assignments/${assignmentId}`);
-
-      if (response.data.success) {
+      if (response.data && response.data.message) {
         setSuccess("Assignment deleted successfully!");
         fetchAssignments();
       } else {
@@ -218,26 +205,17 @@ const AssignCourses = () => {
 
   const handleCancelEdit = () => {
     setEditingAssignment(null);
-    setForm({
-      year: 1,
-      batch: "N",
-      semester: 1,
-      course: courses[0] || "",
-      faculty: faculties[0] || "",
-    });
   };
 
   const fetchAssignments = async () => {
     try {
       const response = await apiAxios().get(
-        `/assignments/semester/${form.semester}/batch/${form.batch}`
+        `/assignments/semester/${form.semester}/batch/${
+          form.batch
+        }?academic_year=${encodeURIComponent(form.academic_year)}`
       );
       if (response.data) {
-        setAssignments(
-          Array.isArray(response.data)
-            ? response.data
-            : []
-        );
+        setAssignments(Array.isArray(response.data) ? response.data : []);
       } else {
         console.error("Failed to fetch assignments");
         setAssignments([]);
@@ -251,7 +229,7 @@ const AssignCourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       const response = await apiAxios().get(
-        `/courses/semester/${form.semester}`
+        `/assignments/unique-courses/semester/${form.semester}`
       );
       const data = response.data;
       setCourses(data);
@@ -265,7 +243,7 @@ const AssignCourses = () => {
 
   useEffect(() => {
     fetchAssignments();
-  }, [form.semester, form.batch]);
+  }, [form.semester, form.batch, form.academic_year]);
 
   useEffect(() => {
     const fetchFaculties = async () => {
@@ -414,18 +392,36 @@ const AssignCourses = () => {
             </select>
           </label>
         </div>
+        <div>
+          <label>
+            Academic Year
+            <br />
+            <input
+              type="text"
+              name="academic_year"
+              value={form.academic_year}
+              onChange={handleChange}
+              placeholder="YYYY - YYYY"
+              pattern="^\d{4}\s*-\s*\d{4}$"
+              required
+              style={{ width: "140px" }}
+            />
+          </label>
+        </div>
         <div style={{ alignSelf: "end", display: "flex", gap: "0.5rem" }}>
-          <button
-            type="submit"
-            className={styles.assignCoursesButton}
-            disabled={loading}
-          >
-            {loading
-              ? "Processing..."
-              : editingAssignment
-              ? "Update Assignment"
-              : "Assign Faculty"}
-          </button>
+          {editingAssignment && (
+            <button
+              type="submit"
+              className={styles.assignCoursesButton}
+              disabled={loading}
+            >
+              {loading
+                ? "Processing..."
+                : editingAssignment
+                ? "Update Assignment"
+                : null}
+            </button>
+          )}
           {editingAssignment && (
             <button
               type="button"
@@ -444,6 +440,7 @@ const AssignCourses = () => {
       <table className={styles.assignCoursesTable}>
         <thead>
           <tr>
+            <th>Academic Year</th>
             <th>Batch</th>
             <th>Semester</th>
             <th>Course</th>
@@ -462,6 +459,7 @@ const AssignCourses = () => {
                     : {}
                 }
               >
+                <td>{assignment.academic_year}</td>
                 <td>{assignment.batch}</td>
                 <td>{assignment.semester}</td>
                 <td>{assignment.course?.name || assignment.course}</td>
@@ -509,7 +507,7 @@ const AssignCourses = () => {
             ))}
           {(!Array.isArray(assignments) || assignments.length === 0) && (
             <tr>
-              <td colSpan={5} className={styles.assignCoursesNoData}>
+              <td colSpan={6} className={styles.assignCoursesNoData}>
                 No assignments yet.
               </td>
             </tr>

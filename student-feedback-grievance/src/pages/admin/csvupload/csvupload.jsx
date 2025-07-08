@@ -29,10 +29,17 @@ const CSVUpload = ({ onUploadSuccess }) => {
   const [studentElectivePreviewData, setStudentElectivePreviewData] =
     useState(null);
 
+  // Add state for course-faculty assignment upload
+  const [assignmentFile, setAssignmentFile] = useState(null);
+  const [assignmentUploading, setAssignmentUploading] = useState(false);
+  const [assignmentUploadStatus, setAssignmentUploadStatus] = useState("");
+  const [assignmentPreviewData, setAssignmentPreviewData] = useState(null);
+  const [assignmentUploadErrors, setAssignmentUploadErrors] = useState([]);
+
   // Fetch elective courses for dropdown
   useEffect(() => {
     const fetchElectives = async () => {
-      const response = await apiAxios().get("/electives");
+      const response = await apiAxios().get("/courses?isElective=true");
       if (response.data) {
         setElectiveCourses(response.data);
       }
@@ -189,7 +196,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
   };
 
   const downloadCourseTemplate = () => {
-    const template = `code,name,semester\n`;
+    const template = `code,name,regulation,isElective\n`;
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -199,84 +206,8 @@ const CSVUpload = ({ onUploadSuccess }) => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Elective Course CSV handlers
-  const handleElectiveFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.type === "text/csv") {
-      setElectiveFile(selectedFile);
-      setElectiveUploadStatus("");
-      previewElectiveCSV(selectedFile);
-    } else {
-      setElectiveUploadStatus("Please select a valid CSV file");
-      setElectiveFile(null);
-      setElectivePreviewData(null);
-    }
-  };
-  const previewElectiveCSV = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const lines = text.split("\n");
-      const headers = lines[0].split(",").map((header) => header.trim());
-      const previewRows = lines.slice(1, 6).map((line) => {
-        const values = line.split(",").map((value) => value.trim());
-        const row = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || "";
-        });
-        return row;
-      });
-      setElectivePreviewData({ headers, rows: previewRows });
-    };
-    reader.readAsText(file);
-  };
-  const handleElectiveUpload = async () => {
-    if (!electiveFile) {
-      setElectiveUploadStatus("Please select a file first");
-      return;
-    }
-    setElectiveUploading(true);
-    setElectiveUploadStatus("Uploading...");
-    try {
-      const formData = new FormData();
-      formData.append("file", electiveFile);
-      const response = await apiAxios().post(
-        "/electives/upload-csv",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      if (response.data && response.data.message) {
-        setElectiveUploadStatus(response.data.message);
-        setElectiveFile(null);
-        setElectivePreviewData(null);
-        document.getElementById("elective-csv-file-input").value = "";
-      } else {
-        setElectiveUploadStatus("Upload failed. Please try again.");
-      }
-    } catch (error) {
-      setElectiveUploadStatus(
-        "Upload failed. Please check your connection and try again."
-      );
-    } finally {
-      setElectiveUploading(false);
-    }
-  };
-  const downloadElectiveTemplate = () => {
-    const template = `code,name,semester\n`;
-    const blob = new Blob([template], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "elective_courses_template.csv";
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  // Student-Elective Assignment CSV handlers
+  // Remove all state, handlers, and UI for elective course CSV upload
+  // Only keep course-faculty assignment upload logic
   const handleStudentElectiveFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile && selectedFile.type === "text/csv") {
@@ -308,10 +239,8 @@ const CSVUpload = ({ onUploadSuccess }) => {
     reader.readAsText(file);
   };
   const handleStudentElectiveUpload = async () => {
-    if (!studentElectiveFile || !selectedElective) {
-      setStudentElectiveUploadStatus(
-        "Please select a file and an elective course"
-      );
+    if (!studentElectiveFile) {
+      setStudentElectiveUploadStatus("Please select a file");
       return;
     }
     setStudentElectiveUploading(true);
@@ -319,7 +248,6 @@ const CSVUpload = ({ onUploadSuccess }) => {
     try {
       const formData = new FormData();
       formData.append("file", studentElectiveFile);
-      formData.append("electiveCourseId", selectedElective);
       const response = await apiAxios().post(
         "/elective-student-assignments/upload-csv",
         formData,
@@ -346,12 +274,96 @@ const CSVUpload = ({ onUploadSuccess }) => {
     }
   };
   const downloadStudentElectiveTemplate = () => {
-    const template = `s_id,batch\n`;
+    const template = `s_id,course_code,batch\n`;
     const blob = new Blob([template], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "student_elective_assignment_template.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleAssignmentFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type === "text/csv") {
+      setAssignmentFile(selectedFile);
+      setAssignmentUploadStatus("");
+      setAssignmentUploadErrors([]);
+      previewAssignmentCSV(selectedFile);
+    } else {
+      setAssignmentUploadStatus("Please select a valid CSV file");
+      setAssignmentFile(null);
+      setAssignmentPreviewData(null);
+      setAssignmentUploadErrors([]);
+    }
+  };
+
+  const previewAssignmentCSV = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split("\n");
+      const headers = lines[0].split(",").map((header) => header.trim());
+      const previewRows = lines.slice(1, 6).map((line) => {
+        const values = line.split(",").map((value) => value.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || "";
+        });
+        return row;
+      });
+      setAssignmentPreviewData({ headers, rows: previewRows });
+    };
+    reader.readAsText(file);
+  };
+
+  const handleAssignmentUpload = async () => {
+    if (!assignmentFile) {
+      setAssignmentUploadStatus("Please select a file first");
+      return;
+    }
+    setAssignmentUploading(true);
+    setAssignmentUploadStatus("Uploading...");
+    setAssignmentUploadErrors([]);
+    try {
+      const formData = new FormData();
+      formData.append("file", assignmentFile);
+      const response = await apiAxios().post(
+        "/assignments/upload-csv",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (response.data && response.data.message) {
+        setAssignmentUploadStatus(response.data.message);
+        setAssignmentFile(null);
+        setAssignmentPreviewData(null);
+        setAssignmentUploadErrors(response.data.errors || []);
+        document.getElementById("assignment-csv-file-input").value = "";
+      } else {
+        setAssignmentUploadStatus("Upload failed. Please try again.");
+      }
+    } catch (error) {
+      setAssignmentUploadStatus(
+        "Upload failed. Please check your connection and try again."
+      );
+      console.log(error);
+    } finally {
+      setAssignmentUploading(false);
+    }
+  };
+
+  const downloadAssignmentTemplate = () => {
+    const assignmentTemplate = `academic_year,semester,batch,course,faculty\n`;
+    const blob = new Blob([assignmentTemplate], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "course_faculty_assignment_template.csv";
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -394,14 +406,14 @@ const CSVUpload = ({ onUploadSuccess }) => {
           </div>
           <h2>Upload CSV File for student and faculty details</h2>
           <div className="csv-upload__upload-area">
-            <input
-              type="file"
-              id="csv-file-input"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="csv-upload__file-input"
-            />
             <label htmlFor="csv-file-input" className="csv-upload__file-label">
+              <input
+                type="file"
+                id="csv-file-input"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="csv-upload__file-input"
+              />
               <FaFileCsv className="csv-upload__icon" />
               <span>Choose CSV file or drag and drop</span>
             </label>
@@ -500,19 +512,19 @@ const CSVUpload = ({ onUploadSuccess }) => {
         </div>
 
         <div className="csv-upload__section">
-          <h1>Upload Courses for Semester</h1>
+          <h1>Upload Courses</h1>
           <div className="csv-upload__upload-area">
-            <input
-              type="file"
-              id="course-csv-file-input"
-              accept=".csv"
-              onChange={handleCourseFileChange}
-              className="csv-upload__file-input"
-            />
             <label
               htmlFor="course-csv-file-input"
               className="csv-upload__file-label"
             >
+              <input
+                type="file"
+                id="course-csv-file-input"
+                accept=".csv"
+                onChange={handleCourseFileChange}
+                className="csv-upload__file-input"
+              />
               <FaFileCsv className="csv-upload__icon" />
               <span>Choose CSV file or drag and drop</span>
             </label>
@@ -595,140 +607,19 @@ const CSVUpload = ({ onUploadSuccess }) => {
         </div>
 
         <div className="csv-upload__section">
-          <h1>Upload Elective Courses</h1>
+          <h1>Assign Students to Elective Courses</h1>
           <div className="csv-upload__upload-area">
-            <input
-              type="file"
-              id="elective-csv-file-input"
-              accept=".csv"
-              onChange={handleElectiveFileChange}
-              className="csv-upload__file-input"
-            />
-            <label
-              htmlFor="elective-csv-file-input"
-              className="csv-upload__file-label"
-            >
-              <FaFileCsv className="csv-upload__icon" />
-              <span>Choose CSV file or drag and drop</span>
-            </label>
-          </div>
-          {electiveFile && (
-            <div className="csv-upload__file-info">
-              <p>
-                <strong>Selected file:</strong> {electiveFile.name}
-              </p>
-              <p>
-                <strong>Size:</strong> {(electiveFile.size / 1024).toFixed(2)}{" "}
-                KB
-              </p>
-            </div>
-          )}
-          <button
-            onClick={handleElectiveUpload}
-            disabled={!electiveFile || electiveUploading}
-            className="csv-upload__upload-btn"
-          >
-            <FaUpload />{" "}
-            {electiveUploading ? "Uploading..." : "Upload Elective Courses"}
-          </button>
-          {electiveUploadStatus && (
-            <div
-              className={`csv-upload__status ${
-                electiveUploadStatus.includes("successfully")
-                  ? "success"
-                  : "error"
-              }`}
-            >
-              {electiveUploadStatus}
-            </div>
-          )}
-          <div style={{ marginTop: "1rem" }}>
-            <h4>Download Elective Courses CSV Template</h4>
-            <button
-              onClick={downloadElectiveTemplate}
-              className="csv-upload__template-btn"
-            >
-              <FaDownload /> Download Template
-            </button>
-          </div>
-          {electivePreviewData && (
-            <div className="csv-upload__preview">
-              <h4>Data Preview (First 5 rows)</h4>
-              <table>
-                <thead>
-                  <tr>
-                    {electivePreviewData.headers.map((header, index) => (
-                      <th key={index}>{header}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {electivePreviewData.rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {electivePreviewData.headers.map((header, colIndex) => (
-                        <td key={colIndex}>{row[header]}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          <div
-            className="csv-upload__instructions"
-            style={{ marginTop: "1rem" }}
-          >
-            <ul>
-              <li>CSV file should contain columns: code, name, semester</li>
-              <li>First row should contain column headers</li>
-              <li>Each subsequent row should contain elective course data</li>
-              <li>Make sure all required fields are filled</li>
-              <li>Maximum file size: 10MB</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="csv-upload__section">
-          <h1>Assign Students to Elective Course</h1>
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              htmlFor="elective-select"
-              style={{ fontWeight: 500, marginRight: 8 }}
-            >
-              Select Elective Course:
-            </label>
-            <select
-              id="elective-select"
-              value={selectedElective}
-              onChange={(e) => setSelectedElective(e.target.value)}
-              style={{
-                padding: "0.5rem",
-                borderRadius: 4,
-                border: "1px solid #ccc",
-              }}
-            >
-              <option value="">-- Select Elective --</option>
-              {(Array.isArray(electiveCourses) ? electiveCourses : []).map(
-                (course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.code} - {course.name}
-                  </option>
-                )
-              )}
-            </select>
-          </div>
-          <div className="csv-upload__upload-area">
-            <input
-              type="file"
-              id="student-elective-csv-file-input"
-              accept=".csv"
-              onChange={handleStudentElectiveFileChange}
-              className="csv-upload__file-input"
-            />
             <label
               htmlFor="student-elective-csv-file-input"
               className="csv-upload__file-label"
             >
+              <input
+                type="file"
+                id="student-elective-csv-file-input"
+                accept=".csv"
+                onChange={handleStudentElectiveFileChange}
+                className="csv-upload__file-input"
+              />
               <FaFileCsv className="csv-upload__icon" />
               <span>Choose CSV file or drag and drop</span>
             </label>
@@ -739,24 +630,16 @@ const CSVUpload = ({ onUploadSuccess }) => {
                 <strong>Selected file:</strong> {studentElectiveFile.name}
               </p>
               <p>
-                <strong>Size:</strong>{" "}
-                {(studentElectiveFile.size / 1024).toFixed(2)} KB
+                <strong>Size:</strong> {(studentElectiveFile.size / 1024).toFixed(2)} KB
               </p>
             </div>
           )}
           <button
             onClick={handleStudentElectiveUpload}
-            disabled={
-              !studentElectiveFile ||
-              !selectedElective ||
-              studentElectiveUploading
-            }
+            disabled={!studentElectiveFile || studentElectiveUploading}
             className="csv-upload__upload-btn"
           >
-            <FaUpload />{" "}
-            {studentElectiveUploading
-              ? "Uploading..."
-              : "Assign Students to Elective"}
+            <FaUpload /> {studentElectiveUploading ? "Uploading..." : "Assign Students to Electives"}
           </button>
           {studentElectiveUploadStatus && (
             <div
@@ -792,33 +675,121 @@ const CSVUpload = ({ onUploadSuccess }) => {
                 <tbody>
                   {studentElectivePreviewData.rows.map((row, rowIndex) => (
                     <tr key={rowIndex}>
-                      {studentElectivePreviewData.headers.map(
-                        (header, colIndex) => (
-                          <td key={colIndex}>{row[header]}</td>
-                        )
-                      )}
+                      {studentElectivePreviewData.headers.map((header, colIndex) => (
+                        <td key={colIndex}>{row[header]}</td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-          <div
-            className="csv-upload__instructions"
-            style={{ marginTop: "1rem" }}
-          >
+          <div className="csv-upload__instructions" style={{ marginTop: "1rem" }}>
             <ul>
-              <li>CSV file should contain columns: s_id, batch</li>
+              <li>CSV file should contain columns: s_id, course_code, batch</li>
               <li>First row should contain column headers</li>
-              <li>
-                Each subsequent row should contain student id and batch to
-                assign to the selected elective
-              </li>
+              <li>Each subsequent row should contain student id, elective course code, and batch</li>
               <li>Batch should be a number between 1 and 5</li>
+              <li>Course code must be for an elective course with a faculty assigned for that batch</li>
               <li>Make sure all required fields are filled</li>
               <li>Maximum file size: 10MB</li>
             </ul>
           </div>
+        </div>
+
+        <div className="csv-upload__section">
+          <h2>Upload Course-Faculty Assignments</h2>
+          <div className="csv-upload__upload-area">
+            <label
+              htmlFor="assignment-csv-file-input"
+              className="csv-upload__file-label"
+            >
+              <input
+                type="file"
+                id="assignment-csv-file-input"
+                accept=".csv"
+                onChange={handleAssignmentFileChange}
+                className="csv-upload__file-input"
+              />
+              <FaFileCsv className="csv-upload__icon" />
+              <span>Choose CSV file or drag and drop</span>
+            </label>
+          </div>
+          {assignmentFile && (
+            <div className="csv-upload__file-info">
+              <p>
+                <strong>Selected file:</strong> {assignmentFile.name}
+              </p>
+              <p>
+                <strong>Size:</strong> {(assignmentFile.size / 1024).toFixed(2)}{" "}
+                KB
+              </p>
+            </div>
+          )}
+          <button
+            onClick={handleAssignmentUpload}
+            disabled={!assignmentFile || assignmentUploading}
+            className="csv-upload__upload-btn"
+          >
+            <FaUpload />{" "}
+            {assignmentUploading ? "Uploading..." : "Upload Assignments"}
+          </button>
+          {assignmentUploadStatus && (
+            <div
+              className={`csv-upload__status ${
+                assignmentUploadStatus.includes("success") ? "success" : "error"
+              }`}
+            >
+              {assignmentUploadStatus}
+            </div>
+          )}
+          {assignmentUploadErrors.length > 0 && (
+            <div className="csv-upload__status error">
+              <h4>Errors:</h4>
+              <ul>
+                {assignmentUploadErrors.map((err, idx) => (
+                  <li key={idx}>
+                    Row {err.row}: {err.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={downloadAssignmentTemplate}
+            className="csv-upload__template-btn"
+            style={{ marginTop: 12 }}
+          >
+            <FaDownload /> Download Assignment Template
+          </button>
+          {assignmentPreviewData && (
+            <div className="csv-upload__section">
+              <h3>Data Preview (First 5 rows)</h3>
+              <div className="csv-upload__preview">
+                <table>
+                  <thead>
+                    <tr>
+                      {assignmentPreviewData.headers.map((header, index) => (
+                        <th key={index}>{header}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assignmentPreviewData.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {assignmentPreviewData.headers.map(
+                          (header, colIndex) => (
+                            <td key={colIndex}>{row[header]}</td>
+                          )
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

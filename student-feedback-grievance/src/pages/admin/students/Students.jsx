@@ -97,7 +97,7 @@ const Students = () => {
 
   const handleUpdate = async () => {
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `http://localhost:5000/api/students/${editingStudent}`,
         {
           method: "PUT",
@@ -130,7 +130,7 @@ const Students = () => {
   const handleDelete = async (studentId) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `http://localhost:5000/api/students/${studentId}`,
           {
             method: "DELETE",
@@ -161,7 +161,7 @@ const Students = () => {
       )
     ) {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `http://localhost:5000/api/students/semester/${bulkDeleteSemester}`,
           {
             method: "DELETE",

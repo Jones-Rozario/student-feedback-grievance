@@ -4,7 +4,7 @@ const electiveStudentAssignmentSchema = new mongoose.Schema({
   s_id: { type: String, required: true },
   electives: [
     {
-      electiveCourse: { type: mongoose.Schema.Types.ObjectId, ref: "ElectiveCourse", required: true },
+      electiveCourse: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
       batch: { type: Number, required: true, min: 1, max: 5 }
     }
   ]

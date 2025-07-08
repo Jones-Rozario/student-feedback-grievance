@@ -7,7 +7,7 @@ import backgroundImage from "../../../assests/Red_Building_Cropped.jpg";
 import HeaderBar from "../../../components/HeaderBar";
 import FooterBar from "../../../components/FooterBar";
 import { useAuth } from "../../../contexts/AuthContext";
-import { apiFetch } from '../../../utils/api';
+import { apiFetch } from "../../../utils/api";
 
 // Styled components
 const fadeIn = keyframes`
@@ -235,97 +235,109 @@ const FeedbackPage = () => {
   const [error, setError] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState({});
 
+  function getAcademicYear() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // getMonth() is 0-based
+
+    // If current month is June or later, academic year starts this year
+    const startYear = month >= 6 ? year : year - 1;
+    const endYear = String(startYear + 1);
+
+    return `${startYear} - ${endYear}`;
+  }
+
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
         setLoading(true);
-        const response = await apiFetch(
-          `http://localhost:5000/api/assignments/semester/${currentUser?.current_semester}/batch/${currentUser?.batch}`
+        // 1. Fetch regular assignments
+        const regularResponse = await apiFetch(
+          `http://localhost:5000/api/assignments/semester/${
+            currentUser?.current_semester
+          }/batch/${currentUser?.batch}?academic_year=${getAcademicYear()}`
         );
-
-        if (!response.ok) {
+        if (!regularResponse.ok) {
           throw new Error("Failed to fetch assignments");
         }
-
-        const data = await response.json();
-        // console.log("Assignments data:", data);
-
-        // Create course-faculty mapping
+        const regularData = await regularResponse.json();
         const mapping = {};
         const courseList = [];
-
-        data.forEach((assignment) => {
+        regularData.forEach((assignment) => {
           if (assignment.course && assignment.faculty) {
             mapping[assignment.course._id] = assignment.faculty;
-            courseList.push(assignment.course);
+            courseList.push({
+              ...assignment.course,
+              batch: assignment.batch,
+              isElective: assignment.course.isElective,
+              academic_year: assignment.academic_year,
+            });
           }
         });
+
+        // 2. Fetch student's elective assignments
+        const electiveResponse = await apiFetch(
+          `http://localhost:5000/api/elective-student-assignments/student/${currentUser?.id}`
+        );
+        if (electiveResponse.ok) {
+          const electiveData = await electiveResponse.json();
+          // electiveData is an array of assignments, each with electives array
+          const electives = electiveData[0]?.electives || [];
+          // 3. For each elective, fetch the faculty assignment
+          const electiveAssignments = await Promise.all(
+            electives.map(async (elective) => {
+              if (!elective.electiveCourse || !elective.batch) return null;
+              // Fetch the assignment for this elective course, batch, and academic year
+              const res = await apiFetch(
+                `http://localhost:5000/api/assignments/semester/${
+                  currentUser?.current_semester
+                }/batch/${
+                  elective.batch
+                }?academic_year=${getAcademicYear()}&isElective=true`
+              );
+              if (!res.ok) return null;
+              const data = await res.json();
+              // Find the assignment for this course
+              const assignment = data.find(
+                (a) => a.course && a.course._id === elective.electiveCourse
+              );
+              if (!assignment || !assignment.faculty) return null;
+              return {
+                course: {
+                  ...assignment.course,
+                  batch: elective.batch,
+                  isElective: true,
+                },
+                faculty: assignment.faculty,
+              };
+            })
+          );
+          // Add valid elective assignments to mapping and courseList
+          electiveAssignments.forEach((item) => {
+            if (item && item.course && item.faculty) {
+              mapping[item.course._id] = item.faculty;
+              // Avoid duplicate courses (if already in courseList)
+              if (!courseList.some((c) => c._id === item.course._id)) {
+                courseList.push(item.course);
+              }
+            }
+          });
+        }
 
         setCourseFacultyMapping(mapping);
         setCourses(courseList);
 
-        // Fetch elective assignments
-        const electiveResponse = await apiFetch(
-          `http://localhost:5000/api/elective-student-assignments/student/${currentUser?.id}`
-        );
-
-        if (!electiveResponse.ok) {
-          throw new Error("Failed to fetch elective assignments");
-        }
-
-        const electiveData = await electiveResponse.json();
-        // Gather all {electiveCourse, batch} pairs
-        const electivePairs = electiveData.flatMap((assignment) =>
-          assignment.electives.map((elective) => ({
-            course: elective.electiveCourse,
-            batch: elective.batch,
-          }))
-        );
-
-        // Fetch faculty for each elective course+batch
-        const electiveWithFaculty = await Promise.all(
-          electivePairs.map(async ({ course, batch }) => {
-            if (!course || !batch) return null;
-            const res = await apiFetch(
-              `http://localhost:5000/api/electiveCourseFacultyAssignment/electiveCourse/${course._id}/batch/${batch}`
-            );
-            if (!res.ok) throw new Error("Faculties not getting");
-            const data = await res.json();
-            // data is an array, take the first assignment (if any)
-            const faculty = data[0]?.faculty || null;
-            return faculty
-              ? { course, faculty, isElective: true, batch }
-              : null;
-          })
-        );
-        // Remove nulls
-        const validElectiveAssignments = electiveWithFaculty.filter(Boolean);
-        // Combine with regular courses
-        const combinedCourses = [
-          ...courseList.map((c) => ({ ...c, isElective: false })),
-          ...validElectiveAssignments.map((e) => ({
-            ...e.course,
-            isElective: true,
-            batch: e.batch,
-          })),
-        ];
-
-        const combinedMapping = { ...mapping };
-        validElectiveAssignments.forEach((e) => {
-          if (e.course && e.faculty) {
-            combinedMapping[e.course._id] = e.faculty;
-          }
-        });
-        setCourses(combinedCourses);
-        setCourseFacultyMapping(combinedMapping);
-
         // Check feedback status for each course
         const statusMap = {};
-        for (const course of combinedCourses) {
+        for (const course of courseList) {
           try {
             const studentId = currentUser?.studentRef || currentUser?._id;
             const feedbackResponse = await apiFetch(
-              `http://localhost:5000/api/feedback/check/${studentId}/${course._id}/${course?.batch || currentUser?.batch}/${currentUser?.current_semester}`
+              `http://localhost:5000/api/feedback/check/${studentId}/${
+                course._id
+              }/${course.batch || currentUser?.batch}/${
+                currentUser?.current_semester
+              }`
             );
             if (feedbackResponse.ok) {
               const feedbackData = await feedbackResponse.json();
@@ -345,22 +357,13 @@ const FeedbackPage = () => {
           (s) => s === true
         );
 
-        if (isFeedbackGiven && combinedCourses.length > 0) {
+        if (isFeedbackGiven && courseList.length > 0) {
           try {
-            console.log("Attempting to update student feedback status...");
-            console.log(
-              "Current user ID:",
-              currentUser?.studentRef || currentUser?._id
-            );
-            console.log("Current user object:", currentUser);
-
             const studentId = currentUser?.studentRef || currentUser?._id;
-
             if (!studentId) {
               console.error("No valid student ID found");
               return;
             }
-
             const response = await apiFetch(
               `http://localhost:5000/api/students/${studentId}`,
               {
@@ -371,11 +374,8 @@ const FeedbackPage = () => {
                 body: JSON.stringify({ isFeedbackGiven: true }),
               }
             );
-
             if (response.ok) {
               const result = await response.json();
-              console.log("Updated the feedback given data in db:", result);
-              // Update the current user context
               currentUser.isFeedbackGiven = true;
             } else {
               const errorData = await response.json();
@@ -390,10 +390,9 @@ const FeedbackPage = () => {
         }
 
         // Set default course and faculty if available
-        if (combinedCourses.length > 0) {
-          const defaultCourse = combinedCourses[0];
-          const defaultFaculty = combinedMapping[defaultCourse._id];
-
+        if (courseList.length > 0) {
+          const defaultCourse = courseList[0];
+          const defaultFaculty = mapping[defaultCourse._id];
           setFormData((prev) => ({
             ...prev,
             course: defaultCourse,
@@ -408,7 +407,6 @@ const FeedbackPage = () => {
         setLoading(false);
       }
     };
-
     if (currentUser?.current_semester && currentUser?.batch) {
       fetchAssignments();
     }
@@ -475,6 +473,7 @@ const FeedbackPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          academic_year: getAcademicYear(),
           student: studentId,
           faculty: formData.faculty._id,
           course: formData.course._id,

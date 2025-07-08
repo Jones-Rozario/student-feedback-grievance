@@ -5,7 +5,7 @@ const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String },
   current_semester: { type: Number },
-  batch: { type: String, required: true },
+  batch: { type: Number, required: true },
   joined_year: { type: Number },
   isFeedbackGiven: { type: Boolean, default: false },
 });

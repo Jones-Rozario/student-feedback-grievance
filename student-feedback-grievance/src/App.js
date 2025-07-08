@@ -26,8 +26,6 @@ import NavBar from "./components/navbar/navbar";
 import "./App.css";
 import Unauthorized from "./pages/Unauthorized";
 import FacultySelfPerformance from "./pages/faculty/FacultySelfPerformance";
-import AssignElectiveFaculties from "./pages/admin/assigncourses/assignElectiveFaculties";
-import ElectiveCourses from "./pages/admin/electivecourses/ElectiveCoursesStudentAssignment";
 import AllElectiveCourses from "./pages/admin/electivecourses/AllElectiveCourses";
 import ElectiveCoursesStudentAssignment from "./pages/admin/electivecourses/ElectiveCoursesStudentAssignment";
 
@@ -139,7 +137,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/admin/assign-elective-faculties"
               element={
                 <ProtectedRoute requiredRole="admin">
@@ -151,7 +149,7 @@ function App() {
                   </AdminLayout>
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/admin/faculties"
               element={

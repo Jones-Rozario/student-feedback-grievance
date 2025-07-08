@@ -65,11 +65,11 @@
   margin-bottom: 1rem;
 }
 .csv-upload__file-input {
-  position: absolute;
   opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
+  width: 0.1px;
+  height: 0.1px;
+  position: absolute;
+  z-index: -1;
 }
 .csv-upload__file-label {
   display: flex;

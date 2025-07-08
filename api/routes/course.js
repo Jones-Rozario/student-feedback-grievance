@@ -12,17 +12,12 @@ const upload = multer({ dest: "uploads/" });
 // Get all courses
 router.get("/",verifyToken, requireRole("admin"), async (req, res) => {
   try {
-    const courses = await Course.find();
-    res.status(200).json(courses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get courses by semester
-router.get("/semester/:semester",verifyToken, async (req, res) => {
-  try {
-    const courses = await Course.find({ semester: req.params.semester });
+    const filter = {};
+    if (req.query.isElective !== undefined) {
+      // Accept 'true' or 'false' as string, convert to boolean
+      filter.isElective = req.query.isElective === 'true';
+    }
+    const courses = await Course.find(filter);
     res.status(200).json(courses);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -42,10 +37,10 @@ router.get("/:id",verifyToken, async (req, res) => {
 // Update course
 router.put("/:id",verifyToken, requireRole("admin"), async (req, res) => {
   try {
-    const { name, code, semester } = req.body;
+    const { name, code, regulation, isElective } = req.body;
     const course = await Course.findByIdAndUpdate(
       req.params.id,
-      { name, code, semester },
+      { name, code, regulation, isElective },
       { new: true }
     );
     if (!course) {
@@ -77,27 +72,28 @@ router.delete("/:id",verifyToken, requireRole("admin"), async (req, res) => {
   }
 });
 
-// Bulk delete courses by semester
-router.delete("/semester/:semester",verifyToken, requireRole("admin"), async (req, res) => {
-  try {
-    const courses = await Course.find({ semester: req.params.semester });
-    const courseCodes = courses.map(course => String(course._id));
+// // Bulk delete courses by semester
+// router.delete("/semester/:semester",verifyToken, requireRole("admin"), async (req, res) => {
+//   try {
+//     const courses = await Course.find({ semester: req.params.semester });
+//     const courseCodes = courses.map(course => String(course._id));
     
-    // Delete related assignments for all courses in this semester
-    const deletedAssignments = await CourseFacultyAssignment.deleteMany({ 
-      course: { $in: courseCodes } 
-    });
+//     // Delete related assignments for all courses in this semester
+//     const deletedAssignments = await CourseFacultyAssignment.deleteMany({ 
+//       course: { $in: courseCodes } 
+//     });
     
-    const result = await Course.deleteMany({ semester: req.params.semester });
+//     const result = await Course.deleteMany({ semester: req.params.semester });
     
-    res.status(200).json({ 
-      message: `${result.deletedCount} courses deleted from semester ${req.params.semester}`,
-      deletedAssignments: deletedAssignments.deletedCount
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+//     res.status(200).json({ 
+//       message: `${result.deletedCount} courses deleted from semester ${req.params.semester}`,
+//       deletedAssignments: deletedAssignments.deletedCount
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
 
 // Bulk upload courses from CSV
 router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file"), async (req, res) => {
@@ -106,7 +102,8 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
   }
   
   const courses = [];
-  const headers = ["code", "name", "semester"];
+  // Remove semester from headers
+  const headers = ["code", "name", "regulation", "isElective"];
   
   // Helper function to delete file
   const deleteFile = () => {
@@ -128,8 +125,9 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
         if (row[header] !== undefined) {
           if (header === "code") {
             courseData[header] = String(row[header]);
-          } else if (header === "semester") {
-            courseData[header] = Number(row[header]);
+          } else if (header === "isElective") {
+            const val = String(row[header]).trim().toLowerCase();
+            courseData[header] = val === 'true' || val === '1' || val === 'yes';
           } else {
             courseData[header] = row[header];
           }
@@ -139,11 +137,20 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
     })
     .on("end", async () => {
       try {
-        const created = await Course.insertMany(courses);
+        // Filter out duplicates by code (existing in DB)
+        const codes = courses.map(c => c.code);
+        const existing = await Course.find({ code: { $in: codes } });
+        const existingCodes = new Set(existing.map(c => c.code));
+        const uniqueCourses = courses.filter(c => !existingCodes.has(c.code));
+        if (uniqueCourses.length === 0) {
+          deleteFile();
+          return res.status(409).json({ error: "All uploaded courses are duplicates." });
+        }
+        const created = await Course.insertMany(uniqueCourses);
         deleteFile(); // Delete file on success
         res
           .status(201)
-          .json({ message: "Courses uploaded", courses: created });
+          .json({ message: "Courses uploaded", courses: created, skipped: courses.length - uniqueCourses.length });
       } catch (err) {
         deleteFile(); // Delete file on database error
         console.error("Database error:", err);

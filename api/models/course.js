@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const courseSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true },
   name: { type: String, required: true },
-  semester: { type: Number, required: true, min: 1, max: 8 },
+  regulation: { type: String },
+  isElective: { type: Boolean, default: false },
 });
 
 export default mongoose.model("Course", courseSchema);

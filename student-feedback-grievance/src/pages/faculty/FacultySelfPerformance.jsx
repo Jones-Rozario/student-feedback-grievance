@@ -16,40 +16,35 @@ const FacultySelfPerformance = () => {
   const [loading, setLoading] = useState(true);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
 
   useEffect(() => {
     const fetchFacultyData = async () => {
       try {
         setLoading(true);
-        // Fetch courses assigned to this faculty (regular)
+        // Fetch all courses assigned to this faculty (regular and elective, unified)
         const coursesResponse = await apiFetch(
           `http://localhost:5000/api/assignments/faculty/${currentUser.facultyRef}`
         );
-        let coursesData = [];
+        let allAssignments = [];
         if (coursesResponse.ok) {
-          coursesData = await coursesResponse.json();
+          allAssignments = await coursesResponse.json();
         }
-        // Fetch elective courses assigned to this faculty
-        const electiveCoursesResponse = await apiFetch(
-          `http://localhost:5000/api/electiveCourseFacultyAssignment/faculty/${currentUser.facultyRef}`
-        );
-        let electiveCoursesData = [];
-        if (electiveCoursesResponse.ok) {
-          electiveCoursesData = await electiveCoursesResponse.json();
-        }
-        // Map elective courses to match the regular assignment structure
-        const mappedElectives = electiveCoursesData.map((e) => ({
-          course: e.electiveCourse,
-          batch: e.batch,
-          semester: e.electiveCourse?.semester,
-          isElective: true,
+        // Map assignments to include academic_year, batch, semester, isElective, etc.
+        const allCourses = allAssignments.map((a) => ({
+          course: a.course,
+          batch: a.batch,
+          semester: a.semester,
+          academic_year: a.academic_year,
+          isElective: a.course?.isElective,
         }));
-        // Combine regular and elective courses
-        const allCourses = [
-          ...coursesData.map((c) => ({ ...c, isElective: false })),
-          ...mappedElectives,
-        ];
+        console.log(allCourses);
         setFacultyCourses(allCourses);
+        // Set default academic year to latest available in data
+        const years = Array.from(new Set(allCourses.map(c => c.academic_year))).sort();
+        if (years.length > 0) {
+          setSelectedAcademicYear(years[years.length - 1]);
+        }
         // Fetch yearly performance data (already includes all feedbacks)
         const yearlyResponse = await apiFetch(
           `http://localhost:5000/api/feedback/faculty/yearly/${currentUser.facultyRef}`
@@ -58,16 +53,29 @@ const FacultySelfPerformance = () => {
           const yearlyData = await yearlyResponse.json();
           setYearlyPerformance(yearlyData);
         }
-        // Fetch per-course, per-batch stats for all courses
+        // Fetch per-course, per-batch, per-year stats for all courses
         const stats = {};
         for (const assignment of allCourses) {
-          if (!assignment.course?._id || !assignment.batch) continue;
+          if (
+            !assignment.course?._id ||
+            !assignment.batch ||
+            !assignment.academic_year
+          )
+            continue;
           const res = await apiFetch(
-            `http://localhost:5000/api/faculties/${currentUser.facultyRef}/performance/course/${assignment.course._id}/batch/${assignment.batch}`
+            `http://localhost:5000/api/faculties/${
+              currentUser.facultyRef
+            }/performance/course/${assignment.course._id}/batch/${
+              assignment.batch
+            }?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
           if (res.ok) {
             const data = await res.json();
-            stats[`${assignment.course._id}_${assignment.batch}`] = data;
+            console.log(data);
+            // Key by course, batch, and academic year
+            stats[
+              `${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`
+            ] = data;
           }
         }
         setCourseBatchStats(stats);
@@ -78,6 +86,7 @@ const FacultySelfPerformance = () => {
       }
     };
     fetchFacultyData();
+    // eslint-disable-next-line
   }, [currentUser.facultyRef]);
 
   function getAcademicYear() {
@@ -112,7 +121,7 @@ const FacultySelfPerformance = () => {
       [
         "Academic Year & Semester",
         ":",
-        getAcademicYear() + " - " + (assignment.semester || "-"),
+        assignment.academic_year + " - " + (assignment.semester || "-"),
       ],
       ["Subject", ":", assignment.course?.name || "-"],
       ["Instructor", ":", currentUser?.name || "-"],
@@ -174,19 +183,32 @@ const FacultySelfPerformance = () => {
     return "#e74a3b";
   };
 
-  const years = Object.keys(yearlyPerformance).sort();
+  // Academic year options
+  const academicYearOptions = Array.from(
+    new Set(facultyCourses.map((c) => c.academic_year))
+  ).sort();
 
-  // Compute total feedbacks given
-  const totalFeedbacks = Object.values(courseBatchStats).reduce(
-    (sum, stat) => sum + (stat?.totalFeedbacks || 0),
-    0
+  // Filter courses and stats by selected academic year
+  const filteredCourses = facultyCourses.filter(
+    (c) => c.academic_year === selectedAcademicYear
   );
-
-  // Compute overall average question-wise ratings
+  // Compute total feedbacks for selected year
+  const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+      ];
+    return sum + (stat?.totalFeedbacks || 0);
+  }, 0);
+  // Compute overall average question-wise ratings for selected year
   const questionSums = [];
   const questionCounts = [];
   let questionTexts = [];
-  Object.values(courseBatchStats).forEach((stat) => {
+  filteredCourses.forEach((assignment) => {
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+      ];
     if (stat?.questionRatings && stat?.questionTexts) {
       stat.questionRatings.forEach((rating, i) => {
         if (!questionSums[i]) {
@@ -238,6 +260,7 @@ const FacultySelfPerformance = () => {
       >
         <LogoutButton />
       </div>
+
       {/* Faculty Header */}
       <div className={styles.performanceHeader}>
         <div className={styles.performanceAvatar}>
@@ -250,6 +273,27 @@ const FacultySelfPerformance = () => {
           </div>
           <div className={styles.performanceId}>ID: {currentUser?.id}</div>
         </div>
+      </div>
+      {/* Academic Year Selector */}
+      <div style={{ marginBottom: 24, textAlign: "center" }}>
+        <label
+          htmlFor="academicYearSelect"
+          style={{ fontWeight: 600, marginRight: 8 }}
+        >
+          Academic Year:
+        </label>
+        <select
+          id="academicYearSelect"
+          value={selectedAcademicYear}
+          onChange={(e) => setSelectedAcademicYear(e.target.value)}
+          style={{ padding: "8px 16px", borderRadius: 4, fontSize: 16 }}
+        >
+          {academicYearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
       </div>
       {/* Overall Performance Score */}
       <div className={styles.overallScoreSection}>
@@ -265,13 +309,9 @@ const FacultySelfPerformance = () => {
           <div className={styles.scoreCard}>
             <div className={styles.scoreValue}>
               {(() => {
-                const scores = Object.values(yearlyPerformance || {}).filter(
-                  (v) => typeof v === "number"
-                );
-                if (!scores.length) return "0.00";
-                return (
-                  scores.reduce((a, b) => a + b, 0) / scores.length
-                ).toFixed(2);
+                const score = yearlyPerformance[selectedAcademicYear];
+                if (typeof score !== "number") return "0.00";
+                return Number(score).toFixed(2);
               })()}
               <span className={styles.scoreMax}>/25</span>
             </div>
@@ -286,7 +326,7 @@ const FacultySelfPerformance = () => {
             </div>
           </div>
           <div className={styles.scoreCard}>
-            <div className={styles.scoreValue}>{facultyCourses.length}</div>
+            <div className={styles.scoreValue}>{filteredCourses.length}</div>
             <div style={{ color: "#7b8a97", fontSize: "1rem", marginTop: 4 }}>
               Courses Taught
             </div>
@@ -294,7 +334,7 @@ const FacultySelfPerformance = () => {
         </div>
         {overallQuestionAverages.length > 0 && (
           <div className={styles.section} style={{ marginTop: 24 }}>
-            <h4>Average Question-wise Ratings (All Courses & Batches)</h4>
+            <h4>Average Question-wise Ratings (Selected Academic Year)</h4>
             <div className={styles.questionAveragesGrid}>
               {overallQuestionAverages.map((avg, i) => (
                 <div key={i} className={styles.questionAverageBox}>
@@ -323,14 +363,14 @@ const FacultySelfPerformance = () => {
         )}
       </div>
       {/* Courses Taken */}
-      {facultyCourses.length > 0 && (
+      {filteredCourses.length > 0 && (
         <div className={styles.section}>
           <h3>Courses Taken</h3>
           <div className={styles.coursesGrid}>
-            {facultyCourses.map((assignment, index) => {
+            {filteredCourses.map((assignment, index) => {
               const stat =
                 courseBatchStats[
-                  `${assignment.course?._id}_${assignment.batch}`
+                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
                 ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0
@@ -381,6 +421,7 @@ const FacultySelfPerformance = () => {
                     <div className={styles.courseInfo}>
                       <span>Semester: {assignment.semester}</span>
                       <span>Batch: {assignment.batch}</span>
+                      <span>Academic Year: {assignment.academic_year}</span>
                       <span>
                         Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
                       </span>
@@ -475,17 +516,6 @@ const FacultySelfPerformance = () => {
       {/* Yearly Performance Section */}
       <div className={styles.yearlyPerformanceSection}>
         <h3>Yearly Performance</h3>
-        {/* Show average or latest year as a number */}
-        {/* <div className={styles.yearlyPerformanceNumber}>
-          {(() => {
-            const vals = Object.values(yearlyPerformance).filter(
-              (v) => typeof v === "number"
-            );
-            if (vals.length === 0) return "N/A";
-            const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-            return "Average: " + avg.toFixed(2);
-          })()}
-        </div> */}
         {/* Show the bar chart for yearly performance */}
         <BarChart
           labels={Object.keys(yearlyPerformance)}
@@ -495,9 +525,12 @@ const FacultySelfPerformance = () => {
         />
       </div>
       {/* No Data Message */}
-      {facultyCourses.length === 0 && years.length === 0 && (
+      {filteredCourses.length === 0 && (
         <div className={styles.noDataMessage}>
-          <p>No course assignments or performance data available for you.</p>
+          <p>
+            No course assignments or performance data available for the selected
+            academic year.
+          </p>
         </div>
       )}
     </div>

@@ -21,3 +21,15 @@ export const apiAxios = () => {
     },
   });
 };
+
+export function getAcademicYear() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // getMonth() is 0-based
+
+  // If current month is June or later, academic year starts this year
+  const startYear = month >= 6 ? year : year - 1;
+  const endYear = String(startYear + 1);
+
+  return `${startYear}-${endYear.substring(2, 4)}`;
+}

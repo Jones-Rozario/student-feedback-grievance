@@ -21,7 +21,8 @@ const AllElectiveCourses = () => {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const res = await apiAxios().get("/electives");
+      // Use the main courses endpoint with isElective=true
+      const res = await apiAxios().get("/courses?isElective=true");
       setCourses(res.data);
     } catch (err) {
       console.log(err);
@@ -37,6 +38,7 @@ const AllElectiveCourses = () => {
       code: course.code,
       name: course.name,
       semester: course.semester,
+      regulation: course.regulation || "",
     });
   };
 
@@ -46,7 +48,7 @@ const AllElectiveCourses = () => {
 
   const handleUpdate = async (course) => {
     try {
-      await apiAxios().put(`/electives/${course._id}`, editForm);
+      await apiAxios().put(`/courses/${course._id}`, editForm);
       setEditId(null);
       fetchCourses();
     } catch (err) {
@@ -190,6 +192,7 @@ const AllElectiveCourses = () => {
                 <th>Course Code</th>
                 <th>Course Name</th>
                 <th>Semester</th>
+                <th>Regulation</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -229,6 +232,14 @@ const AllElectiveCourses = () => {
                         />
                       </td>
                       <td>
+                        <input
+                          name="regulation"
+                          value={editForm.regulation}
+                          onChange={handleEditChange}
+                          className={styles.editInput}
+                        />
+                      </td>
+                      <td>
                         <div className={styles.actionButtons}>
                           <button
                             onClick={() => handleUpdate(course)}
@@ -250,6 +261,7 @@ const AllElectiveCourses = () => {
                       <td>{course.code}</td>
                       <td>{course.name}</td>
                       <td>{course.semester}</td>
+                      <td>{course.regulation || "-"}</td>
                       <td>
                         <div className={styles.actionButtons}>
                           <button

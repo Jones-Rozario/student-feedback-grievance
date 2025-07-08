@@ -70,7 +70,6 @@ const Sidebar = ({ open, setSidebarOpen }) => {
       icon: FaWpforms,
       items: [
         { path: "/admin/assigncourses", label: "Assign Courses", icon: FaUsers },
-        { path: "/admin/assign-elective-faculties", label: "Assign Elective Faculties", icon: FaWpforms },
         { path: "/admin/elective-student-assignments", label: "Elective Student Assignments", icon: FaBook },
       ]
     },
