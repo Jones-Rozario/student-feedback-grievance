@@ -102,6 +102,7 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
   }
   
   const courses = [];
+  const errors = [];
   // Remove semester from headers
   const headers = ["code", "name", "regulation", "isElective"];
   
@@ -119,7 +120,32 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
 
   fs.createReadStream(req.file.path)
     .pipe(parse({ columns: true, trim: true }))
-    .on("data", (row) => {
+    .on("data", (row, index) => {
+      const rowNumber = index + 2; // +2 because index starts at 0 and we skip header row
+      
+      const codeValue = row["code"];
+      const nameValue = row["name"];
+      const regulationValue = row["regulation"];
+      const isElectiveValue = row["isElective"];
+      
+      // Validate required fields
+      if (!codeValue) {
+        errors.push({ row: rowNumber, error: "Course code is required" });
+        return;
+      }
+      if (!nameValue) {
+        errors.push({ row: rowNumber, error: "Course name is required" });
+        return;
+      }
+      if (!regulationValue) {
+        errors.push({ row: rowNumber, error: "Regulation is required" });
+        return;
+      }
+      if (isElectiveValue === undefined || isElectiveValue === null || isElectiveValue === '') {
+        errors.push({ row: rowNumber, error: "isElective field is required" });
+        return;
+      }
+
       const courseData = {};
       headers.forEach((header) => {
         if (row[header] !== undefined) {
@@ -137,28 +163,40 @@ router.post("/upload-csv",verifyToken, requireRole("admin"), upload.single("file
     })
     .on("end", async () => {
       try {
-        // Filter out duplicates by code (existing in DB)
+        // Filter out duplicates by code (existing in DB) and add to errors
         const codes = courses.map(c => c.code);
         const existing = await Course.find({ code: { $in: codes } });
         const existingCodes = new Set(existing.map(c => c.code));
-        const uniqueCourses = courses.filter(c => !existingCodes.has(c.code));
-        if (uniqueCourses.length === 0) {
-          deleteFile();
-          return res.status(409).json({ error: "All uploaded courses are duplicates." });
+        
+        const uniqueCourses = [];
+        courses.forEach((course, index) => {
+          if (existingCodes.has(course.code)) {
+            errors.push({ row: index + 2, error: `Course with code '${course.code}' already exists` });
+          } else {
+            uniqueCourses.push(course);
+          }
+        });
+
+        let created = [];
+        if (uniqueCourses.length > 0) {
+          created = await Course.insertMany(uniqueCourses);
         }
-        const created = await Course.insertMany(uniqueCourses);
-        deleteFile(); // Delete file on success
-        res
-          .status(201)
-          .json({ message: "Courses uploaded", courses: created, skipped: courses.length - uniqueCourses.length });
+        
+        deleteFile();
+        res.status(errors.length > 0 ? 207 : 201).json({ 
+          message: `${created.length} courses uploaded`, 
+          courses: created, 
+          skipped: courses.length - uniqueCourses.length,
+          errors: errors
+        });
       } catch (err) {
-        deleteFile(); // Delete file on database error
+        deleteFile();
         console.error("Database error:", err);
         res.status(500).json({ error: err.message });
       }
     })
     .on("error", (err) => {
-      deleteFile(); // Delete file on parse error
+      deleteFile();
       console.error("CSV parse error:", err);
       res.status(500).json({ error: err.message });
     });

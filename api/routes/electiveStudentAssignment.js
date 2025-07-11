@@ -58,37 +58,100 @@ router.post(
 
     const assignments = [];
     const errors = [];
+
+    // Helper function to delete file
+    const deleteFile = () => {
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+          console.log(`Deleted file: ${req.file.path}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting file ${req.file.path}:`, err);
+      }
+    };
+
     fs.createReadStream(req.file.path)
       .pipe(parse({ columns: true, trim: true }))
-      .on("data", (row) => {
+      .on("data", (row, index) => {
+        const rowNumber = index + 2; // +2 because index starts at 0 and we skip header row
+        
+        const sIdValue = row.s_id;
+        const courseCodeValue = row.course_code;
+        const batchValue = row.batch;
+        
+        // Validate required fields
+        if (!sIdValue) {
+          errors.push({ row: rowNumber, error: "Student ID is required" });
+          return;
+        }
+        if (!courseCodeValue) {
+          errors.push({ row: rowNumber, error: "Course code is required" });
+          return;
+        }
+        if (!batchValue) {
+          errors.push({ row: rowNumber, error: "Batch is required" });
+          return;
+        }
+
+        // Validate batch format
+        const batch = Number(batchValue);
+        if (isNaN(batch) || batch < 1 || batch > 5) {
+          errors.push({ row: rowNumber, error: "Invalid batch (must be 1-5)" });
+          return;
+        }
+
         if (row.s_id && row.course_code && row.batch) {
           assignments.push({
             s_id: String(row.s_id),
             course_code: String(row.course_code),
-            batch: Number(row.batch),
+            batch: Number(batch),
           });
         }
       })
       .on("end", async () => {
         try {
           let successCount = 0;
-          for (const { s_id, course_code, batch } of assignments) {
+          for (let i = 0; i < assignments.length; i++) {
+            const { s_id, course_code, batch } = assignments[i];
+            const rowNumber = i + 2; // +2 because we start from row 2 (after header)
+            
             // 1. Check course exists and is elective
             const course = await Course.findOne({ code: course_code, isElective: true });
             if (!course) {
-              errors.push({ s_id, course_code, batch, error: "Course not found or not elective" });
+              errors.push({ row: rowNumber, error: `Course '${course_code}' not found or not elective` });
               continue;
             }
+            
             // 2. Check faculty assignment exists for this course and batch
             const facultyAssignment = await CourseFacultyAssignment.findOne({
               course: course._id,
               batch: batch,
             });
             if (!facultyAssignment) {
-              errors.push({ s_id, course_code, batch, error: "No faculty assigned for this course and batch" });
+              errors.push({ row: rowNumber, error: `No faculty assigned for course '${course_code}' and batch ${batch}` });
               continue;
             }
-            // 3. Assign student to elective
+            
+            // 3. Check if student exists
+            const student = await Student.findOne({ id: s_id });
+            if (!student) {
+              errors.push({ row: rowNumber, error: `Student with ID '${s_id}' not found` });
+              continue;
+            }
+            
+            // 4. Check if assignment already exists
+            const existingAssignment = await ElectiveStudentAssignment.findOne({
+              s_id: s_id,
+              "electives.electiveCourse": course._id,
+              "electives.batch": batch
+            });
+            if (existingAssignment) {
+              errors.push({ row: rowNumber, error: `Student '${s_id}' already assigned to course '${course_code}' in batch ${batch}` });
+              continue;
+            }
+            
+            // 5. Assign student to elective
             await ElectiveStudentAssignment.findOneAndUpdate(
               { s_id },
               {
@@ -103,19 +166,20 @@ router.post(
             );
             successCount++;
           }
-          fs.unlinkSync(req.file.path);
+          
+          deleteFile();
           res.status(errors.length > 0 ? 207 : 201).json({
-            message: "Student-elective assignments uploaded",
+            message: `${successCount} student-elective assignments uploaded`,
             count: successCount,
             errors,
           });
         } catch (err) {
-          fs.unlinkSync(req.file.path);
+          deleteFile();
           res.status(500).json({ error: err.message });
         }
       })
       .on("error", (err) => {
-        fs.unlinkSync(req.file.path);
+        deleteFile();
         res.status(500).json({ error: err.message });
       });
   }

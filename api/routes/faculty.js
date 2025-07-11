@@ -97,25 +97,63 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
 
     const facultiesToInsert = [];
     const allFacultyIdsInCsv = [];
+    const errors = [];
+
+    // Helper function to delete file
+    const deleteFile = () => {
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+          console.log(`Deleted file: ${req.file.path}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting file ${req.file.path}:`, err);
+      }
+    };
 
     const processFile = async () => {
       const parser = fs
         .createReadStream(req.file.path)
         .pipe(parse({ columns: true, trim: true }));
 
-      parser.on("data", (row) => {
+      parser.on("data", (row, index) => {
         // Map frontend headers to backend schema fields
+        const idValue = row["Faculty_ID"] || row["id"];
+        const nameValue = row["Faculty_Name"] || row["name"];
+        const emailValue = row["Email"] || row["email"];
+        const designationValue = row["Designation"] || row["designation"];
+        
+        const rowNumber = index + 2; // +2 because index starts at 0 and we skip header row
+        
+        // Validate required fields
+        if (!idValue) {
+          errors.push({ row: rowNumber, error: "Faculty ID is required" });
+          return;
+        }
+        if (!nameValue) {
+          errors.push({ row: rowNumber, error: "Faculty name is required" });
+          return;
+        }
+        if (!designationValue) {
+          errors.push({ row: rowNumber, error: "Designation is required" });
+          return;
+        }
+
+        // Validate email format if provided
+        if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+          errors.push({ row: rowNumber, error: "Invalid email format" });
+          return;
+        }
+
         const facultyData = {
-          id: row["Faculty_ID"] || row["id"],
-          name: row["Faculty_Name"] || row["name"],
-          email: row["Email"] || row["email"],
-          designation: row["Designation"] || row["designation"],
+          id: String(idValue),
+          name: String(nameValue),
+          email: emailValue ? String(emailValue) : undefined,
+          designation: String(designationValue),
         };
 
-        if (facultyData.id) {
-          allFacultyIdsInCsv.push(facultyData.id);
-          facultiesToInsert.push(facultyData);
-        }
+        allFacultyIdsInCsv.push(facultyData.id);
+        facultiesToInsert.push(facultyData);
       });
 
       parser.on("end", async () => {
@@ -129,13 +167,19 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
             existingFaculties.map((f) => f.id)
           );
 
-          // Filter out faculties that already exist
-          const newFaculties = facultiesToInsert.filter(
-            (faculty) => !existingFacultyIds.has(faculty.id)
-          );
+          // Filter out faculties that already exist and add to errors
+          const newFaculties = [];
+          facultiesToInsert.forEach((faculty, index) => {
+            if (existingFacultyIds.has(faculty.id)) {
+              errors.push({ row: index + 2, error: `Faculty with ID '${faculty.id}' already exists` });
+            } else {
+              newFaculties.push(faculty);
+            }
+          });
 
+          let createdFaculties = [];
           if (newFaculties.length > 0) {
-            const createdFaculties = await Faculty.insertMany(newFaculties, {
+            createdFaculties = await Faculty.insertMany(newFaculties, {
               ordered: false,
             });
 
@@ -158,31 +202,24 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
             );
 
             await User.insertMany(facultyUsers, { ordered: false });
-
-            res.status(201).json({
-              message: `${createdFaculties.length} new faculties uploaded and user accounts created.`,
-              faculties: createdFaculties,
-            });
-          } else {
-            res.status(200).json({
-              message:
-                "No new faculties to upload. All faculties in the CSV already exist.",
-            });
           }
+
+          deleteFile();
+          res.status(errors.length > 0 ? 207 : 201).json({
+            message: `${createdFaculties.length} new faculties uploaded and user accounts created.`,
+            faculties: createdFaculties,
+            errors: errors,
+          });
         } catch (err) {
           console.error("Database error:", err);
-          res
-            .status(500)
-            .json({ error: "Failed to insert faculties into database." });
-        } finally {
-          // Clean up the uploaded file
-          fs.unlinkSync(req.file.path);
+          deleteFile();
+          res.status(500).json({ error: "Failed to insert faculties into database." });
         }
       });
 
       parser.on("error", (err) => {
         console.error("CSV parse error:", err);
-        fs.unlinkSync(req.file.path);
+        deleteFile();
         res.status(500).json({ error: "Error parsing CSV file." });
       });
     };

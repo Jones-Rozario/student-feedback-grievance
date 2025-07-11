@@ -9,11 +9,13 @@ const CSVUpload = ({ onUploadSuccess }) => {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [uploadErrors, setUploadErrors] = useState([]);
   const [previewData, setPreviewData] = useState(null);
   const [courseSemester, setCourseSemester] = useState(1);
   const [courseFile, setCourseFile] = useState(null);
   const [courseUploading, setCourseUploading] = useState(false);
   const [courseUploadStatus, setCourseUploadStatus] = useState("");
+  const [courseUploadErrors, setCourseUploadErrors] = useState([]);
   const [coursePreviewData, setCoursePreviewData] = useState(null);
   const [electiveFile, setElectiveFile] = useState(null);
   const [electiveUploading, setElectiveUploading] = useState(false);
@@ -26,6 +28,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
     useState(false);
   const [studentElectiveUploadStatus, setStudentElectiveUploadStatus] =
     useState("");
+  const [studentElectiveUploadErrors, setStudentElectiveUploadErrors] = useState([]);
   const [studentElectivePreviewData, setStudentElectivePreviewData] =
     useState(null);
 
@@ -53,11 +56,13 @@ const CSVUpload = ({ onUploadSuccess }) => {
     if (selectedFile && selectedFile.type === "text/csv") {
       setFile(selectedFile);
       setError("");
+      setUploadErrors([]);
       previewCSV(selectedFile);
     } else {
       setError("Please select a valid CSV file");
       setFile(null);
       setPreviewData(null);
+      setUploadErrors([]);
     }
   };
 
@@ -89,6 +94,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
     setUploading(true);
     setError("");
     setSuccess("");
+    setUploadErrors([]);
     const formData = new FormData();
     formData.append("file", file);
     try {
@@ -99,12 +105,16 @@ const CSVUpload = ({ onUploadSuccess }) => {
       });
       if (response.data && response.data.message) {
         setSuccess(response.data.message);
+        setUploadErrors(response.data.errors || []);
         onUploadSuccess && onUploadSuccess();
       } else {
         setError("Upload failed");
       }
     } catch (err) {
       setError("Upload failed");
+      if (err.response && err.response.data && err.response.data.errors) {
+        setUploadErrors(err.response.data.errors);
+      }
     } finally {
       setUploading(false);
     }
@@ -136,11 +146,13 @@ const CSVUpload = ({ onUploadSuccess }) => {
     if (selectedFile && selectedFile.type === "text/csv") {
       setCourseFile(selectedFile);
       setCourseUploadStatus("");
+      setCourseUploadErrors([]);
       previewCourseCSV(selectedFile);
     } else {
       setCourseUploadStatus("Please select a valid CSV file");
       setCourseFile(null);
       setCoursePreviewData(null);
+      setCourseUploadErrors([]);
     }
   };
 
@@ -170,6 +182,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
     }
     setCourseUploading(true);
     setCourseUploadStatus("Uploading...");
+    setCourseUploadErrors([]);
     try {
       const formData = new FormData();
       formData.append("file", courseFile);
@@ -180,6 +193,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
       });
       if (response.data && response.data.message) {
         setCourseUploadStatus(response.data.message);
+        setCourseUploadErrors(response.data.errors || []);
         setCourseFile(null);
         setCoursePreviewData(null);
         document.getElementById("course-csv-file-input").value = "";
@@ -190,6 +204,9 @@ const CSVUpload = ({ onUploadSuccess }) => {
       setCourseUploadStatus(
         "Upload failed. Please check your connection and try again."
       );
+      if (error.response && error.response.data && error.response.data.errors) {
+        setCourseUploadErrors(error.response.data.errors);
+      }
     } finally {
       setCourseUploading(false);
     }
@@ -213,11 +230,13 @@ const CSVUpload = ({ onUploadSuccess }) => {
     if (selectedFile && selectedFile.type === "text/csv") {
       setStudentElectiveFile(selectedFile);
       setStudentElectiveUploadStatus("");
+      setStudentElectiveUploadErrors([]);
       previewStudentElectiveCSV(selectedFile);
     } else {
       setStudentElectiveUploadStatus("Please select a valid CSV file");
       setStudentElectiveFile(null);
       setStudentElectivePreviewData(null);
+      setStudentElectiveUploadErrors([]);
     }
   };
   const previewStudentElectiveCSV = (file) => {
@@ -245,6 +264,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
     }
     setStudentElectiveUploading(true);
     setStudentElectiveUploadStatus("Uploading...");
+    setStudentElectiveUploadErrors([]);
     try {
       const formData = new FormData();
       formData.append("file", studentElectiveFile);
@@ -259,6 +279,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
       );
       if (response.data && response.data.message) {
         setStudentElectiveUploadStatus(response.data.message);
+        setStudentElectiveUploadErrors(response.data.errors || []);
         setStudentElectiveFile(null);
         setStudentElectivePreviewData(null);
         document.getElementById("student-elective-csv-file-input").value = "";
@@ -269,6 +290,9 @@ const CSVUpload = ({ onUploadSuccess }) => {
       setStudentElectiveUploadStatus(
         "Upload failed. Please check your connection and try again."
       );
+      if (error.response && error.response.data && error.response.data.errors) {
+        setStudentElectiveUploadErrors(error.response.data.errors);
+      }
     } finally {
       setStudentElectiveUploading(false);
     }
@@ -351,6 +375,9 @@ const CSVUpload = ({ onUploadSuccess }) => {
       setAssignmentUploadStatus(
         "Upload failed. Please check your connection and try again."
       );
+      if (error.response && error.response.data && error.response.data.errors) {
+        setAssignmentUploadErrors(error.response.data.errors);
+      }
       console.log(error);
     } finally {
       setAssignmentUploading(false);
@@ -392,6 +419,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
                 setFile(null);
                 setPreviewData(null);
                 setError("");
+                setUploadErrors([]);
                 document.getElementById("csv-file-input").value = "";
               }}
               style={{
@@ -441,6 +469,18 @@ const CSVUpload = ({ onUploadSuccess }) => {
           {error && <div className="csv-upload__status error">{error}</div>}
           {success && (
             <div className="csv-upload__status success">{success}</div>
+          )}
+          {uploadErrors.length > 0 && (
+            <div className="csv-upload__status error">
+              <h4>Errors:</h4>
+              <ul>
+                {uploadErrors.map((err, idx) => (
+                  <li key={idx}>
+                    Row {err.row}: {err.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 
@@ -557,6 +597,18 @@ const CSVUpload = ({ onUploadSuccess }) => {
               {courseUploadStatus}
             </div>
           )}
+          {courseUploadErrors.length > 0 && (
+            <div className="csv-upload__status error">
+              <h4>Errors:</h4>
+              <ul>
+                {courseUploadErrors.map((err, idx) => (
+                  <li key={idx}>
+                    Row {err.row}: {err.error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div style={{ marginTop: "1rem" }}>
             <h4>Download Courses CSV Template</h4>
             <button
@@ -594,12 +646,10 @@ const CSVUpload = ({ onUploadSuccess }) => {
             style={{ marginTop: "1rem" }}
           >
             <ul>
-              <li>CSV file should contain columns: code, name, semester</li>
+              <li>CSV file should contain columns: code, name, regulation, isElective</li>
               <li>First row should contain column headers</li>
-              <li>
-                Each subsequent row should contain course data for the selected
-                semester
-              </li>
+              <li>Each subsequent row should contain course data</li>
+              <li>isElective should be 'true' or 'false' (case sensitive)</li>
               <li>Make sure all required fields are filled</li>
               <li>Maximum file size: 10MB</li>
             </ul>
@@ -650,6 +700,18 @@ const CSVUpload = ({ onUploadSuccess }) => {
               }`}
             >
               {studentElectiveUploadStatus}
+            </div>
+          )}
+          {studentElectiveUploadErrors.length > 0 && (
+            <div className="csv-upload__status error">
+              <h4>Errors:</h4>
+              <ul>
+                {studentElectiveUploadErrors.map((err, idx) => (
+                  <li key={idx}>
+                    Row {err.row}: {err.error}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           <div style={{ marginTop: "1rem" }}>
@@ -790,6 +852,34 @@ const CSVUpload = ({ onUploadSuccess }) => {
               </div>
             </div>
           )}
+          <div className="csv-upload__instructions" style={{ marginTop: "1rem" }}>
+            <h4>Course-Faculty Assignment Format Instructions:</h4>
+            <ul>
+              <li><strong>CSV file should contain columns:</strong> academic_year, semester, batch, course, faculty</li>
+              <li><strong>academic_year:</strong> The academic year (e.g., "2023-2024")</li>
+              <li><strong>semester:</strong> Semester number (1-8)</li>
+              <li><strong>batch:</strong> Batch number (1-5)</li>
+              <li><strong>course:</strong> Course code (must exist in courses table)</li>
+              <li><strong>faculty:</strong> Faculty ID (must exist in faculties table)</li>
+              <li>First row should contain column headers</li>
+              <li>Each subsequent row should contain assignment data</li>
+              <li>All fields are required and cannot be empty</li>
+              <li>Course code must exist in the courses table</li>
+              <li>Faculty ID must exist in the faculties table</li>
+              <li>Semester should be a number between 1 and 8</li>
+              <li>Batch should be a number between 1 and 5</li>
+              <li>Maximum file size: 10MB</li>
+            </ul>
+            <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "#f8f9fa", borderRadius: "4px" }}>
+              <h5>Example CSV Format:</h5>
+              <pre style={{ margin: 0, fontSize: "12px" }}>
+{`academic_year,semester,batch,course,faculty
+2023-2024,1,1,CS101,F001
+2023-2024,1,2,CS101,F002
+2023-2024,2,1,CS201,F003`}
+              </pre>
+            </div>
+          </div>
         </div>
       </div>
     </div>

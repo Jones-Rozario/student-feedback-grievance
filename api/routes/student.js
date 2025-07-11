@@ -124,27 +124,69 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
 
     const studentsToInsert = [];
     const allStudentIdsInCsv = [];
+    const errors = [];
+
+    // Helper function to delete file
+    const deleteFile = () => {
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+          console.log(`Deleted file: ${req.file.path}`);
+        }
+      } catch (err) {
+        console.error(`Error deleting file ${req.file.path}:`, err);
+      }
+    };
 
     const processFile = async () => {
       const parser = fs
         .createReadStream(req.file.path)
         .pipe(parse({ columns: true, trim: true }));
 
-      parser.on("data", (row) => {
+      parser.on("data", (row, index) => {
         // Only process the columns: id, name, batch, joined_year
         const idValue = row["id"];
+        const nameValue = row["name"];
+        const batchValue = row["batch"];
+        const joinedYearValue = row["joined_year"];
+        
+        const rowNumber = index + 2; // +2 because index starts at 0 and we skip header row
+        
+        // Validate required fields
+        if (!idValue) {
+          errors.push({ row: rowNumber, error: "Student ID is required" });
+          return;
+        }
+        if (!nameValue) {
+          errors.push({ row: rowNumber, error: "Student name is required" });
+          return;
+        }
+        if (!batchValue) {
+          errors.push({ row: rowNumber, error: "Batch is required" });
+          return;
+        }
+        if (!joinedYearValue) {
+          errors.push({ row: rowNumber, error: "Joined year is required" });
+          return;
+        }
+
+        // Validate joined_year format
+        const joinedYear = Number(joinedYearValue);
+        if (isNaN(joinedYear) || joinedYear < 2000 || joinedYear > new Date().getFullYear()) {
+          errors.push({ row: rowNumber, error: "Invalid joined year (must be between 2000 and current year)" });
+          return;
+        }
+
         const studentData = {
-          id: idValue !== undefined ? String(idValue) : undefined,
-          name: row["name"] || undefined,
-          batch: row["batch"] || undefined,
-          joined_year: row["joined_year"] || undefined,
-          current_semester: calculateSemester(Number(row["joined_year"])),
+          id: String(idValue),
+          name: String(nameValue),
+          batch: Number(batchValue),
+          joined_year: joinedYear,
+          current_semester: calculateSemester(joinedYear),
         };
 
-        if (studentData.id) {
-          allStudentIdsInCsv.push(studentData.id);
-          studentsToInsert.push(studentData);
-        }
+        allStudentIdsInCsv.push(studentData.id);
+        studentsToInsert.push(studentData);
       });
 
       parser.on("end", async () => {
@@ -158,13 +200,19 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
             existingStudents.map((s) => String(s.id))
           );
 
-          // Filter out students that already exist
-          const newStudents = studentsToInsert.filter(
-            (student) => !existingStudentIds.has(String(student.id))
-          );
+          // Filter out students that already exist and add to errors
+          const newStudents = [];
+          studentsToInsert.forEach((student, index) => {
+            if (existingStudentIds.has(String(student.id))) {
+              errors.push({ row: index + 2, error: `Student with ID '${student.id}' already exists` });
+            } else {
+              newStudents.push(student);
+            }
+          });
 
+          let createdStudents = [];
           if (newStudents.length > 0) {
-            const createdStudents = await Student.insertMany(newStudents, {
+            createdStudents = await Student.insertMany(newStudents, {
               ordered: false,
             });
 
@@ -187,31 +235,24 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
             );
 
             await User.insertMany(studentUsers, { ordered: false });
-
-            res.status(201).json({
-              message: `${createdStudents.length} new students uploaded and user accounts created.`,
-              students: createdStudents,
-            });
-          } else {
-            res.status(200).json({
-              message:
-                "No new students to upload. All students in the CSV already exist.",
-            });
           }
+
+          deleteFile();
+          res.status(errors.length > 0 ? 207 : 201).json({
+            message: `${createdStudents.length} new students uploaded and user accounts created.`,
+            students: createdStudents,
+            errors: errors,
+          });
         } catch (err) {
           console.error("Database error:", err);
-          res
-            .status(500)
-            .json({ error: "Failed to insert students into database." });
-        } finally {
-          // Clean up the uploaded file
-          fs.unlinkSync(req.file.path);
+          deleteFile();
+          res.status(500).json({ error: "Failed to insert students into database." });
         }
       });
 
       parser.on("error", (err) => {
         console.error("CSV parse error:", err);
-        fs.unlinkSync(req.file.path);
+        deleteFile();
         res.status(500).json({ error: "Error parsing CSV file." });
       });
     };
