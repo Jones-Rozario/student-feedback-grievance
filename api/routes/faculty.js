@@ -197,6 +197,8 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
                   role: "faculty",
                   password: hashedPassword,
                   facultyRef: faculty._id,
+                  mustChangePassword: true,
+                  email: faculty.email,
                 };
               })
             );

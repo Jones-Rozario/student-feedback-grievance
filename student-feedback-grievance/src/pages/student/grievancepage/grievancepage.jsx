@@ -7,7 +7,7 @@ import backgroundImage from "../../../assests/Red_Building_Cropped.jpg";
 import HeaderBar from "../../../components/HeaderBar";
 import FooterBar from "../../../components/FooterBar";
 import { useAuth } from "../../../contexts/AuthContext";
-import { apiFetch } from '../../../utils/api';
+import { apiAxios } from '../../../utils/api';
 // Animations
 const slideIn = keyframes`
   from {
@@ -264,29 +264,24 @@ const GrievancePage = () => {
     try {
       const studentId = currentUser?.studentRef || currentUser?._id;
       
-      const response = await apiFetch("http://localhost:5000/api/grievances", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          student: studentId,
-          faculty: null, // Can be null for general grievances
-          course: null, // Can be null for general grievances
-          batch: currentUser.batch,
-          semester: currentUser.current_semester,
-          category: formData.category,
-          subject: formData.subject,
-          grievanceText: formData.description,
-        }),
+      const axiosInstance = apiAxios();
+      const response = await axiosInstance.post('/grievances', {
+        student: studentId,
+        faculty: null, // Can be null for general grievances
+        course: null, // Can be null for general grievances
+        batch: currentUser.batch,
+        semester: currentUser.current_semester,
+        category: formData.category,
+        subject: formData.subject,
+        grievanceText: formData.description,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status !== 201) {
+        const errorData = response.data;
         throw new Error(errorData.error || "Failed to submit grievance");
       }
 
-      const result = await response.json();
+      const result = response.data;
       console.log("Grievance submitted:", result);
       toast.success("Grievance submitted successfully!");
       

@@ -5,6 +5,7 @@ import phoneHand from "../../../assests/animations/getting-started-logo-animatio
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
+import { apiAxios } from "../../../utils/api";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -31,12 +32,10 @@ const LoginPage = () => {
 
   const getPasswordHint = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/auth/password-hint/${formData.id}/${formData.role}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setPasswordHint(data.hint);
+      const axiosInstance = apiAxios();
+      const response = await axiosInstance.get(`/auth/password-hint/${formData.id}/${formData.role}`);
+      if (response.data) {
+        setPasswordHint(response.data.hint);
         setShowPasswordHint(true);
       } else {
         setError("Could not get password hint");
@@ -52,35 +51,36 @@ const LoginPage = () => {
     setSuccess("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const axiosInstance = apiAxios();
+      const response = await axiosInstance.post("/auth/login", {
+        id: formData.id,
+        password: formData.password,
+        role: formData.role,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        login(response.data.user, response.data.token);
         setSuccess("Login successful!");
-        // Use AuthContext login function
-        login(data.user, data.token);
         // Redirect based on role
         setTimeout(() => {
-          if (data.user.role === "student") {
+          if (response.data.user.role === "student") {
             navigate("/home");
-          } else if (data.user.role === "faculty") {
+          } else if (response.data.user.role === "faculty") {
             navigate("/faculty/performance");
-          } else if (data.user.role === "admin") {
+          } else if (response.data.user.role === "admin") {
             navigate("/admin/dashboard");
           }
         }, 1000);
       } else {
-        setError(data.error || "Login failed");
+        setError(response.data.error || "Login failed");
       }
-    } catch (err) {
-      setError("Network error. Please try again.");
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMessage =
+        error.response?.data?.error || "Login failed. Please try again.";
+      setError(errorMessage);
     }
   };
 
@@ -198,6 +198,11 @@ const LoginPage = () => {
             </p>
           </div>
         )}
+        <div style={{ marginTop: 12, textAlign: 'right' }}>
+          <a href="/forgot-password" style={{ color: '#3498db', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.95em' }}>
+            Forgot Password?
+          </a>
+        </div>
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
         <button className="login-button" onClick={handleSubmit}>

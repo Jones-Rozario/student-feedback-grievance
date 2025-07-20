@@ -5,7 +5,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoPng from "../../assests/anna_univ_logo.png";
 import LogoutButton from "../../components/LogoutButton";
-import { apiFetch } from "../../utils/api";
+import { apiAxios } from "../../utils/api";
 import BarChart from "../../components/barchart";
 
 const FacultySelfPerformance = () => {
@@ -23,12 +23,12 @@ const FacultySelfPerformance = () => {
       try {
         setLoading(true);
         // Fetch all courses assigned to this faculty (regular and elective, unified)
-        const coursesResponse = await apiFetch(
-          `http://localhost:5000/api/assignments/faculty/${currentUser.facultyRef}`
+        const coursesResponse = await apiAxios().get(
+          `/assignments/faculty/${currentUser.facultyRef}`
         );
         let allAssignments = [];
-        if (coursesResponse.ok) {
-          allAssignments = await coursesResponse.json();
+        if (coursesResponse.data) {
+          allAssignments = coursesResponse.data;
         }
         // Map assignments to include academic_year, batch, semester, isElective, etc.
         const allCourses = allAssignments.map((a) => ({
@@ -46,11 +46,11 @@ const FacultySelfPerformance = () => {
           setSelectedAcademicYear(years[years.length - 1]);
         }
         // Fetch yearly performance data (already includes all feedbacks)
-        const yearlyResponse = await apiFetch(
-          `http://localhost:5000/api/feedback/faculty/yearly/${currentUser.facultyRef}`
+        const yearlyResponse = await apiAxios().get(
+          `/feedback/faculty/yearly/${currentUser.facultyRef}`
         );
-        if (yearlyResponse.ok) {
-          const yearlyData = await yearlyResponse.json();
+        if (yearlyResponse.data) {
+          const yearlyData = yearlyResponse.data;
           setYearlyPerformance(yearlyData);
         }
         // Fetch per-course, per-batch, per-year stats for all courses
@@ -62,15 +62,15 @@ const FacultySelfPerformance = () => {
             !assignment.academic_year
           )
             continue;
-          const res = await apiFetch(
-            `http://localhost:5000/api/faculties/${
+          const res = await apiAxios().get(
+            `/faculties/${
               currentUser.facultyRef
             }/performance/course/${assignment.course._id}/batch/${
               assignment.batch
             }?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
-          if (res.ok) {
-            const data = await res.json();
+          if (res.data) {
+            const data = res.data;
             console.log(data);
             // Key by course, batch, and academic year
             stats[

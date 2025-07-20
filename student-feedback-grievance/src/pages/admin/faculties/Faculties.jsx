@@ -1,125 +1,8 @@
 import React, { useEffect, useState } from "react";
 import styles from "./FacultyTable.module.css";
-import { apiFetch } from '../../../utils/api';
+import { apiAxios } from '../../../utils/api';
 import BarChart from '../../../components/barchart';
 
-// const facultyData = [
-//   {
-//     id: "622356",
-//     name: "Priya",
-//     avatar: "A",
-//     course: "Database Management System",
-//     batch: "P",
-//     designation: "Teaching Faculty",
-//     performance: "Low",
-//     rating: 2,
-//     courses: [
-//       {
-//         name: "Course 1",
-//         metrics: {
-//           "Teaching Efficiency": 4,
-//           "Course Content Quality": 4,
-//           "Communication Skills": 4,
-//           "Student Engagement": 4,
-//           Innovative: 4,
-//         },
-//         yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
-//       },
-//     ],
-//   },
-//   {
-//     id: "622356",
-//     name: "Amudha",
-//     avatar: "A",
-//     course: "Database Management System",
-//     batch: "P",
-//     designation: "Teaching Faculty",
-//     performance: "High",
-//     rating: 5,
-//     courses: [
-//       {
-//         name: "Course 1",
-//         metrics: {
-//           "Teaching Efficiency": 5,
-//           "Course Content Quality": 5,
-//           "Communication Skills": 5,
-//           "Student Engagement": 5,
-//           Innovative: 5,
-//         },
-//         yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
-//       },
-//     ],
-//   },
-//   {
-//     id: "622356",
-//     name: "Saradha",
-//     avatar: "S",
-//     course: "Database Management System",
-//     batch: "P",
-//     designation: "Teaching Faculty",
-//     performance: "High",
-//     rating: 5,
-//     courses: [
-//       {
-//         name: "Course 1",
-//         metrics: {
-//           "Teaching Efficiency": 5,
-//           "Course Content Quality": 5,
-//           "Communication Skills": 5,
-//           "Student Engagement": 5,
-//           Innovative: 5,
-//         },
-//         yearlyStats: { 2020: 4, 2021: 5, 2022: 5 },
-//       },
-//     ],
-//   },
-//   {
-//     id: "622356",
-//     name: "Ganesh",
-//     avatar: "G",
-//     course: "Database Management System",
-//     batch: "P",
-//     designation: "Teaching Faculty",
-//     performance: "Medium",
-//     rating: 3,
-//     courses: [
-//       {
-//         name: "Course 1",
-//         metrics: {
-//           "Teaching Efficiency": 3,
-//           "Course Content Quality": 3,
-//           "Communication Skills": 3,
-//           "Student Engagement": 3,
-//           Innovative: 3,
-//         },
-//         yearlyStats: { 2020: 2, 2021: 3, 2022: 3 },
-//       },
-//     ],
-//   },
-//   {
-//     id: "622356",
-//     name: "Kirthicka",
-//     avatar: "K",
-//     course: "Database Management System",
-//     batch: "P",
-//     designation: "Teaching Faculty",
-//     performance: "Medium",
-//     rating: 4,
-//     courses: [
-//       {
-//         name: "Course 1",
-//         metrics: {
-//           "Teaching Efficiency": 4,
-//           "Course Content Quality": 4,
-//           "Communication Skills": 4,
-//           "Student Engagement": 4,
-//           Innovative: 4,
-//         },
-//         yearlyStats: { 2020: 3, 2021: 4, 2022: 4 },
-//       },
-//     ],
-//   },
-// ];
 
 const performanceColors = {
   High: styles.badgeHigh,
@@ -142,12 +25,12 @@ function FacultyPerformanceView({ faculty, onBack }) {
       try {
         setLoading(true);
         // Fetch all courses assigned to this faculty (regular and elective, unified)
-        const coursesResponse = await apiFetch(
-          `http://localhost:5000/api/assignments/faculty/${faculty._id}`
+        const coursesResponse = await apiAxios().get(
+          `/assignments/faculty/${faculty._id}`
         );
         let allAssignments = [];
-        if (coursesResponse.ok) {
-          allAssignments = await coursesResponse.json();
+        if (coursesResponse.data) {
+          allAssignments = coursesResponse.data;
         }
         // Map assignments to include academic_year, batch, semester, isElective, etc.
         const allCourses = allAssignments.map((a) => ({
@@ -159,11 +42,11 @@ function FacultyPerformanceView({ faculty, onBack }) {
         }));
         setFacultyCourses(allCourses);
         // Fetch yearly performance data (already includes all feedbacks)
-        const yearlyResponse = await apiFetch(
-          `http://localhost:5000/api/feedback/faculty/yearly/${faculty._id}`
+        const yearlyResponse = await apiAxios().get(
+          `/feedback/faculty/yearly/${faculty._id}`
         );
-        if (yearlyResponse.ok) {
-          const yearlyData = await yearlyResponse.json();
+        if (yearlyResponse.data) {
+          const yearlyData = yearlyResponse.data;
           setYearlyPerformance(yearlyData);
           // Set default academic year to latest if not set
           const years = Object.keys(yearlyData).sort();
@@ -175,11 +58,11 @@ function FacultyPerformanceView({ faculty, onBack }) {
         const stats = {};
         for (const assignment of allCourses) {
           if (!assignment.course?._id || !assignment.batch || !assignment.academic_year) continue;
-          const res = await apiFetch(
-            `http://localhost:5000/api/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}?academic_year=${encodeURIComponent(assignment.academic_year)}`
+          const res = await apiAxios().get(
+            `/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
-          if (res.ok) {
-            const data = await res.json();
+          if (res.data) {
+            const data = res.data;
             stats[`${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`] = data;
           }
         }
@@ -537,9 +420,9 @@ const FacultyTable = () => {
     try {
       setLoading(true);
       // Get all faculties
-      let response = await apiFetch("http://localhost:5000/api/faculties");
-      if (response.ok) {
-        const facultiesData = await response.json();
+      let response = await apiAxios().get("/faculties");
+      if (response.data) {
+        const facultiesData = response.data;
         console.log("Faculties data:", facultiesData);
 
         // Fetch average scores and ratings for each faculty
@@ -547,23 +430,23 @@ const FacultyTable = () => {
           facultiesData.map(async (faculty) => {
             try {
               // Get average score for this faculty
-              const avgResponse = await apiFetch(
-                `http://localhost:5000/api/feedback/faculty/avg/${faculty._id}`
+              const avgResponse = await apiAxios().get(
+                `/feedback/faculty/avg/${faculty._id}`
               );
               let avgScore = 0;
-              if (avgResponse.ok) {
-                const avgData = await avgResponse.json();
+              if (avgResponse.data) {
+                const avgData = avgResponse.data;
                 avgScore = avgData.averageScore || 0;
               }
 
               // Get average ratings for each question
-              const ratingsResponse = await apiFetch(
-                `http://localhost:5000/api/feedback/faculty/ratings/${faculty._id}`
+              const ratingsResponse = await apiAxios().get(
+                `/feedback/faculty/ratings/${faculty._id}`
               );
               let questionRatings = [];
               let questionTexts = [];
-              if (ratingsResponse.ok) {
-                const ratingsData = await ratingsResponse.json();
+              if (ratingsResponse.data) {
+                const ratingsData = ratingsResponse.data;
                 questionRatings = ratingsData.ratings || [];
                 questionTexts = ratingsData.questions || [];
               }
@@ -613,24 +496,18 @@ const FacultyTable = () => {
     if (!editingFaculty) return;
 
     try {
-      const response = await apiFetch(`http://localhost:5000/api/faculties/${editingFaculty._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: editingFaculty.name,
-          designation: editingFaculty.designation,
-        }),
+      const response = await apiAxios().put(`/faculties/${editingFaculty._id}`, {
+        name: editingFaculty.name,
+        designation: editingFaculty.designation,
       });
 
-      if (response.ok) {
-        const updatedFaculty = await response.json();
+      if (response.data) {
+        const updatedFaculty = response.data;
         setFaculties(faculties.map(f => (f._id === updatedFaculty._id ? updatedFaculty : f)));
         setEditingFaculty(null);
         alert("Faculty updated successfully.");
       } else {
-        const err = await response.json();
+        const err = response.data;
         alert(`Error: ${err.error}`);
       }
     } catch (error) {
@@ -642,15 +519,13 @@ const FacultyTable = () => {
   const handleDelete = async (facultyId) => {
     if (window.confirm("Are you sure you want to delete this faculty? This will also remove all their feedback scores and course assignments.")) {
       try {
-        const response = await apiFetch(`http://localhost:5000/api/faculties/${facultyId}`, {
-          method: 'DELETE',
-        });
+        const response = await apiAxios().delete(`/faculties/${facultyId}`);
 
-        if (response.ok) {
+        if (response.data) {
           setFaculties(faculties.filter(f => f._id !== facultyId));
           alert("Faculty deleted successfully.");
         } else {
-          const err = await response.json();
+          const err = response.data;
           alert(`Error: ${err.error}`);
         }
       } catch (error) {

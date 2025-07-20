@@ -127,7 +127,7 @@ const CSVUpload = ({ onUploadSuccess }) => {
       template = `id,name,batch,joined_year\n`;
       filename = "student_template.csv";
     } else {
-      template = `id,name,designation\n`;
+      template = `id,name,email,designation\n`;
       filename = "faculty_template.csv";
     }
     const blob = new Blob([template], { type: "text/csv" });
@@ -531,16 +531,17 @@ const CSVUpload = ({ onUploadSuccess }) => {
               {uploadType === "student" ? (
                 <>
                   <li>
-                    CSV file should contain columns: id, name, current_semester,
-                    batch, joined_year
+                    CSV file should contain columns: <strong>id</strong> (unique student ID), name, current_semester, batch, joined_year
                   </li>
+                  <li><strong>id</strong> is the unique identifier for each student. Do not use email as id.</li>
                   <li>Each subsequent row should contain student data</li>
                 </>
               ) : (
                 <>
                   <li>
-                    CSV file should contain columns: id, name, designation
+                    CSV file should contain columns: <strong>id</strong> (unique faculty ID), name, <strong>email</strong>, designation
                   </li>
+                  <li><strong>id</strong> is the unique identifier for each faculty. Email is required for password reset.</li>
                   <li>Each subsequent row should contain faculty data</li>
                 </>
               )}

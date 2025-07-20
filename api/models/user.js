@@ -5,11 +5,14 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   role: { type: String, enum: ["student", "faculty", "admin"], required: true },
   password: { type: String, required: true },
+  mustChangePassword: { type: Boolean, default: true },
   email: { type: String },
   phone: { type: String },
   // Reference to the actual student/faculty document
   studentRef: { type: String, ref: "Student" },
   facultyRef: { type: String, ref: "Faculty" },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
 });
 
 export default mongoose.model("User", userSchema); 

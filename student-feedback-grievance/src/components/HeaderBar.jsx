@@ -172,9 +172,6 @@ const FormButton = styled(motion.button)`
 
 const HeaderBar = () => {
   const { logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(3);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -144,11 +144,12 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
         .pipe(parse({ columns: true, trim: true }));
 
       parser.on("data", (row, index) => {
-        // Only process the columns: id, name, batch, joined_year
+        // Only process the columns: id, name, batch, joined_year, email
         const idValue = row["id"];
         const nameValue = row["name"];
         const batchValue = row["batch"];
         const joinedYearValue = row["joined_year"];
+        const emailValue = row["email"];
         
         const rowNumber = index + 2; // +2 because index starts at 0 and we skip header row
         
@@ -169,6 +170,11 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
           errors.push({ row: rowNumber, error: "Joined year is required" });
           return;
         }
+        // Validate email format if provided
+        if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+          errors.push({ row: rowNumber, error: "Invalid email format" });
+          return;
+        }
 
         // Validate joined_year format
         const joinedYear = Number(joinedYearValue);
@@ -180,6 +186,7 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
         const studentData = {
           id: String(idValue),
           name: String(nameValue),
+          email: emailValue && emailValue.trim() !== '' ? String(emailValue) : `${idValue}@student.annauniv.edu`,
           batch: Number(batchValue),
           joined_year: joinedYear,
           current_semester: calculateSemester(joinedYear),
@@ -230,6 +237,8 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
                   role: "student",
                   password: hashedPassword,
                   studentRef: student._id,
+                  mustChangePassword: true,
+                  email: student.email,
                 };
               })
             );

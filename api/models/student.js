@@ -8,6 +8,7 @@ const studentSchema = new mongoose.Schema({
   batch: { type: Number, required: true },
   joined_year: { type: Number },
   isFeedbackGiven: { type: Boolean, default: false },
+  mustChangePassword: { type: Boolean, default: true },
 });
 
 export default mongoose.model("Student", studentSchema);

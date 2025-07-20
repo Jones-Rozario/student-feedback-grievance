@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Courses.css";
-import { apiFetch } from "../../../utils/api";
+import { apiAxios } from "../../../utils/api";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -22,9 +22,7 @@ const Courses = () => {
     regulation: "",
   });
 
-  // Bulk delete state
-  const [bulkDeleteSemester, setBulkDeleteSemester] = useState("");
-  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
 
   useEffect(() => {
     fetchCourses();
@@ -37,12 +35,8 @@ const Courses = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const response = await apiFetch("http://localhost:5000/api/courses");
-      if (!response.ok) {
-        throw new Error("Failed to fetch courses");
-      }
-      const data = await response.json();
-      setCourses(data);
+      const response = await apiAxios().get("/courses");
+      setCourses(response.data);
       setError("");
     } catch (err) {
       setError("Failed to fetch courses");
@@ -82,18 +76,12 @@ const Courses = () => {
 
   const handleUpdate = async () => {
     try {
-      const response = await apiFetch(
-        `http://localhost:5000/api/courses/${editingCourse}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editForm),
-        }
+      const response = await apiAxios().put(
+        `/courses/${editingCourse}`,
+        editForm
       );
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error("Failed to update course");
       }
 
@@ -109,14 +97,11 @@ const Courses = () => {
   const handleDelete = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       try {
-        const response = await apiFetch(
-          `http://localhost:5000/api/courses/${courseId}`,
-          {
-            method: "DELETE",
-          }
+        const response = await apiAxios().delete(
+          `/courses/${courseId}`
         );
 
-        if (!response.ok) {
+        if (response.status !== 200) {
           throw new Error("Failed to delete course");
         }
 

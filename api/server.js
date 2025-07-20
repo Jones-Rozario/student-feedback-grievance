@@ -31,6 +31,7 @@ const createAdminUser = async () => {
         name: 'Administrator',
         role: 'admin',
         password: hashedPassword,
+        mustChangePassword: true,
       });
       await adminUser.save();
       console.log('Admin user created successfully.');

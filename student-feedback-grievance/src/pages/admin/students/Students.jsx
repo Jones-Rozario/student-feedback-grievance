@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Students.css";
-import { apiFetch } from '../../../utils/api';
+import { apiAxios } from '../../../utils/api';
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -39,12 +39,11 @@ const Students = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await apiFetch("http://localhost:5000/api/students");
-      if (!response.ok) {
+      const response = await apiAxios().get("/students");
+      if (response.data.error) {
         throw new Error("Failed to fetch students");
       }
-      const data = await response.json();
-      setStudents(data);
+      setStudents(response.data);
       setError("");
     } catch (err) {
       setError("Failed to fetch students");
@@ -97,18 +96,12 @@ const Students = () => {
 
   const handleUpdate = async () => {
     try {
-      const response = await apiFetch(
-        `http://localhost:5000/api/students/${editingStudent}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editForm),
-        }
+      const response = await apiAxios().put(
+        `/students/${editingStudent}`,
+        editForm
       );
 
-      if (!response.ok) {
+      if (response.data.error) {
         throw new Error("Failed to update student");
       }
 
@@ -130,14 +123,11 @@ const Students = () => {
   const handleDelete = async (studentId) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
       try {
-        const response = await apiFetch(
-          `http://localhost:5000/api/students/${studentId}`,
-          {
-            method: "DELETE",
-          }
+        const response = await apiAxios().delete(
+          `/students/${studentId}`
         );
 
-        if (!response.ok) {
+        if (response.data.error) {
           throw new Error("Failed to delete student");
         }
 
@@ -161,14 +151,11 @@ const Students = () => {
       )
     ) {
       try {
-        const response = await apiFetch(
-          `http://localhost:5000/api/students/semester/${bulkDeleteSemester}`,
-          {
-            method: "DELETE",
-          }
+        const response = await apiAxios().delete(
+          `/students/semester/${bulkDeleteSemester}`
         );
 
-        if (!response.ok) {
+        if (response.data.error) {
           throw new Error("Failed to delete students");
         }
 

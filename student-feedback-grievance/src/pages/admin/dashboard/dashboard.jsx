@@ -4,7 +4,7 @@ import StatCard from "../../../components/statcard/statcard";
 import BarChart from "../../../components/barchart.jsx";
 import PieChart from "../../../components/piechart.jsx";
 import { useAuth } from "../../../contexts/AuthContext";
-import { apiFetch } from '../../../utils/api';
+import { apiAxios } from '../../../utils/api';
 import { 
   FaUsers, 
   FaComments, 
@@ -44,36 +44,34 @@ const Dashboard = () => {
       try {
         // Fetch basic stats
         const [feedbacks, grievanceStats, students, faculties, courses, grievances] = await Promise.all([
-          apiFetch("http://localhost:5000/api/feedback").then((res) => res.json()),
-          apiFetch("http://localhost:5000/api/grievances/stats/overview").then((res) => res.json()),
-          apiFetch("http://localhost:5000/api/students").then((res) => res.json()),
-          apiFetch("http://localhost:5000/api/faculties").then((res) => res.json()),
-          apiFetch("http://localhost:5000/api/courses").then((res) => res.json()),
-          apiFetch("http://localhost:5000/api/grievances").then((res) => res.json()),
+          apiAxios().get("/feedback").then((res) => res.data),
+          apiAxios().get("/grievances/stats/overview").then((res) => res.data),
+          apiAxios().get("/students").then((res) => res.data),
+          apiAxios().get("/faculties").then((res) => res.data),
+          apiAxios().get("/courses").then((res) => res.data),
+          apiAxios().get("/grievances").then((res) => res.data),
         ]);
 
         // Fetch top rated faculty
         const facultiesWithRatings = await Promise.all(
           faculties.map(async (faculty) => {
             try {
-              const avgResponse = await apiFetch(
-                `http://localhost:5000/api/feedback/faculty/avg/${faculty._id}`
+              const avgResponse = await apiAxios().get(
+                `/feedback/faculty/avg/${faculty._id}`
               );
-              const ratingsResponse = await apiFetch(
-                `http://localhost:5000/api/feedback/faculty/ratings/${faculty._id}`
+              const ratingsResponse = await apiAxios().get(
+                `/feedback/faculty/ratings/${faculty._id}`
               );
               
               let avgScore = 0;
               let questionRatings = [];
               
-              if (avgResponse.ok) {
-                const avgData = await avgResponse.json();
-                avgScore = avgData.averageScore || 0;
+              if (avgResponse.data) {
+                avgScore = avgResponse.data.averageScore || 0;
               }
               
-              if (ratingsResponse.ok) {
-                const ratingsData = await ratingsResponse.json();
-                questionRatings = ratingsData.ratings || [];
+              if (ratingsResponse.data) {
+                questionRatings = ratingsResponse.data.ratings || [];
               }
               
               const averageRating = questionRatings.length > 0 

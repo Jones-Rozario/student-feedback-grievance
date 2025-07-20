@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaBell, FaCheckCircle, FaTrash } from "react-icons/fa";
 import styles from "./Notifications.module.css";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiFetch } from '../../utils/api';
+import { apiAxios } from '../../utils/api';
 
 const Notifications = () => {
   const { currentUser } = useAuth();
@@ -19,12 +19,11 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await apiFetch(
-        `http://localhost:5000/api/notifications/student/${currentUser.studentRef}`
+      const response = await apiAxios().get(
+        `/notifications/student/${currentUser.studentRef}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data);
+      if (response.data) {
+        setNotifications(response.data);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -37,9 +36,7 @@ const Notifications = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      await apiFetch(`http://localhost:5000/api/notifications/${id}/read`, {
-        method: "PUT",
-      });
+      await apiAxios().put(`/notifications/${id}/read`);
       // Refresh notifications after marking one as read
       fetchNotifications();
     } catch (error) {
@@ -55,10 +52,8 @@ const Notifications = () => {
     if (!confirmed) return;
     
     try {
-      const response = await apiFetch(`http://localhost:5000/api/notifications/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
+      const response = await apiAxios().delete(`/notifications/${id}`);
+      if (response.data) {
         // Remove the notification from local state
         setNotifications(prev => prev.filter(notification => notification._id !== id));
       } else {
@@ -82,9 +77,7 @@ const Notifications = () => {
     try {
       // Delete all notifications one by one
       const deletePromises = notifications.map(notification =>
-        apiFetch(`http://localhost:5000/api/notifications/${notification._id}`, {
-          method: "DELETE",
-        })
+        apiAxios().delete(`/notifications/${notification._id}`)
       );
       
       await Promise.all(deletePromises);

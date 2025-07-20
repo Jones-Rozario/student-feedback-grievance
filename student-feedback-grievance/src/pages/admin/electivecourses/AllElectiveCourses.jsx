@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./ElectiveCourses.module.css";
 import { apiAxios } from "../../../utils/api";
-import { FaFilter, FaSearch, FaTimes, FaGraduationCap, FaBook, FaCalendarAlt } from "react-icons/fa";
+import { FaFilter, FaTimes, FaGraduationCap, FaBook, FaCalendarAlt } from "react-icons/fa";
 
 const AllElectiveCourses = () => {
   const [courses, setCourses] = useState([]);

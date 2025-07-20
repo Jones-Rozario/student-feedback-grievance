@@ -28,6 +28,9 @@ import Unauthorized from "./pages/Unauthorized";
 import FacultySelfPerformance from "./pages/faculty/FacultySelfPerformance";
 import AllElectiveCourses from "./pages/admin/electivecourses/AllElectiveCourses";
 import ElectiveCoursesStudentAssignment from "./pages/admin/electivecourses/ElectiveCoursesStudentAssignment";
+import ChangePassword from "./pages/changePassword";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Admin layout component
 const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
@@ -62,6 +65,9 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected student routes */}
             <Route

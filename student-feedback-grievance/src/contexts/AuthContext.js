@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, token) => {
     setCurrentUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-    console.log(token);
     localStorage.setItem("token", token);
   };
 
@@ -66,6 +65,7 @@ export const AuthProvider = ({ children }) => {
     hasAnyRole,
     getToken,
     loading,
+    mustChangePassword: currentUser?.mustChangePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

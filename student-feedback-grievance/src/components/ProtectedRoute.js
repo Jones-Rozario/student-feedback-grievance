@@ -8,7 +8,7 @@ const ProtectedRoute = ({
   requiredRoles = null,
   redirectTo = '/login' 
 }) => {
-  const { isAuthenticated, hasRole, hasAnyRole, loading } = useAuth();
+  const { isAuthenticated, hasRole, hasAnyRole, loading, mustChangePassword } = useAuth();
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -27,6 +27,11 @@ const ProtectedRoute = ({
   // Check if user is authenticated
   if (!isAuthenticated()) {
     return <Navigate to={redirectTo} replace />;
+  }
+
+  // Check if user must change password
+  if (mustChangePassword && window.location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
   }
 
   // Check for specific role requirement

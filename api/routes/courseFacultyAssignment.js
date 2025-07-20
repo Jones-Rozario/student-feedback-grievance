@@ -30,7 +30,7 @@ router.get(
   async (req, res) => {
     try {
       const semester = Number(req.params.semester);
-      const batch = req.params.batch;
+      const batch = Number(req.params.batch);
       const academic_year = req.query.academic_year;
       const isElective = req.query.isElective;
 
@@ -56,9 +56,9 @@ router.get(
         batch: batch,
         academic_year: academic_year,
       };
-      if (isElective !== undefined) {
-        query["isElective"] = isElective === "true";
-      }
+      // if (isElective !== undefined) {
+      //   query["isElective"] = isElective === "true";
+      // }
 
       // Find assignments and populate course (to check isElective)
       let assignments = await CourseFacultyAssignment.find(query)
@@ -71,6 +71,68 @@ router.get(
           (a) => a.course && a.course.isElective === (isElective === "true")
         );
       }
+      console.log(assignments);
+
+      console.log(`Found ${assignments.length} assignments`);
+      res.status(200).json(assignments);
+    } catch (err) {
+      console.error("Error in semester/batch/academic_year route:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// Get assignments by semester and batch and academic year and course
+router.get(
+  "/semester/:semester/batch/:batch/course/:course",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const semester = Number(req.params.semester);
+      const batch = Number(req.params.batch);
+      const academic_year = req.query.academic_year;
+      const isElective = req.query.isElective;
+      const course = req.params.course;
+
+      // Validate semester
+      if (isNaN(semester) || semester < 1 || semester > 8) {
+        return res
+          .status(400)
+          .json({ error: "Invalid semester. Must be 1-8." });
+      }
+      if (!academic_year) {
+        return res
+          .status(400)
+          .json({ error: "academic_year is required as a query parameter" });
+      }
+
+      console.log(
+        `Fetching assignments for semester: ${semester}, batch: ${batch}, academic_year: ${academic_year}, isElective: ${isElective}`
+      );
+
+      // Build query
+      const query = {
+        semester: semester,
+        batch: batch,
+        academic_year: academic_year,
+        course: course,
+      };
+      // if (isElective !== undefined) {
+      //   query["isElective"] = isElective === "true";
+      // }
+
+      // Find assignments and populate course (to check isElective)
+      let assignments = await CourseFacultyAssignment.find(query)
+        .populate("course", "name code regulation isElective")
+        .populate("faculty", "name designation");
+
+      // If isElective filter is set, filter by course.isElective
+      if (isElective !== undefined) {
+        assignments = assignments.filter(
+          (a) => a.course && a.course.isElective === (isElective === "true")
+        );
+      }
+      console.log(assignments);
 
       console.log(`Found ${assignments.length} assignments`);
       res.status(200).json(assignments);
@@ -334,7 +396,10 @@ router.post(
             }
             // Validate academic_year format
             if (!/^\d{4} - \d{4}$/.test(a.academic_year)) {
-              console.error(`Row ${i + 2}: Invalid academic_year format`, a.academic_year);
+              console.error(
+                `Row ${i + 2}: Invalid academic_year format`,
+                a.academic_year
+              );
               errors.push({
                 row: i + 2,
                 error: "Invalid academic_year format (expected YYYY - YYYY)",
@@ -353,7 +418,9 @@ router.post(
             // Validate course exists
             const courseDoc = await Course.findOne({ code: a.course });
             if (!courseDoc) {
-              console.error(`Row ${i + 2}: Course with code '${a.course}' not found`);
+              console.error(
+                `Row ${i + 2}: Course with code '${a.course}' not found`
+              );
               errors.push({
                 row: i + 2,
                 error: `Course with code '${a.course}' not found`,
@@ -363,7 +430,9 @@ router.post(
             // Validate faculty exists
             const facultyDoc = await Faculty.findOne({ id: a.faculty });
             if (!facultyDoc) {
-              console.error(`Row ${i + 2}: Faculty with id '${a.faculty}' not found`);
+              console.error(
+                `Row ${i + 2}: Faculty with id '${a.faculty}' not found`
+              );
               errors.push({
                 row: i + 2,
                 error: `Faculty with id '${a.faculty}' not found`,
@@ -419,22 +488,28 @@ router.post(
 );
 
 // Get unique courses by semester
-router.get("/unique-courses/semester/:semester", verifyToken, async (req, res) => {
-  try {
-    const semester = Number(req.params.semester);
-    if (isNaN(semester) || semester < 1 || semester > 8) {
-      return res.status(400).json({ error: "Invalid semester. Must be 1-8." });
+router.get(
+  "/unique-courses/semester/:semester",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const semester = Number(req.params.semester);
+      if (isNaN(semester) || semester < 1 || semester > 8) {
+        return res
+          .status(400)
+          .json({ error: "Invalid semester. Must be 1-8." });
+      }
+      // Find all assignments for the semester
+      const assignments = await CourseFacultyAssignment.find({ semester });
+      // Get unique course IDs
+      const courseIds = [...new Set(assignments.map((a) => a.course))];
+      // Fetch course documents
+      const courses = await Course.find({ _id: { $in: courseIds } });
+      res.status(200).json(courses);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    // Find all assignments for the semester
-    const assignments = await CourseFacultyAssignment.find({ semester });
-    // Get unique course IDs
-    const courseIds = [...new Set(assignments.map(a => a.course))];
-    // Fetch course documents
-    const courses = await Course.find({ _id: { $in: courseIds } });
-    res.status(200).json(courses);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
 export default router;

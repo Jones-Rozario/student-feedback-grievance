@@ -7,7 +7,7 @@ import backgroundImage from "../../../assests/Red_Building_Cropped.jpg";
 import HeaderBar from "../../../components/HeaderBar";
 import FooterBar from "../../../components/FooterBar";
 import { useAuth } from "../../../contexts/AuthContext";
-import { apiFetch } from "../../../utils/api";
+import { apiAxios } from "../../../utils/api";
 
 // Styled components
 const fadeIn = keyframes`
@@ -252,19 +252,23 @@ const FeedbackPage = () => {
       try {
         setLoading(true);
         // 1. Fetch regular assignments
-        const regularResponse = await apiFetch(
-          `http://localhost:5000/api/assignments/semester/${
+        const regularResponse = await apiAxios().get(
+          `/assignments/semester/${
             currentUser?.current_semester
           }/batch/${currentUser?.batch}?academic_year=${getAcademicYear()}`
         );
-        if (!regularResponse.ok) {
+        if (regularResponse.status !== 200) {
           throw new Error("Failed to fetch assignments");
         }
-        const regularData = await regularResponse.json();
+        const regularData = regularResponse.data;
         const mapping = {};
         const courseList = [];
         regularData.forEach((assignment) => {
-          if (assignment.course && assignment.faculty) {
+          if (
+            assignment.course &&
+            assignment.faculty &&
+            assignment.course.isElective === false // Only regular courses
+          ) {
             mapping[assignment.course._id] = assignment.faculty;
             courseList.push({
               ...assignment.course,
@@ -276,30 +280,33 @@ const FeedbackPage = () => {
         });
 
         // 2. Fetch student's elective assignments
-        const electiveResponse = await apiFetch(
-          `http://localhost:5000/api/elective-student-assignments/student/${currentUser?.id}`
+        const electiveResponse = await apiAxios().get(
+          `/elective-student-assignments/student/${currentUser?.id}`
         );
-        if (electiveResponse.ok) {
-          const electiveData = await electiveResponse.json();
+        if (electiveResponse.status === 200) {
+          const electiveData = electiveResponse.data;
           // electiveData is an array of assignments, each with electives array
           const electives = electiveData[0]?.electives || [];
+
+          console.log("Electives taken by the student", electives);
           // 3. For each elective, fetch the faculty assignment
           const electiveAssignments = await Promise.all(
             electives.map(async (elective) => {
               if (!elective.electiveCourse || !elective.batch) return null;
               // Fetch the assignment for this elective course, batch, and academic year
-              const res = await apiFetch(
-                `http://localhost:5000/api/assignments/semester/${
+              const res = await apiAxios().get(
+                `/assignments/semester/${
                   currentUser?.current_semester
                 }/batch/${
                   elective.batch
                 }?academic_year=${getAcademicYear()}&isElective=true`
               );
-              if (!res.ok) return null;
-              const data = await res.json();
+              if (res.status !== 200) return null;
+              const data = res.data;
+
               // Find the assignment for this course
               const assignment = data.find(
-                (a) => a.course && a.course._id === elective.electiveCourse
+                (a) => a.course && a.course._id === elective.electiveCourse._id
               );
               if (!assignment || !assignment.faculty) return null;
               return {
@@ -312,6 +319,8 @@ const FeedbackPage = () => {
               };
             })
           );
+          console.log("Elective faculties assignments", electiveAssignments);
+
           // Add valid elective assignments to mapping and courseList
           electiveAssignments.forEach((item) => {
             if (item && item.course && item.faculty) {
@@ -332,15 +341,15 @@ const FeedbackPage = () => {
         for (const course of courseList) {
           try {
             const studentId = currentUser?.studentRef || currentUser?._id;
-            const feedbackResponse = await apiFetch(
-              `http://localhost:5000/api/feedback/check/${studentId}/${
+            const feedbackResponse = await apiAxios().get(
+              `/feedback/check/${studentId}/${
                 course._id
               }/${course.batch || currentUser?.batch}/${
                 currentUser?.current_semester
               }`
             );
-            if (feedbackResponse.ok) {
-              const feedbackData = await feedbackResponse.json();
+            if (feedbackResponse.status === 200) {
+              const feedbackData = feedbackResponse.data;
               statusMap[course._id] = feedbackData.exists;
             }
           } catch (error) {
@@ -364,21 +373,15 @@ const FeedbackPage = () => {
               console.error("No valid student ID found");
               return;
             }
-            const response = await apiFetch(
-              `http://localhost:5000/api/students/${studentId}`,
-              {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ isFeedbackGiven: true }),
-              }
-            );
-            if (response.ok) {
-              const result = await response.json();
-              currentUser.isFeedbackGiven = true;
+            const axiosInstance = apiAxios();
+            const response = await axiosInstance.put(`/students/${studentId}`, {
+              isFeedbackGiven,
+            });
+            if (response.status === 200) {
+              const result = response.data;
+              currentUser.isFeedbackGiven = isFeedbackGiven;
             } else {
-              const errorData = await response.json();
+              const errorData = response.data;
               console.error(
                 "Failed to update student feedback status:",
                 errorData
@@ -412,7 +415,7 @@ const FeedbackPage = () => {
     }
   }, [currentUser]);
 
-  console.log("form data ", formData);
+  // console.log("form data ", formData);
 
   const handleCourseChange = (courseId) => {
     const selectedCourse = courses.find((course) => course._id === courseId);
@@ -467,29 +470,23 @@ const FeedbackPage = () => {
 
     try {
       const studentId = currentUser?.studentRef || currentUser?._id;
-      const response = await apiFetch("http://localhost:5000/api/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          academic_year: getAcademicYear(),
-          student: studentId,
-          faculty: formData.faculty._id,
-          course: formData.course._id,
-          batch: String(formData.course.batch || currentUser.batch),
-          semester: currentUser.current_semester,
-          questionRating: formData.questionRating,
-          additionalComments: formData.additionalComments,
-        }),
+      const response = await apiAxios().post("/feedback", {
+        academic_year: getAcademicYear(),
+        student: studentId,
+        faculty: formData.faculty._id,
+        course: formData.course._id,
+        batch: String(formData.course.batch || currentUser.batch),
+        semester: currentUser.current_semester,
+        questionRating: formData.questionRating,
+        additionalComments: formData.additionalComments,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status !== 201) {
+        const errorData = response.data;
         throw new Error(errorData.error || "Failed to submit feedback");
       }
 
-      const result = await response.json();
+      const result = response.data;
       console.log("Feedback submitted:", result);
       toast.success("Feedback submitted successfully!");
 
@@ -512,26 +509,20 @@ const FeedbackPage = () => {
       if (allFeedbackGiven) {
         try {
           console.log("All feedback completed, updating student status...");
-          const updateResponse = await apiFetch(
-            `http://localhost:5000/api/students/${studentId}`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ isFeedbackGiven: true }),
-            }
+          const updateResponse = await apiAxios().put(
+            `/students/${studentId}`,
+            { isFeedbackGiven: true }
           );
 
-          if (updateResponse.ok) {
-            const result = await updateResponse.json();
+          if (updateResponse.status === 200) {
+            const result = updateResponse.data;
             console.log(
               "Updated student feedback status to completed:",
               result
             );
             currentUser.isFeedbackGiven = true;
           } else {
-            const errorData = await updateResponse.json();
+            const errorData = updateResponse.data;
             console.error(
               "Failed to update student feedback status:",
               errorData

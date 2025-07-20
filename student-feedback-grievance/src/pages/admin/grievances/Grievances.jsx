@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./GrievanceTable.module.css";
-import { apiFetch } from "../../../utils/api";
+import { apiAxios } from "../../../utils/api";
 
 const statusColors = {
   Pending: styles.statusOpen,
@@ -161,10 +161,9 @@ const Grievances = () => {
   const fetchGrievances = async () => {
     try {
       setLoading(true);
-      const response = await apiFetch("http://localhost:5000/api/grievances");
-      if (response.ok) {
-        const data = await response.json();
-        setGrievances(data);
+      const response = await apiAxios().get("/grievances");
+      if (response.data) {
+        setGrievances(response.data);
       } else {
         throw new Error("Failed to fetch grievances");
       }
@@ -177,41 +176,35 @@ const Grievances = () => {
 
   const handleUpdateStatus = async (grievanceId, status, adminResponse) => {
     try {
-      const response = await apiFetch(
-        `http://localhost:5000/api/grievances/${grievanceId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status, adminResponse }),
-        }
+      const response = await apiAxios().put(
+        `/grievances/${grievanceId}`,
+        { status, adminResponse }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to update grievance");
-      }
+      if (response.data) {
+        const updatedGrievance = response.data;
 
-      const updatedGrievance = await response.json();
-
-      if (status === "Resolved" || status === "Rejected") {
-        // If resolved or rejected, the grievance is deleted on the backend.
-        // We just need to remove it from the local state.
-        setGrievances((prev) => prev.filter((g) => g._id !== grievanceId));
-        setSelected(null); // Go back to the list view
-        alert(updatedGrievance.message); // Show the message from the backend
-      } else {
-        // For other statuses, we update the item in the list.
-        setGrievances((prev) =>
-          prev.map((g) =>
-            g._id === grievanceId ? updatedGrievance.grievance : g
-          )
-        );
-        // Update the selected grievance if it's the one being updated
-        if (selected && selected._id === grievanceId) {
-          setSelected(updatedGrievance.grievance);
+        if (status === "Resolved" || status === "Rejected") {
+          // If resolved or rejected, the grievance is deleted on the backend.
+          // We just need to remove it from the local state.
+          setGrievances((prev) => prev.filter((g) => g._id !== grievanceId));
+          setSelected(null); // Go back to the list view
+          alert(updatedGrievance.message); // Show the message from the backend
+        } else {
+          // For other statuses, we update the item in the list.
+          setGrievances((prev) =>
+            prev.map((g) =>
+              g._id === grievanceId ? updatedGrievance.grievance : g
+            )
+          );
+          // Update the selected grievance if it's the one being updated
+          if (selected && selected._id === grievanceId) {
+            setSelected(updatedGrievance.grievance);
+          }
+          alert("Grievance status updated successfully!");
         }
-        alert("Grievance status updated successfully!");
+      } else {
+        throw new Error("Failed to update grievance");
       }
     } catch (error) {
       console.error("Error updating grievance:", error);

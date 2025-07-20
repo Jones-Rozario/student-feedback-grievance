@@ -76,7 +76,7 @@ ul li {
 }
 
 .performanceViewWrapper {
-  max-width: 900px;
+  max-width: 100%;
   margin: 32px auto;
   background: #fff;
   border-radius: 16px;
