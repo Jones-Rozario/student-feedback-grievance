@@ -146,7 +146,7 @@ const LoginPage = () => {
           <h2 className="login-title-short">
             Welcome to the Grievance & Feedback Portal
           </h2>
-          <div className="login-subtitle-short">Login to continue</div>
+          <div className="login-subtitle-short">Department of Computer Science and Engineering - CEG </div>
         </div>
         <h2 className="login-welcome">
           Hey,

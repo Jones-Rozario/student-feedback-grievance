@@ -234,6 +234,11 @@ const FeedbackPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState({});
+  const [academicYears, setAcademicYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState({});
+  const [selectedSemester, setSelectedSemester] = useState(
+    currentUser.current_semester
+  );
 
   function getAcademicYear() {
     const date = new Date();
@@ -247,175 +252,212 @@ const FeedbackPage = () => {
     return `${startYear} - ${endYear}`;
   }
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        // 1. Fetch regular assignments
-        const regularResponse = await apiAxios().get(
-          `/assignments/semester/${
-            currentUser?.current_semester
-          }/batch/${currentUser?.batch}?academic_year=${getAcademicYear()}`
-        );
-        if (regularResponse.status !== 200) {
-          throw new Error("Failed to fetch assignments");
-        }
-        const regularData = regularResponse.data;
-        const mapping = {};
-        const courseList = [];
-        regularData.forEach((assignment) => {
-          if (
-            assignment.course &&
-            assignment.faculty &&
-            assignment.course.isElective === false // Only regular courses
-          ) {
-            mapping[assignment.course._id] = assignment.faculty;
-            courseList.push({
-              ...assignment.course,
-              batch: assignment.batch,
-              isElective: assignment.course.isElective,
-              academic_year: assignment.academic_year,
-            });
-          }
-        });
+  function getAcademicYearSemesterList(joinedYear) {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth(); // 0 = Jan, 11 = Dec
 
-        // 2. Fetch student's elective assignments
-        const electiveResponse = await apiAxios().get(
-          `/elective-student-assignments/student/${currentUser?.id}`
-        );
-        if (electiveResponse.status === 200) {
-          const electiveData = electiveResponse.data;
-          // electiveData is an array of assignments, each with electives array
-          const electives = electiveData[0]?.electives || [];
+    // Academic year starts from June/July
+    const lastAcademicYear = currentMonth >= 5 ? currentYear : currentYear - 1;
 
-          console.log("Electives taken by the student", electives);
-          // 3. For each elective, fetch the faculty assignment
-          const electiveAssignments = await Promise.all(
-            electives.map(async (elective) => {
-              if (!elective.electiveCourse || !elective.batch) return null;
-              // Fetch the assignment for this elective course, batch, and academic year
-              const res = await apiAxios().get(
-                `/assignments/semester/${
-                  currentUser?.current_semester
-                }/batch/${
-                  elective.batch
-                }?academic_year=${getAcademicYear()}&isElective=true`
-              );
-              if (res.status !== 200) return null;
-              const data = res.data;
+    const academicList = [];
+    let semester = 1;
 
-              // Find the assignment for this course
-              const assignment = data.find(
-                (a) => a.course && a.course._id === elective.electiveCourse._id
-              );
-              if (!assignment || !assignment.faculty) return null;
-              return {
-                course: {
-                  ...assignment.course,
-                  batch: elective.batch,
-                  isElective: true,
-                },
-                faculty: assignment.faculty,
-              };
-            })
-          );
-          console.log("Elective faculties assignments", electiveAssignments);
+    for (let year = joinedYear; year <= lastAcademicYear; year++) {
+      const academicYear = `${year} - ${year + 1}`;
+      const semesters = [];
 
-          // Add valid elective assignments to mapping and courseList
-          electiveAssignments.forEach((item) => {
-            if (item && item.course && item.faculty) {
-              mapping[item.course._id] = item.faculty;
-              // Avoid duplicate courses (if already in courseList)
-              if (!courseList.some((c) => c._id === item.course._id)) {
-                courseList.push(item.course);
-              }
-            }
+      // Push two semesters per academic year
+      semesters.push(semester++);
+      semesters.push(semester++);
+
+      academicList.push({ academicYear, semesters });
+    }
+
+    return academicList;
+  }
+
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      // 1. Fetch regular assignments
+      const regularResponse = await apiAxios().get(
+        `/assignments/semester/${
+          selectedSemester || currentUser?.current_semester
+        }/batch/${currentUser?.batch}?academic_year=${
+          selectedYear.academicYear || getAcademicYear()
+        }`
+      );
+      if (regularResponse.status !== 200) {
+        throw new Error("Failed to fetch assignments");
+      }
+      const regularData = regularResponse.data;
+      const mapping = {};
+      const courseList = [];
+      regularData.forEach((assignment) => {
+        if (
+          assignment.course &&
+          assignment.faculty &&
+          assignment.course.isElective === false // Only regular courses
+        ) {
+          mapping[assignment.course._id] = assignment.faculty;
+          courseList.push({
+            ...assignment.course,
+            batch: assignment.batch,
+            isElective: assignment.course.isElective,
+            academic_year: assignment.academic_year,
           });
         }
+      });
 
-        setCourseFacultyMapping(mapping);
-        setCourses(courseList);
+      // 2. Fetch student's elective assignments
+      const electiveResponse = await apiAxios().get(
+        `/elective-student-assignments/student/${currentUser?.id}`
+      );
+      if (electiveResponse.status === 200) {
+        const electiveData = electiveResponse.data;
+        // electiveData is an array of assignments, each with electives array
+        const electives = electiveData[0]?.electives || [];
 
-        // Check feedback status for each course
-        const statusMap = {};
-        for (const course of courseList) {
-          try {
-            const studentId = currentUser?.studentRef || currentUser?._id;
-            const feedbackResponse = await apiAxios().get(
-              `/feedback/check/${studentId}/${
-                course._id
-              }/${course.batch || currentUser?.batch}/${
-                currentUser?.current_semester
-              }`
+        console.log("Electives taken by the student", electives);
+        // 3. For each elective, fetch the faculty assignment
+        const electiveAssignments = await Promise.all(
+          electives.map(async (elective) => {
+            if (!elective.electiveCourse || !elective.batch) return null;
+            // Fetch the assignment for this elective course, batch, and academic year
+            const res = await apiAxios().get(
+              `/assignments/semester/${
+                selectedSemester || currentUser?.current_semester
+              }/batch/${elective.batch}?academic_year=${
+                selectedYear.academicYear || getAcademicYear()
+              }&isElective=true`
             );
-            if (feedbackResponse.status === 200) {
-              const feedbackData = feedbackResponse.data;
-              statusMap[course._id] = feedbackData.exists;
-            }
-          } catch (error) {
-            console.error(
-              `Error checking feedback for course ${course._id}:`,
-              error
-            );
-            statusMap[course._id] = false;
-          }
-        }
-        setFeedbackStatus(statusMap);
+            if (res.status !== 200) return null;
+            const data = res.data;
 
-        const isFeedbackGiven = Object.values(statusMap).every(
-          (s) => s === true
+            // Find the assignment for this course
+            const assignment = data.find(
+              (a) => a.course && a.course._id === elective.electiveCourse._id
+            );
+            if (!assignment || !assignment.faculty) return null;
+            return {
+              course: {
+                ...assignment.course,
+                batch: elective.batch,
+                isElective: true,
+              },
+              faculty: assignment.faculty,
+            };
+          })
         );
+        console.log("Elective faculties assignments", electiveAssignments);
 
-        if (isFeedbackGiven && courseList.length > 0) {
-          try {
-            const studentId = currentUser?.studentRef || currentUser?._id;
-            if (!studentId) {
-              console.error("No valid student ID found");
-              return;
+        // Add valid elective assignments to mapping and courseList
+        electiveAssignments.forEach((item) => {
+          if (item && item.course && item.faculty) {
+            mapping[item.course._id] = item.faculty;
+            // Avoid duplicate courses (if already in courseList)
+            if (!courseList.some((c) => c._id === item.course._id)) {
+              courseList.push(item.course);
             }
-            const axiosInstance = apiAxios();
-            const response = await axiosInstance.put(`/students/${studentId}`, {
-              isFeedbackGiven,
-            });
-            if (response.status === 200) {
-              const result = response.data;
-              currentUser.isFeedbackGiven = isFeedbackGiven;
-            } else {
-              const errorData = response.data;
-              console.error(
-                "Failed to update student feedback status:",
-                errorData
-              );
-            }
-          } catch (error) {
-            console.error("Error updating student feedback status:", error);
           }
-        }
-
-        // Set default course and faculty if available
-        if (courseList.length > 0) {
-          const defaultCourse = courseList[0];
-          const defaultFaculty = mapping[defaultCourse._id];
-          setFormData((prev) => ({
-            ...prev,
-            course: defaultCourse,
-            faculty: defaultFaculty,
-          }));
-        }
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-        setError("Failed to load course assignments. Please try again later.");
-        toast.error("Failed to load course assignments");
-      } finally {
-        setLoading(false);
+        });
       }
-    };
+
+      setCourseFacultyMapping(mapping);
+      setCourses(courseList);
+
+      // Check feedback status for each course
+      const statusMap = {};
+      for (const course of courseList) {
+        try {
+          const studentId = currentUser?.studentRef || currentUser?._id;
+          const feedbackResponse = await apiAxios().get(
+            `/feedback/check/${studentId}/${course._id}/${
+              course.batch || currentUser?.batch
+            }/${selectedSemester || currentUser?.current_semester}`
+          );
+          if (feedbackResponse.status === 200) {
+            const feedbackData = feedbackResponse.data;
+            statusMap[course._id] = feedbackData.exists;
+          }
+        } catch (error) {
+          console.error(
+            `Error checking feedback for course ${course._id}:`,
+            error
+          );
+          statusMap[course._id] = false;
+        }
+      }
+      setFeedbackStatus(statusMap);
+
+      const isFeedbackGiven = Object.values(statusMap).every((s) => s === true);
+
+      if (courseList.length > 0) {
+        try {
+          const studentId = currentUser?.studentRef || currentUser?._id;
+          if (!studentId) {
+            console.error("No valid student ID found");
+            return;
+          }
+          const axiosInstance = apiAxios();
+          const response = await axiosInstance.put(`/students/${studentId}`, {
+            isFeedbackGiven,
+          });
+          if (response.status === 200) {
+            const result = response.data;
+            currentUser.isFeedbackGiven = isFeedbackGiven;
+          } else {
+            const errorData = response.data;
+            console.error(
+              "Failed to update student feedback status:",
+              errorData
+            );
+          }
+        } catch (error) {
+          console.error("Error updating student feedback status:", error);
+        }
+      }
+
+      // Set default course and faculty if available
+      if (courseList.length > 0) {
+        const defaultCourse = courseList[0];
+        const defaultFaculty = mapping[defaultCourse._id];
+        setFormData((prev) => ({
+          ...prev,
+          course: defaultCourse,
+          faculty: defaultFaculty,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      setError("Failed to load course assignments. Please try again later.");
+      toast.error("Failed to load course assignments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const academicList = getAcademicYearSemesterList(currentUser.joined_year);
+
+    const academic = academicList.find(
+      (ay) => getAcademicYear() === ay.academicYear
+    );
+    setAcademicYears(academicList);
+    setSelectedYear(academic);
+    setSelectedSemester(academic.semesters[0]);
     if (currentUser?.current_semester && currentUser?.batch) {
       fetchAssignments();
     }
   }, [currentUser]);
 
-  // console.log("form data ", formData);
+  useEffect(() => {
+    if (currentUser?.current_semester && currentUser?.batch) {
+      fetchAssignments();
+    }
+  }, [selectedSemester, selectedYear]);
+
+  // console.log("form data ", formData)
 
   const handleCourseChange = (courseId) => {
     const selectedCourse = courses.find((course) => course._id === courseId);
@@ -468,15 +510,24 @@ const FeedbackPage = () => {
 
     setIsSubmitting(true);
 
+    console.log({
+      academic_year: selectedYear.academicYear,
+      faculty: formData.faculty._id,
+      course: formData.course._id,
+      batch: String(formData.course.batch || currentUser.batch),
+      semester: selectedSemester,
+      questionRating: formData.questionRating,
+    });
+
     try {
       const studentId = currentUser?.studentRef || currentUser?._id;
       const response = await apiAxios().post("/feedback", {
-        academic_year: getAcademicYear(),
+        academic_year: selectedYear.academicYear,
         student: studentId,
         faculty: formData.faculty._id,
         course: formData.course._id,
         batch: String(formData.course.batch || currentUser.batch),
-        semester: currentUser.current_semester,
+        semester: selectedSemester,
         questionRating: formData.questionRating,
         additionalComments: formData.additionalComments,
       });
@@ -553,6 +604,7 @@ const FeedbackPage = () => {
     }
   };
 
+  console.log(selectedYear, selectedSemester);
   if (loading) {
     return (
       <>
@@ -596,6 +648,79 @@ const FeedbackPage = () => {
         <PageContainer>
           <Container>
             <Title>Course Feedback Form</Title>
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Academic Year</Label>
+              <select
+                name="courseName"
+                value={selectedYear?.academicYear || ""}
+                onChange={(e) => {
+                  const selected = academicYears.find(
+                    (year) => year.academicYear === e.target.value
+                  );
+                  setSelectedYear(selected);
+                  setSelectedSemester(selected.semesters[0]);
+                }}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears.map((year, i) => (
+                  <option key={i} value={year.academicYear}>
+                    {year.academicYear}
+                  </option>
+                ))}
+              </select>
+            </FormGroup>
+
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Semester</Label>
+              <select
+                name="courseName"
+                value={selectedSemester || ""}
+                onChange={(e) => setSelectedSemester(Number(e.target.value))}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                {selectedYear?.semesters
+                  ?.filter((sem) => sem <= currentUser.current_semester)
+                  .map((sem, i) => (
+                    <option key={i} value={sem}>
+                      {sem}
+                    </option>
+                  ))}
+              </select>
+            </FormGroup>
+
             <div style={{ textAlign: "center", padding: "2rem" }}>
               No courses assigned for your semester and batch.
             </div>
@@ -619,6 +744,79 @@ const FeedbackPage = () => {
         <PageContainer>
           <Container>
             <Title>Course Feedback Form</Title>
+
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Academic Year</Label>
+              <select
+                name="courseName"
+                value={selectedYear?.academicYear || ""}
+                onChange={(e) => {
+                  const selected = academicYears.find(
+                    (year) => year.academicYear === e.target.value
+                  );
+                  setSelectedYear(selected);
+                  setSelectedSemester(selected.semesters[0]);
+                }}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears.map((year, i) => (
+                  <option key={i} value={year.academicYear}>
+                    {year.academicYear}
+                  </option>
+                ))}
+              </select>
+            </FormGroup>
+
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Semester</Label>
+              <select
+                name="courseName"
+                value={selectedSemester || ""}
+                onChange={(e) => setSelectedSemester(Number(e.target.value))}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                {selectedYear?.semesters
+                  ?.filter((sem) => sem <= currentUser.current_semester)
+                  .map((sem, i) => (
+                    <option key={i} value={sem}>
+                      {sem}
+                    </option>
+                  ))}
+              </select>
+            </FormGroup>
             <div
               style={{
                 background: "#e8f5e8",
@@ -646,6 +844,79 @@ const FeedbackPage = () => {
         <Container>
           <Title>Course Feedback Form</Title>
           <Form onSubmit={handleSubmit}>
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Academic Year</Label>
+              <select
+                name="courseName"
+                value={selectedYear?.academicYear || ""}
+                onChange={(e) => {
+                  const selected = academicYears.find(
+                    (year) => year.academicYear === e.target.value
+                  );
+                  setSelectedYear(selected);
+                  setSelectedSemester(selected.semesters[0]);
+                }}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                <option value="">Select Academic Year</option>
+                {academicYears.map((year, i) => (
+                  <option key={i} value={year.academicYear}>
+                    {year.academicYear}
+                  </option>
+                ))}
+              </select>
+            </FormGroup>
+
+            <FormGroup
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Label>Semester</Label>
+              <select
+                name="courseName"
+                value={selectedSemester || ""}
+                onChange={(e) => setSelectedSemester(Number(e.target.value))}
+                style={{
+                  padding: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ccc",
+                  width: "100%",
+                  outline: "none",
+                  backgroundColor: "white",
+                  color: "black",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                }}
+                required
+              >
+                {selectedYear?.semesters
+                  ?.filter((sem) => sem <= currentUser.current_semester)
+                  .map((sem, i) => (
+                    <option key={i} value={sem}>
+                      {sem}
+                    </option>
+                  ))}
+              </select>
+            </FormGroup>
+
             <FormGroup
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -746,7 +1017,7 @@ const FeedbackPage = () => {
                     </FormGroup>
                   ))}
 
-                  <FormGroup
+                  {/* <FormGroup
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.7 }}
@@ -762,7 +1033,7 @@ const FeedbackPage = () => {
                       }
                       placeholder="Share your thoughts and suggestions..."
                     />
-                  </FormGroup>
+                  </FormGroup> */}
 
                   <SubmitButton
                     type="submit"

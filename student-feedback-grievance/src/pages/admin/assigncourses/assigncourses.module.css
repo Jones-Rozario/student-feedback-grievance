@@ -64,6 +64,16 @@
   width: 200px;
   color: #333;
 }
+.assignCoursesForm input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #e1e5e9;
+  font-size: 1rem;
+  background: #fff;
+  transition: all 0.3s ease;
+  width: 200px;
+  color: #333;
+}
 
 .assignCoursesForm select:focus {
   border-color: #667eea;
