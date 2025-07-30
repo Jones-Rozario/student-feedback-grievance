@@ -256,13 +256,16 @@ const FeedbackPage = () => {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth(); // 0 = Jan, 11 = Dec
 
-    // Academic year starts from June/July
+    // Academic year starts from June (Month index 5)
     const lastAcademicYear = currentMonth >= 5 ? currentYear : currentYear - 1;
 
     const academicList = [];
     let semester = 1;
 
-    for (let year = joinedYear; year <= lastAcademicYear; year++) {
+    // Limit to max 4 academic years (joinedYear to joinedYear + 3)
+    const endYear = Math.min(joinedYear + 3, lastAcademicYear);
+
+    for (let year = joinedYear; year <= endYear; year++) {
       const academicYear = `${year} - ${year + 1}`;
       const semesters = [];
 
@@ -440,12 +443,10 @@ const FeedbackPage = () => {
   useEffect(() => {
     const academicList = getAcademicYearSemesterList(currentUser.joined_year);
 
-    const academic = academicList.find(
-      (ay) => getAcademicYear() === ay.academicYear
-    );
+    const academic = academicList[academicList.length - 1];
     setAcademicYears(academicList);
     setSelectedYear(academic);
-    setSelectedSemester(academic.semesters[0]);
+    setSelectedSemester(academic?.semesters[academic.semesters.length - 1]);
     if (currentUser?.current_semester && currentUser?.batch) {
       fetchAssignments();
     }
@@ -662,7 +663,7 @@ const FeedbackPage = () => {
                     (year) => year.academicYear === e.target.value
                   );
                   setSelectedYear(selected);
-                  setSelectedSemester(selected.semesters[0]);
+                  setSelectedSemester(selected?.semesters[0]);
                 }}
                 style={{
                   padding: "10px",
@@ -713,7 +714,7 @@ const FeedbackPage = () => {
               >
                 {selectedYear?.semesters
                   ?.filter((sem) => sem <= currentUser.current_semester)
-                  .map((sem, i) => (
+                  ?.map((sem, i) => (
                     <option key={i} value={sem}>
                       {sem}
                     </option>
@@ -759,7 +760,7 @@ const FeedbackPage = () => {
                     (year) => year.academicYear === e.target.value
                   );
                   setSelectedYear(selected);
-                  setSelectedSemester(selected.semesters[0]);
+                  setSelectedSemester(selected?.semesters[0]);
                 }}
                 style={{
                   padding: "10px",
@@ -858,7 +859,7 @@ const FeedbackPage = () => {
                     (year) => year.academicYear === e.target.value
                   );
                   setSelectedYear(selected);
-                  setSelectedSemester(selected.semesters[0]);
+                  setSelectedSemester(selected?.semesters[0]);
                 }}
                 style={{
                   padding: "10px",
@@ -944,7 +945,8 @@ const FeedbackPage = () => {
                 <option value="">Select Course</option>
                 {courses.map((course) => (
                   <option key={course._id} value={course._id}>
-                    {course.name} {course.isElective ? "(Elective)" : ""}{" "}
+                    {course.name} {course.code}{" "}
+                    {course.isElective ? "(Elective)" : ""}{" "}
                     {feedbackStatus[course._id] ? "(Feedback Given)" : ""}
                   </option>
                 ))}

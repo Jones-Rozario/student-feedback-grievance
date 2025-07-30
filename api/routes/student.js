@@ -27,7 +27,7 @@ function calculateSemester(joinYear) {
   // Every 6 months = 1 semester
   const semester = Math.floor(monthsElapsed / 6) + 1;
 
-  return semester; // cap at 8
+  return semester > 8 ? 8 : semester; // cap at 8
 }
 
 // get all students

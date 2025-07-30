@@ -305,12 +305,13 @@ router.get("/:id/performance",verifyToken,requireRoles("admin", "faculty"),async
   }
 );
 
-// Get faculty performance (self-view) along with their course and Batch
-router.get("/:id/performance/course/:courseId/batch/:batch", verifyToken, requireRoles("admin", "faculty"), async (req, res) => {
+// Get faculty performance (self-view) along with their course and Batch and semester
+router.get("/:id/performance/course/:courseId/batch/:batch/semester/:semester", verifyToken, requireRoles("admin", "faculty"), async (req, res) => {
   try {
     const facultyId = String(req.params.id);
     const courseId = String(req.params.courseId);
     const batch = req.params.batch;
+    const semester = req.params.semester;
     const academicYear = req.query.academic_year;
     const faculty = await Faculty.findById(facultyId);
     if (!faculty) {
@@ -322,6 +323,7 @@ router.get("/:id/performance/course/:courseId/batch/:batch", verifyToken, requir
       faculty: facultyId,
       course: courseId,
       batch: batch,
+      semester: semester
     };
     if (academicYear) {
       feedbackQuery["academic_year"] = academicYear;
@@ -329,6 +331,7 @@ router.get("/:id/performance/course/:courseId/batch/:batch", verifyToken, requir
 
     // Get feedbacks for this faculty, course, batch, and academic year (if provided)
     const feedbacks = await Feedback.find(feedbackQuery);
+    console.log(feedbacks);
     let avgScore = 0;
     if (feedbacks.length > 0) {
       avgScore = feedbacks.reduce((sum, f) => sum + f.score, 0) / feedbacks.length;

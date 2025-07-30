@@ -70,7 +70,7 @@ const Students = () => {
 
     if (batchFilter) {
       filtered = filtered.filter((student) =>
-        student.batch.toLowerCase().includes(batchFilter.toLowerCase())
+        student.batch === Number(batchFilter)
       );
     }
 

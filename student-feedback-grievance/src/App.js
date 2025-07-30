@@ -31,6 +31,7 @@ import ElectiveCoursesStudentAssignment from "./pages/admin/electivecourses/Elec
 import ChangePassword from "./pages/changePassword";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import FooterBar from "./components/FooterBar";
 
 // Admin layout component
 const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
@@ -39,6 +40,7 @@ const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
     <div className="right-content">
       <NavBar onHamburgerClick={() => setSidebarOpen(!sidebarOpen)} />
       {children}
+      <FooterBar/>
     </div>
   </div>
 );

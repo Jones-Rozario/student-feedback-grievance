@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./FacultyTable.module.css";
-import { apiAxios } from '../../../utils/api';
-import BarChart from '../../../components/barchart';
-
+import { apiAxios } from "../../../utils/api";
+import BarChart from "../../../components/barchart";
 
 const performanceColors = {
   High: styles.badgeHigh,
@@ -57,13 +56,24 @@ function FacultyPerformanceView({ faculty, onBack }) {
         // Fetch per-course, per-batch, per-year stats for all courses
         const stats = {};
         for (const assignment of allCourses) {
-          if (!assignment.course?._id || !assignment.batch || !assignment.academic_year) continue;
+          if (
+            !assignment.course?._id ||
+            !assignment.batch ||
+            !assignment.academic_year
+          )
+            continue;
           const res = await apiAxios().get(
-            `/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}?academic_year=${encodeURIComponent(assignment.academic_year)}`
+            `/faculties/${faculty._id}/performance/course/${
+              assignment.course._id
+            }/batch/${assignment.batch}/semester/${
+              assignment.semester
+            }?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
           if (res.data) {
             const data = res.data;
-            stats[`${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`] = data;
+            stats[
+              `${assignment.course._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
+            ] = data;
           }
         }
         setCourseBatchStats(stats);
@@ -78,17 +88,20 @@ function FacultyPerformanceView({ faculty, onBack }) {
   }, [faculty._id]);
 
   // Academic year options
-  const academicYearOptions = Array.from(new Set(facultyCourses.map(c => c.academic_year))).sort();
+  const academicYearOptions = Array.from(
+    new Set(facultyCourses.map((c) => c.academic_year))
+  ).sort();
 
   // Filter courses and stats by selected academic year
   const filteredCourses = facultyCourses.filter(
     (c) => c.academic_year === selectedAcademicYear
   );
-  // Compute total feedbacks for selected year  
+  // Compute total feedbacks for selected year
   const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
-    const stat = courseBatchStats[
-      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
-    ];
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
+      ];
     return sum + (stat?.totalFeedbacks || 0);
   }, 0);
   // Compute overall average question-wise ratings for selected year
@@ -96,9 +109,10 @@ function FacultyPerformanceView({ faculty, onBack }) {
   const questionCounts = [];
   let questionTexts = [];
   filteredCourses.forEach((assignment) => {
-    const stat = courseBatchStats[
-      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
-    ];
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
+      ];
     if (stat?.questionRatings && stat?.questionTexts) {
       stat.questionRatings.forEach((rating, i) => {
         if (!questionSums[i]) {
@@ -173,7 +187,10 @@ function FacultyPerformanceView({ faculty, onBack }) {
       </div>
       {/* Academic Year Selector */}
       <div style={{ marginBottom: 24, textAlign: "center" }}>
-        <label htmlFor="academicYearSelect" style={{ fontWeight: 600, marginRight: 8 }}>
+        <label
+          htmlFor="academicYearSelect"
+          style={{ fontWeight: 600, marginRight: 8 }}
+        >
           Academic Year:
         </label>
         <select
@@ -248,7 +265,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
             {filteredCourses.map((assignment, index) => {
               const stat =
                 courseBatchStats[
-                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
                 ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0
@@ -297,9 +314,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
                   </div>
                   <div className={styles.courseDetails}>
                     <div className={styles.courseInfo}>
-                      {!assignment.isElective && (
-                        <span>Semester: {assignment.semester}</span>
-                      )}
+                      <span>Semester: {assignment.semester}</span>
                       <span>Batch: {assignment.batch}</span>
                       <span>Academic Year: {assignment.academic_year}</span>
                       <span>
@@ -339,7 +354,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
                       }}
                     >
                       <div style={{ fontWeight: 600, color: "#2980b9" }}>
-                        Batch Avg Score: {" "}
+                        Batch Avg Score:{" "}
                         {stat.avgScore ? stat.avgScore.toFixed(2) : "N/A"}/25
                       </div>
                       {stat.questionRatings &&
@@ -380,7 +395,13 @@ function FacultyPerformanceView({ faculty, onBack }) {
       {academicYearOptions.length > 0 && (
         <div className={styles.section}>
           <h3>Performance by Year</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <BarChart
               labels={academicYearOptions}
               data={academicYearOptions.map((year) => yearlyPerformance[year])}
@@ -450,7 +471,7 @@ const FacultyTable = () => {
                 questionRatings = ratingsData.ratings || [];
                 questionTexts = ratingsData.questions || [];
               }
-              
+
               return {
                 ...faculty,
                 avgScore: avgScore,
@@ -471,7 +492,7 @@ const FacultyTable = () => {
             }
           })
         );
-        
+
         setFaculties(facultiesWithStats);
         console.log("Faculties with stats:", facultiesWithStats);
       } else {
@@ -496,14 +517,21 @@ const FacultyTable = () => {
     if (!editingFaculty) return;
 
     try {
-      const response = await apiAxios().put(`/faculties/${editingFaculty._id}`, {
-        name: editingFaculty.name,
-        designation: editingFaculty.designation,
-      });
+      const response = await apiAxios().put(
+        `/faculties/${editingFaculty._id}`,
+        {
+          name: editingFaculty.name,
+          designation: editingFaculty.designation,
+        }
+      );
 
       if (response.data) {
         const updatedFaculty = response.data;
-        setFaculties(faculties.map(f => (f._id === updatedFaculty._id ? updatedFaculty : f)));
+        setFaculties(
+          faculties.map((f) =>
+            f._id === updatedFaculty._id ? updatedFaculty : f
+          )
+        );
         setEditingFaculty(null);
         alert("Faculty updated successfully.");
       } else {
@@ -517,12 +545,16 @@ const FacultyTable = () => {
   };
 
   const handleDelete = async (facultyId) => {
-    if (window.confirm("Are you sure you want to delete this faculty? This will also remove all their feedback scores and course assignments.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this faculty? This will also remove all their feedback scores and course assignments."
+      )
+    ) {
       try {
         const response = await apiAxios().delete(`/faculties/${facultyId}`);
 
         if (response.data) {
-          setFaculties(faculties.filter(f => f._id !== facultyId));
+          setFaculties(faculties.filter((f) => f._id !== facultyId));
           alert("Faculty deleted successfully.");
         } else {
           const err = response.data;
@@ -540,13 +572,24 @@ const FacultyTable = () => {
       fac.name.toLowerCase().includes(search.toLowerCase()) ||
       fac.id.toLowerCase().includes(search.toLowerCase());
     const matchesDesignation = filter.designation
-      ? fac.designation && fac.designation.toLowerCase() === filter.designation.toLowerCase()
+      ? fac.designation &&
+        fac.designation.toLowerCase() === filter.designation.toLowerCase()
       : true;
     const matchesPerformance = filter.performance
       ? (() => {
           if (filter.performance === "High" && fac.avgScore >= 22) return true;
-          if (filter.performance === "Good" && fac.avgScore >= 18 && fac.avgScore < 22) return true;
-          if (filter.performance === "Medium" && fac.avgScore >= 15 && fac.avgScore < 18) return true;
+          if (
+            filter.performance === "Good" &&
+            fac.avgScore >= 18 &&
+            fac.avgScore < 22
+          )
+            return true;
+          if (
+            filter.performance === "Medium" &&
+            fac.avgScore >= 15 &&
+            fac.avgScore < 18
+          )
+            return true;
           if (filter.performance === "Low" && fac.avgScore < 15) return true;
           return false;
         })()
@@ -638,13 +681,20 @@ const FacultyTable = () => {
             <input
               type="text"
               value={editingFaculty.name}
-              onChange={(e) => setEditingFaculty({ ...editingFaculty, name: e.target.value })}
+              onChange={(e) =>
+                setEditingFaculty({ ...editingFaculty, name: e.target.value })
+              }
               placeholder="Name"
             />
             <input
               type="text"
               value={editingFaculty.designation}
-              onChange={(e) => setEditingFaculty({ ...editingFaculty, designation: e.target.value })}
+              onChange={(e) =>
+                setEditingFaculty({
+                  ...editingFaculty,
+                  designation: e.target.value,
+                })
+              }
               placeholder="Designation"
             />
             <div className={styles.modalActions}>
@@ -669,21 +719,44 @@ const FacultyTable = () => {
         </thead>
         <tbody>
           {filteredData.map((fac, idx) => (
-            <tr
-              key={idx}
-              className={styles.tableRow}
-            >
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{idx + 1}</td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.id}</td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
+            <tr key={idx} className={styles.tableRow}>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
+                {idx + 1}
+              </td>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
+                {fac.id}
+              </td>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
                 <span className={styles.avatar}>
                   {fac.name.charAt(0).toUpperCase()}
                 </span>{" "}
                 {fac.name}
               </td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.designation}</td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.avgScore ? fac.avgScore.toFixed(2) : "0.00"}/25</td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
+                {fac.designation}
+              </td>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
+                {fac.avgScore ? fac.avgScore.toFixed(2) : "0.00"}/25
+              </td>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
                 <span
                   className={`${styles.badge} ${
                     performanceColors[getPerformanceLevel(fac.avgScore)]
@@ -692,7 +765,10 @@ const FacultyTable = () => {
                   {getPerformanceLevel(fac.avgScore)}
                 </span>
               </td>
-              <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>
+              <td
+                onClick={() => setSelectedFaculty(fac)}
+                style={{ cursor: "pointer" }}
+              >
                 {Array.from({ length: 5 }).map((_, i) => (
                   <span
                     key={i}

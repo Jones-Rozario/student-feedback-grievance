@@ -38,10 +38,12 @@ const FacultySelfPerformance = () => {
           academic_year: a.academic_year,
           isElective: a.course?.isElective,
         }));
-        console.log(allCourses);
+        console.log("All Courses ", allCourses);
         setFacultyCourses(allCourses);
         // Set default academic year to latest available in data
-        const years = Array.from(new Set(allCourses.map(c => c.academic_year))).sort();
+        const years = Array.from(
+          new Set(allCourses.map((c) => c.academic_year))
+        ).sort();
         if (years.length > 0) {
           setSelectedAcademicYear(years[years.length - 1]);
         }
@@ -63,21 +65,22 @@ const FacultySelfPerformance = () => {
           )
             continue;
           const res = await apiAxios().get(
-            `/faculties/${
-              currentUser.facultyRef
-            }/performance/course/${assignment.course._id}/batch/${
-              assignment.batch
+            `/faculties/${currentUser.facultyRef}/performance/course/${
+              assignment.course._id
+            }/batch/${assignment.batch}/semester/${
+              assignment.semester
             }?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
           if (res.data) {
             const data = res.data;
-            console.log(data);
+            console.log("Performance of courses per data ", data);
             // Key by course, batch, and academic year
             stats[
-              `${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`
+              `${assignment.course._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
             ] = data;
           }
         }
+        console.log("stats", stats);
         setCourseBatchStats(stats);
       } catch (error) {
         setError(error.message);
@@ -88,18 +91,6 @@ const FacultySelfPerformance = () => {
     fetchFacultyData();
     // eslint-disable-next-line
   }, [currentUser.facultyRef]);
-
-  function getAcademicYear() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // getMonth() is 0-based
-
-    // If current month is June or later, academic year starts this year
-    const startYear = month >= 6 ? year : year - 1;
-    const endYear = String(startYear + 1);
-
-    return `${startYear}-${endYear.substring(2, 4)}`;
-  }
 
   // PDF Download Handler for a course+batch
   const handleDownloadPDF = (assignment, stat) => {
@@ -196,7 +187,7 @@ const FacultySelfPerformance = () => {
   const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
     const stat =
       courseBatchStats[
-        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
       ];
     return sum + (stat?.totalFeedbacks || 0);
   }, 0);
@@ -207,7 +198,7 @@ const FacultySelfPerformance = () => {
   filteredCourses.forEach((assignment) => {
     const stat =
       courseBatchStats[
-        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
       ];
     if (stat?.questionRatings && stat?.questionTexts) {
       stat.questionRatings.forEach((rating, i) => {
@@ -313,7 +304,7 @@ const FacultySelfPerformance = () => {
                 if (typeof score !== "number") return "0.00";
                 return Number(score).toFixed(2);
               })()}
-              <span className={styles.scoreMax}>/25</span>
+              <span className={[styles.scoreMax]}>/25</span>
             </div>
             <div style={{ color: "#7b8a97", fontSize: "1rem", marginTop: 4 }}>
               Overall Score
@@ -370,7 +361,7 @@ const FacultySelfPerformance = () => {
             {filteredCourses.map((assignment, index) => {
               const stat =
                 courseBatchStats[
-                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
                 ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0
