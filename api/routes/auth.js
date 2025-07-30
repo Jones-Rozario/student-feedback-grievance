@@ -29,15 +29,26 @@ function calculateSemester(joinYear) {
 // Login endpoint
 router.post("/login", async (req, res) => {
   try {
-    const { id, password, role } = req.body;
+    const { password, role } = req.body;
+    let cred;
 
-    if (!id || !password || !role) {
+    if(role === "faculty"){
+      const {email} = req.body;
+      cred = email;
+    }
+    else{
+      const {id} = req.body;
+      cred = id;
+    }
+
+    if (!cred || !password || !role) {
       return res
         .status(400)
         .json({ error: "ID, password, and role are required" });
     }
 
-    const user = await User.findOne({ id, role });
+    const query = (role === "faculty") ? {email: cred, role} : {id: cred, role};
+    const user = await User.findOne(query);
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -233,7 +244,7 @@ router.get("/password-hint/:id/:role", async (req, res) => {
         res.status(404).json({ error: "Student not found" });
       }
     } else if (role === "faculty") {
-      const faculty = await Faculty.findOne({ id });
+      const faculty = await Faculty.findOne({ email: id });
       if (faculty) {
         const namePrefix = faculty.name.substring(0, 4).toLowerCase();
         res.status(200).json({
