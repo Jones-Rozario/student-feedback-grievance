@@ -70,7 +70,7 @@ const Students = () => {
 
     if (batchFilter) {
       filtered = filtered.filter((student) =>
-        student.batch.toLowerCase().includes(batchFilter.toLowerCase())
+        student.batch == Number(batchFilter)
       );
     }
 
@@ -234,7 +234,7 @@ const Students = () => {
             onChange={(e) => setSemesterFilter(e.target.value)}
           >
             <option value="">All Semesters</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14].map((sem) => (
               <option key={sem} value={sem}>
                 Semester {sem}
               </option>
@@ -312,7 +312,7 @@ const Students = () => {
                         })
                       }
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14].map((sem) => (
                         <option key={sem} value={sem}>
                           {sem}
                         </option>
@@ -396,7 +396,7 @@ const Students = () => {
                 onChange={(e) => setBulkDeleteSemester(e.target.value)}
               >
                 <option value="">Choose semester...</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14].map((sem) => (
                   <option key={sem} value={sem}>
                     Semester {sem}
                   </option>

@@ -27,7 +27,7 @@ function calculateSemester(joinYear) {
   // Every 6 months = 1 semester
   const semester = Math.floor(monthsElapsed / 6) + 1;
 
-  return semester; // cap at 8
+  return semester > 8 ? 8 : semester; // cap at 8
 }
 
 // get all students
@@ -145,7 +145,7 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
 
       parser.on("data", (row, index) => {
         // Only process the columns: id, name, batch, joined_year, email
-        const idValue = row["id"];
+        const idValue = String(row["id"]);
         const nameValue = row["name"];
         const batchValue = row["batch"];
         const joinedYearValue = row["joined_year"];
@@ -183,13 +183,19 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
           return;
         }
 
+	let current_semester = calculateSemester(joinedYear);
+	
+	if (idValue.substring(4, 7) != "103"){
+		current_semester += 10;
+	}
+
         const studentData = {
           id: String(idValue),
           name: String(nameValue),
           email: emailValue && emailValue.trim() !== '' ? String(emailValue) : `${idValue}@student.annauniv.edu`,
           batch: Number(batchValue),
           joined_year: joinedYear,
-          current_semester: calculateSemester(joinedYear),
+          current_semester,
         };
 
         allStudentIdsInCsv.push(studentData.id);
@@ -262,6 +268,7 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
       parser.on("error", (err) => {
         console.error("CSV parse error:", err);
         deleteFile();
+	console.log("CSV error:", err);
         res.status(500).json({ error: "Error parsing CSV file." });
       });
     };

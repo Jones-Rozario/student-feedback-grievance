@@ -535,6 +535,10 @@ const CSVUpload = ({ onUploadSuccess }) => {
                   </li>
                   <li><strong>id</strong> is the unique identifier for each student. Do not use email as id.</li>
                   <li>Each subsequent row should contain student data</li>
+		  <li>For M.E students Please do upload batches as follows with the corresponding serial number.
+			 1.ME CSE <br/> 2.ME SE <br/> 3.ME CSE SPLN. BIG DATA ANALYTICS <br/> 4. ME CSE SPLN. in Cyber security and Data science
+		  </li>
+ 
                 </>
               ) : (
                 <>

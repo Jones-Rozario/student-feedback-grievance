@@ -188,7 +188,7 @@ router.post("/upload-csv",verifyToken,requireRole("admin"),upload.single("file")
               createdFaculties.map(async (faculty) => {
                 const plainPassword = `${faculty.name
                   .substring(0, 4)
-                  .toLowerCase()}${faculty.id}123`;
+                  .toLowerCase()}123`;
                 const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
                 return {

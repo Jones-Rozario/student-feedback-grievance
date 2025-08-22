@@ -40,13 +40,15 @@ import { apiAxios } from "../../../utils/api";
 //   { name: 'Dr. K. Selvamani', designation: 'Assistant Professor' },
 // ];
 
-const years = [1, 2, 3, 4];
+const years = [1, 2, 3, 4, 5, 6];
 const batches = [1, 2, 3];
 const yearToSemesters = {
   1: [1, 2],
   2: [3, 4],
   3: [5, 6],
   4: [7, 8],
+  5: [11, 12],
+  6: [13, 14]
 };
 
 const defaultAcademicYear = () => {
@@ -318,7 +320,7 @@ const AssignCourses = () => {
             <select name="year" value={form.year} onChange={handleChange}>
               {years.map((y) => (
                 <option key={y} value={y}>
-                  {y} Year
+                  { y === 5 ? "1 Year (M.E)" : y === 6 ? "2 year (M.E)": `${y} Year (B.E)`}
                 </option>
               ))}
             </select>

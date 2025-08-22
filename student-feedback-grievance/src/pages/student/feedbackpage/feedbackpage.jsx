@@ -252,29 +252,27 @@ const FeedbackPage = () => {
     return `${startYear} - ${endYear}`;
   }
 
-  function getAcademicYearSemesterList(joinedYear) {
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth(); // 0 = Jan, 11 = Dec
+ function getAcademicYearSemesterList(joinedYear, studentId) {
+  const now = new Date();
+  const lastAcademicYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
 
-    // Academic year starts from June/July
-    const lastAcademicYear = currentMonth >= 5 ? currentYear : currentYear - 1;
+  const includeOffset = studentId.substring(4, 7) !== "103";
+  const offset = includeOffset ? 10 : 0;
 
-    const academicList = [];
-    let semester = 1;
+  const academicList = [];
+  const totalYears = Math.max(0, lastAcademicYear - joinedYear + 1);
 
-    for (let year = joinedYear; year <= lastAcademicYear; year++) {
-      const academicYear = `${year} - ${year + 1}`;
-      const semesters = [];
-
-      // Push two semesters per academic year
-      semesters.push(semester++);
-      semesters.push(semester++);
-
-      academicList.push({ academicYear, semesters });
-    }
-
-    return academicList;
+  for (let i = 0; i < totalYears; i++) {
+    const year = joinedYear + i;
+    const academicYear = `${year} - ${year + 1}`;
+    const semesters = [2 * i + 1 + offset, 2 * i + 2 + offset];
+    academicList.push({ academicYear, semesters });
   }
+
+  return academicList;
+}
+
+
 
   const fetchAssignments = async () => {
     try {
@@ -438,7 +436,8 @@ const FeedbackPage = () => {
   };
 
   useEffect(() => {
-    const academicList = getAcademicYearSemesterList(currentUser.joined_year);
+    console.log("Current User: ",currentUser);
+    const academicList = getAcademicYearSemesterList(currentUser.joined_year, currentUser.id);
 
     const academic = academicList.find(
       (ay) => getAcademicYear() === ay.academicYear
@@ -712,8 +711,7 @@ const FeedbackPage = () => {
                 required
               >
                 {selectedYear?.semesters
-                  ?.filter((sem) => sem <= currentUser.current_semester)
-                  .map((sem, i) => (
+                  ?.map((sem, i) => (
                     <option key={i} value={sem}>
                       {sem}
                     </option>
@@ -809,8 +807,7 @@ const FeedbackPage = () => {
                 required
               >
                 {selectedYear?.semesters
-                  ?.filter((sem) => sem <= currentUser.current_semester)
-                  .map((sem, i) => (
+                  ?.map((sem, i) => (
                     <option key={i} value={sem}>
                       {sem}
                     </option>
@@ -908,8 +905,7 @@ const FeedbackPage = () => {
                 required
               >
                 {selectedYear?.semesters
-                  ?.filter((sem) => sem <= currentUser.current_semester)
-                  .map((sem, i) => (
+                  ?.map((sem, i) => (
                     <option key={i} value={sem}>
                       {sem}
                     </option>

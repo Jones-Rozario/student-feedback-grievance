@@ -14,7 +14,7 @@ export const apiAxios = () => {
   const token = localStorage.getItem("token");
   console.log(token);
   return axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: "http://10.5.14.94:5000/api",
     headers: {
       Authorization: token ? `Bearer ${token}` : undefined,
       "Content-Type": "application/json",

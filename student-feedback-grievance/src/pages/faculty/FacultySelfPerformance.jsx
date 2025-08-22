@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./FacultySelfPerformance.module.css";
@@ -7,6 +9,7 @@ import logoPng from "../../assests/anna_univ_logo.png";
 import LogoutButton from "../../components/LogoutButton";
 import { apiAxios } from "../../utils/api";
 import BarChart from "../../components/barchart";
+import FooterBar from "../../components/FooterBar.jsx";
 
 const FacultySelfPerformance = () => {
   const { currentUser } = useAuth();
@@ -116,21 +119,34 @@ const FacultySelfPerformance = () => {
       align: "center",
     });
     // Build the body rows for the course details
+    
+    let str = "";
+    if(assignment.semester > 10){
+	if (assignment.batch === 1)
+		str = "M.E - COMPUTER SCIENCE AND ENGINEERING";
+        else if(assignment.batch === 2)
+		str = "M.E - SOFTWARE ENGINEERING";
+	else if(assignment.batch===3)
+		str = "M.E - CSE SPLN.IN BIG DATA ANALYTICS";
+	else
+		str = "M.E - CSE SPLN.IN CYBER SECURITY AND DATA SCIENCE";
+    }
+    else {
+	str = "B.E - COMPUTER SCIENCE AND ENGINEERING [FULL TIME]"
+    }
+
     const bodyRows = [
-      ["Course", ":", "B.E - COMPUTER SCIENCE ENGINEERING [FULL TIME]"],
+      ["Course", ":", str],
       [
         "Academic Year & Semester",
         ":",
-        assignment.academic_year + " - " + (assignment.semester || "-"),
+        assignment.academic_year + " - " + ((assignment.semester > 10) ? assignment.semester - 10 : assignment.semester || "-"),
       ],
       ["Subject", ":", assignment.course?.name || "-"],
       ["Instructor", ":", currentUser?.name || "-"],
       ["Batch", ":", assignment.batch || "-"],
     ];
-    // Only add semester row if not elective
-    if (!assignment.isElective) {
-      bodyRows.push(["Semester", ":", assignment.semester || "-"]);
-    }
+    
     autoTable(doc, {
       startY: 40,
       theme: "plain",
@@ -248,6 +264,7 @@ const FacultySelfPerformance = () => {
           <div className={styles.pageSubtitle}>
             Empowering Excellence through Feedback
           </div>
+	<a href="/guideme/Faculty.pdf" className={styles.pageSubtitle} target="_blank"> Open Guide </a>
         </div>
       </div>
       <div
@@ -271,7 +288,6 @@ const FacultySelfPerformance = () => {
           <div className={styles.performanceDesignation}>
             {currentUser?.designation}
           </div>
-          <div className={styles.performanceId}>ID: {currentUser?.id}</div>
         </div>
       </div>
       {/* Academic Year Selector */}
@@ -417,15 +433,34 @@ const FacultySelfPerformance = () => {
                       {assignment.course?.code || "N/A"}
                     </span>
                   </div>
-                  <div className={styles.courseDetails}>
+                 <div lassName={styles.courseDetails}>
                     <div className={styles.courseInfo}>
-                      <span>Semester: {assignment.semester}</span>
-                      <span>Batch: {assignment.batch}</span>
-                      <span>Academic Year: {assignment.academic_year}</span>
-                      <span>
-                        Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
-                      </span>
-                    </div>
+                        <span>
+      Semester:{" "}
+      {assignment.semester > 10
+        ? assignment.semester - 10
+        : assignment.semester}
+    </span>
+    <span>
+      Batch:{" "}
+      {assignment.semester > 10 ? (
+        {
+          1: "M.E CSE",
+          2: "M.E SE",
+          3: "M.E CSE (SP.) BDA",
+          4: "M.E CSE (SP.) Cyber security and Data Science",
+        }[assignment.batch] || assignment.batch
+      ) : (
+        assignment.batch
+      )}
+    </span>
+    <span>Academic Year: {assignment.academic_year}</span>
+    <span>
+      Total Feedbacks: {stat?.totalFeedbacks ?? "N/A"}
+    </span>
+  </div>
+
+
                     <div className={styles.courseRating}>
                       <div className={styles.ratingStars}>
                         {Array.from({ length: 5 }).map((_, i) => (
@@ -442,7 +477,7 @@ const FacultySelfPerformance = () => {
                         ))}
                       </div>
                       <div className={styles.ratingValue}>
-                        {avgRating.toFixed(1)}/5
+                       {stat?.totalFeedbacks != 0.0 ? `${avgRating.toFixed(1)}/5` : ""}
                       </div>
                     </div>
                   </div>
@@ -533,6 +568,8 @@ const FacultySelfPerformance = () => {
           </p>
         </div>
       )}
+
+	<FooterBar/>
     </div>
   );
 };

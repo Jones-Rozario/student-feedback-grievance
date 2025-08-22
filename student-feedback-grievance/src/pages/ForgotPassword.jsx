@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { apiAxios } from "../utils/api";
 
 const ForgotPassword = () => {
-  const [id, setId] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -13,7 +13,7 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       const axiosInstance = apiAxios();
-      const response = await axiosInstance.post("/auth/forgot-password", { id, role });
+      const response = await axiosInstance.post("/auth/forgot-password", { email, role });
       setSubmitted(true);
     } catch (err) {
       console.log(err);
@@ -43,11 +43,11 @@ const ForgotPassword = () => {
       ) : (
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
-            <label>ID</label>
+            <label>EMAIL</label>
             <input
               type="text"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               style={{ width: "100%", padding: 8, marginTop: 4 }}
               required
             />

@@ -23,21 +23,31 @@ function calculateSemester(joinYear) {
   // Every 6 months = 1 semester
   const semester = Math.floor(monthsElapsed / 6) + 1;
 
-  return semester; // cap at 8
+  return semester > 8 ? 8 : semester; // cap at 8
 }
 
 // Login endpoint
 router.post("/login", async (req, res) => {
   try {
-    const { id, password, role } = req.body;
-
-    if (!id || !password || !role) {
+    const { password, role } = req.body;
+    let cred;
+    if (role === "faculty"){
+      const {email} = req.body;
+	cred = email;
+    }
+    else{
+	const {id} = req.body;
+	cred = id;
+    }
+    if (!cred || !password || !role) {
       return res
         .status(400)
         .json({ error: "ID, password, and role are required" });
     }
 
-    const user = await User.findOne({ id, role });
+    const query = role === "faculty" ? { email: cred, role } : { id: cred, role };
+    const user = await User.findOne(query);
+    //const user = await User.findOne({ cred, role });
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -143,12 +153,12 @@ router.post("/update-password", async (req, res) => {
 // Forgot password endpoint
 router.post("/forgot-password", async (req, res) => {
   try {
-    const { id, role } = req.body;
-    if (!id || !role) {
+    const { email, role } = req.body;
+    if (!email || !role) {
       return res.status(400).json({ error: "ID and role are required" });
     }
     // Find user by id and role
-    const user = await User.findOne({ id, role });
+    const user = await User.findOne({ email, role });
     // Always return generic message to prevent user enumeration
     if (!user || !user.email) {
       return res.status(200).json({
@@ -164,7 +174,7 @@ router.post("/forgot-password", async (req, res) => {
 
     // Construct reset link
     const resetLink = `${
-      process.env.FRONTEND_URL || "http://localhost:3000"
+      process.env.FRONTEND_URL || "http://10.5.14.94:97"
     }/reset-password?token=${token}`;
 
     // Send email
@@ -223,22 +233,34 @@ router.get("/password-hint/:id/:role", async (req, res) => {
     const { id, role } = req.params;
 
     if (role === "student") {
-      const student = await Student.findOne({ id });
+      const student = await User.findOne({ id });
       if (student) {
-        const firstName = student.name.split(" ")[0].toLowerCase();
-        res.status(200).json({
-          hint: `Your password is your first name (e.g., '${firstName}') followed by the last 4 digits of your ID.`,
-        });
+        if (student.mustChangePassword) {
+          const firstName = student.name.split(" ")[0].toLowerCase();
+          res.status(200).json({
+            hint: `Your password is your first name (e.g., '${firstName}') followed by the last 4 digits of your ID.`,
+          });
+        } else {
+          res.status(200).json({
+            hint: "Your password hint is not available because you have already changed your password.",
+          });
+        }
       } else {
         res.status(404).json({ error: "Student not found" });
       }
     } else if (role === "faculty") {
-      const faculty = await Faculty.findOne({ id });
+      const faculty = await User.findOne({ email: id });
       if (faculty) {
-        const namePrefix = faculty.name.substring(0, 4).toLowerCase();
-        res.status(200).json({
-          hint: `Your password is the first 4 letters of your name (e.g., '${namePrefix}'), your ID, and '123'.`,
-        });
+        if (faculty.mustChangePassword) {
+          const namePrefix = faculty.name.substring(0, 4).toLowerCase();
+          res.status(200).json({
+            hint: `Your password is the first 4 letters of your name (e.g., '${namePrefix}') and '123'.`,
+          });
+        } else {
+          res.status(200).json({
+            hint: "Your password hint is not available because you have already changed your password.",
+          });
+        }
       } else {
         res.status(404).json({ error: "Faculty not found" });
       }

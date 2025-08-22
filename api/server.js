@@ -30,6 +30,7 @@ const createAdminUser = async () => {
         id: 'admin',
         name: 'Administrator',
         role: 'admin',
+	email: "hodcse@annauniv.edu",
         password: hashedPassword,
         mustChangePassword: true,
       });

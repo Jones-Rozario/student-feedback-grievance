@@ -23,6 +23,7 @@ import Courses from "./pages/admin/courses/Courses";
 import Students from "./pages/admin/students/Students";
 import Sidebar from "./components/sidebar/sidebar";
 import NavBar from "./components/navbar/navbar";
+import FooterBar from "./components/FooterBar";
 import "./App.css";
 import Unauthorized from "./pages/Unauthorized";
 import FacultySelfPerformance from "./pages/faculty/FacultySelfPerformance";
@@ -39,6 +40,7 @@ const AdminLayout = ({ sidebarOpen, setSidebarOpen, children }) => (
     <div className="right-content">
       <NavBar onHamburgerClick={() => setSidebarOpen(!sidebarOpen)} />
       {children}
+	<FooterBar/>
     </div>
   </div>
 );

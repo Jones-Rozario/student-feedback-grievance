@@ -628,7 +628,11 @@ const FacultyTable = () => {
           <option value="">Designation</option>
           <option value="Professor">Professor</option>
           <option value="Assistant Professor">Assistant Professor</option>
-          <option value="HOD">HOD</option>
+	  <option value="Associate Professor">Associate Professor</option>
+	  <option value="Assistant Professor(Sr. Gr.)">Assistant Professor(Sr. Gr.)</option>
+	  <option value="Assistant Professor(Sl. Gr.)">Assistant Professor(Sl. Gr.)</option>
+          <option value="Teaching Fellow">Teaching Fellow</option> 
+	  <option value="HOD">HOD</option>
         </select>
       </div>
       {editingFaculty && (
@@ -668,11 +672,14 @@ const FacultyTable = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredData.map((fac, idx) => (
+
+
+          {filteredData.sort((a,b)=> a.id-b.id).map((fac, idx) => (
             <tr
               key={idx}
               className={styles.tableRow}
             >
+	
               <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{idx + 1}</td>
               <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>{fac.id}</td>
               <td onClick={() => setSelectedFaculty(fac)} style={{cursor: 'pointer'}}>

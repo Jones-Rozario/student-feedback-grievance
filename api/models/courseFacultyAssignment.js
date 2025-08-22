@@ -6,7 +6,7 @@ const courseFacultyAssignmentSchema = new mongoose.Schema({
     required: true, 
     match: [/^\d{4}\s*-\s*\d{4}$/, 'Academic year must be in the format YYYY - YYYY'] 
   },
-  semester: { type: Number, required: true, min: 1, max: 8 },
+  semester: { type: Number, required: true, min: 1, max: 14 },
   batch: { type: Number, required: true },
   course: { type: String, ref: "Course", required: true },
   faculty: { type: String, ref: "Faculty", required: true },

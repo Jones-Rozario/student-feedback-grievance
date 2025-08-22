@@ -13,6 +13,7 @@ const LoginPage = () => {
     password: "",
     role: "student",
   });
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPasswordHint, setShowPasswordHint] = useState(false);
@@ -22,12 +23,25 @@ const LoginPage = () => {
   const { login } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    // Clear error and success on any change
     setError("");
     setSuccess("");
+
+    // CHANGE MADE HERE: handle 'email' for faculty
+    if (name === "role") {
+      setFormData({
+        id: "", // reset id/email when role changes
+        password: "",
+        role: value,
+      });
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   const getPasswordHint = async () => {
@@ -52,18 +66,25 @@ const LoginPage = () => {
 
     try {
       const axiosInstance = apiAxios();
-      const response = await axiosInstance.post("/auth/login", {
-        id: formData.id,
+      const payload = {
         password: formData.password,
         role: formData.role,
-      });
+      };
+
+      // CHANGE MADE HERE: Send email instead of id if faculty
+      if (formData.role === "faculty") {
+        payload.email = formData.id;
+      } else {
+        payload.id = formData.id;
+      }
+
+      const response = await axiosInstance.post("/auth/login", payload);
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         login(response.data.user, response.data.token);
         setSuccess("Login successful!");
-        // Redirect based on role
         setTimeout(() => {
           if (response.data.user.role === "student") {
             navigate("/home");
@@ -78,30 +99,25 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage =
-        error.response?.data?.error || "Login failed. Please try again.";
+      const errorMessage = error.response?.data?.error || "Login failed. Please try again.";
       setError(errorMessage);
     }
   };
 
+  // CHANGE MADE HERE: Dynamic placeholder based on role
+  const getInputPlaceholder = () => {
+    if (formData.role === "student") return "Enter your register number";
+    if (formData.role === "faculty") return "Enter your email-id";
+    return "Enter your id";
+  };
+
+  // CHANGE MADE HERE: Dynamic input name
+  const getInputName = () => {
+    return "id"; // Always use 'id' key in state for both email and id
+  };
+
   return (
     <div className="login-container">
-      {/* Page Heading and Role Descriptions */}
-
-      {/* <div className="login-role-descriptions">
-        <div className="login-role-card student-role">
-          <h3>Students</h3>
-          <p>Submit feedback and grievances, and track responses.</p>
-        </div>
-        <div className="login-role-card faculty-role">
-          <h3>Faculty</h3>
-          <p>View feedback, respond to grievances, and download reports.</p>
-        </div>
-        <div className="login-role-card admin-role">
-          <h3>Admins</h3>
-          <p>Manage users, courses, feedback, and grievances.</p>
-        </div>
-      </div> */}
       <div className="login-left">
         <motion.div
           initial={{
@@ -126,38 +142,27 @@ const LoginPage = () => {
           <Lottie animationData={phoneHand} loop={true} />
         </div>
       </div>
+
       <motion.div
-        initial={{
-          opacity: 0,
-          x: 100,
-        }}
-        animate={{
-          opacity: 1,
-          x: 10,
-        }}
-        transition={{
-          delay: 1.5,
-          duration: 1,
-          ease: "easeInOut",
-        }}
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 10 }}
+        transition={{ delay: 1.5, duration: 1, ease: "easeInOut" }}
         className="login-right"
       >
         <div className="login-page-header-short">
-          <h2 className="login-title-short">
-            Welcome to the Grievance & Feedback Portal
-          </h2>
-          <div className="login-subtitle-short">Department of Computer Science and Engineering - CEG </div>
+          <h2 className="login-title-short">Welcome to the Grievance & Feedback Portal</h2>
+          <div className="login-subtitle-short">
+            Department of Computer Science and Engineering - CEG
+          </div>
         </div>
+
         <h2 className="login-welcome">
           Hey,
           <br />
           Welcome Back
         </h2>
-        <div
-          style={{
-            marginBottom: 18,
-          }}
-        >
+
+        <div style={{ marginBottom: 18 }}>
           <select
             className="login-input"
             name="role"
@@ -170,15 +175,17 @@ const LoginPage = () => {
             <option value="admin">Admin</option>
           </select>
         </div>
+
         <input
           className="login-input"
-          type="text"
-          placeholder="Enter your registered number"
-          name="id"
+          type={formData.role === "faculty" ? "email" : "text"} // CHANGE MADE HERE
+          placeholder={getInputPlaceholder()} // CHANGE MADE HERE
+          name={getInputName()} // Always "id"
           value={formData.id}
           onChange={handleChange}
           required
         />
+
         <input
           className="login-input"
           type="password"
@@ -188,9 +195,11 @@ const LoginPage = () => {
           onChange={handleChange}
           required
         />
+
         <button type="button" onClick={getPasswordHint} className="hint-btn">
           Get Password Hint
         </button>
+
         {showPasswordHint && (
           <div className="password-hint">
             <p>
@@ -198,13 +207,24 @@ const LoginPage = () => {
             </p>
           </div>
         )}
-        <div style={{ marginTop: 12, textAlign: 'right' }}>
-          <a href="/forgot-password" style={{ color: '#3498db', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.95em' }}>
+
+        <div style={{ marginTop: 12, textAlign: "right" }}>
+          <a
+            href="/forgot-password"
+            style={{
+              color: "#3498db",
+              textDecoration: "underline",
+              cursor: "pointer",
+              fontSize: "0.95em",
+            }}
+          >
             Forgot Password?
           </a>
         </div>
+
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
+
         <button className="login-button" onClick={handleSubmit}>
           Log In
         </button>
@@ -214,3 +234,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

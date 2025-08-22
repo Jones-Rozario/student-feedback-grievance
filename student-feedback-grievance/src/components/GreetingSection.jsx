@@ -83,7 +83,7 @@ const GreetingSection = () => {
           </h1>
           <p>
             {currentUser?.role === "student" 
-              ? `Welcome to Semester ${currentUser?.current_semester}, Batch ${currentUser?.batch}`
+              ? `Welcome to Semester ${currentUser?.current_semester > 10 ? currentUser?.current_semester - 10 : currentUser?.current_semester}, Batch ${currentUser?.batch}`
               : "Manage Your Grievances with ease"
             }
           </p>

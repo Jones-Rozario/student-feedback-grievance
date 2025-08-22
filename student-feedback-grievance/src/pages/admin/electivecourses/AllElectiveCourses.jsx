@@ -62,7 +62,7 @@ const AllElectiveCourses = () => {
       window.confirm("Delete this elective course and all related assignments?")
     ) {
       try {
-        await apiAxios().delete(`/electives/${course._id}`);
+        await apiAxios().delete(`/courses/${course._id}`);
         fetchCourses();
       } catch (err) {
         alert("Failed to delete course");

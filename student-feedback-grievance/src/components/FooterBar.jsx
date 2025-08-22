@@ -5,10 +5,10 @@ import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import "./FooterBar.css";
 
 // Import team member images
-import mem1 from "../assests/members/mem-1.jpg";
-import mem2 from "../assests/members/mem-2.jpg";
-import mem3 from "../assests/members/mem-3.jpg";
-import mem4 from "../assests/members/mem-4.jpg";
+//import mem1 from "/members/mem-1.jpg";
+//import mem2 from "/members/mem-2.jpg";
+//import mem3 from "/members/mem-3.jpg";
+//import mem4 from "/members/mem-4.jpg";
 
 const slideUp = keyframes`
   from {
@@ -142,8 +142,8 @@ const TeamMember = styled(motion.div)`
 `;
 
 const TeamMemberImage = styled.div`
-  width: 75px;
-  height: 75px;
+  width: 85px;
+  height: 85px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -202,20 +202,20 @@ const FooterBar = () => {
 
   const teamMembers = [
     {
-      name: "Mohammed Salih",
-      image: mem1,
-    },
-    {
       name: "Trinesh G",
-      image: mem3,
-    },
-    {
-      name: "Nola Thomas Daisy",
-      image: mem2,
+      image: "/members/mem-3.jpg",
     },
     {
       name: "Jones Rozario I J",
-      image: mem4,
+      image: "/members/mem-4.jpg",
+    },
+    {
+      name: "Mohammed Salih",
+      image: "/members/mem-1.jpg",
+    },
+    {
+      name: "Nola Daisy Thomas",
+      image: "/members/mem-2.jpg",
     },
   ];
 
@@ -269,7 +269,7 @@ const FooterBar = () => {
           ))}
         </FooterSection>
 
-        <FooterSection variants={itemVariants}>
+      { /* <FooterSection variants={itemVariants}>
           <FooterTitle>Quick Links</FooterTitle>
           <ContactItem as={motion.a} href="/feedback" variants={itemVariants}>
             Submit Feedback
@@ -281,7 +281,7 @@ const FooterBar = () => {
             Home
           </ContactItem>
         </FooterSection>
-
+*/}
         <FooterSection variants={itemVariants}>
           <FooterTitle>Our Team</FooterTitle>
           <TeamMembersGrid>

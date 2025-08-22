@@ -54,7 +54,7 @@ const FormsSection = () => {
                 className="form-title"
                 style={{
                   textAlign: "center",
-                  fontSize: index == 0 ? 70 : 58,
+                  fontSize: index == 0 ? 60 : 40,
                   color: [0, 5, 11].includes(index) ? "#f1c40f" : "white",
                 }}
                 exit={{ opacity: 0, x: -20 }}

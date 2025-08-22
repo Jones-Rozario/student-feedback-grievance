@@ -143,6 +143,7 @@ const Sidebar = ({ open, setSidebarOpen }) => {
             )}
           </div>
         ))}
+	<a className="sidebar__link" target="_blank" href="/guideme/Admin.pdf"> Open Guide </a>
       </nav>
       {/* Cancel button for mobile screens */}
       {open && (

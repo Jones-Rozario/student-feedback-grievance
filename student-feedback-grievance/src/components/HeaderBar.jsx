@@ -240,6 +240,7 @@ const HeaderBar = () => {
             ) : (
               <button onClick={handleLoginClick} className="login-button">Login</button>
             )}
+	<a href="/guideme/Student.pdf" target="_blank"> Download Guide </a>
           </NavSection>
           <button
             className="hamburger"

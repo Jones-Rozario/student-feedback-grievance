@@ -35,10 +35,10 @@ router.get(
       const isElective = req.query.isElective;
 
       // Validate semester
-      if (isNaN(semester) || semester < 1 || semester > 8) {
+      if (isNaN(semester) || semester < 1 || semester > 15) {
         return res
           .status(400)
-          .json({ error: "Invalid semester. Must be 1-8." });
+          .json({ error: "Invalid semester. Must be 1-8, 11-14." });
       }
       if (!academic_year) {
         return res
@@ -95,10 +95,10 @@ router.get(
       const course = req.params.course;
 
       // Validate semester
-      if (isNaN(semester) || semester < 1 || semester > 8) {
+      if (isNaN(semester) || semester < 1 || semester > 15) {
         return res
           .status(400)
-          .json({ error: "Invalid semester. Must be 1-8." });
+          .json({ error: "Invalid semester. Must be 1-8, 11-14." });
       }
       if (!academic_year) {
         return res
@@ -407,7 +407,7 @@ router.post(
               continue;
             }
             // Validate semester
-            if (isNaN(a.semester) || a.semester < 1 || a.semester > 8) {
+            if (isNaN(a.semester) || a.semester < 1 || a.semester > 15) {
               console.error(`Row ${i + 2}: Invalid semester`, a.semester);
               errors.push({
                 row: i + 2,
@@ -494,10 +494,10 @@ router.get(
   async (req, res) => {
     try {
       const semester = Number(req.params.semester);
-      if (isNaN(semester) || semester < 1 || semester > 8) {
+      if (isNaN(semester) || semester < 1 || semester > 15) {
         return res
           .status(400)
-          .json({ error: "Invalid semester. Must be 1-8." });
+          .json({ error: "Invalid semester. Must be 1-8, 11-14." });
       }
       // Find all assignments for the semester
       const assignments = await CourseFacultyAssignment.find({ semester });
