@@ -1,7 +1,9 @@
 import express from "express";
 import Feedback from "../models/feedback.js";
 import { requireRole, requireRoles, verifyToken } from "../middleware/auth.js";
-import faculty from "../models/faculty.js";
+import Faculty from "../models/faculty.js";
+import Assignments from "../models/courseFacultyAssignment.js"
+import PDFDocument from "pdfkit"
 
 const router = express.Router();
 
@@ -102,6 +104,101 @@ router.get(
     }
   }
 );
+
+// Route to generate PDF for all faculties
+router.get("/faculty-feedback-report/", async (req, res) => {
+  const academic_year = req.query.academic_year;
+  try {
+    const faculties = await Faculty.find();
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=FacultyFeedbackReport.pdf");
+
+    doc.pipe(res);
+
+    for (let i = 0; i < faculties.length; i++) {
+      const faculty = faculties[i];
+
+      // Faculty assignments + feedback
+      const assignments = await Assignments.find({ faculty: faculty._id, academic_year: academic_year }).populate("course");
+      const feedbacks = await Feedback.find({ faculty: faculty._id }).populate("course");
+
+      // Page Heading
+      doc.fontSize(20).text("FEEDBACK REPORT", { align: "center" });
+      doc.moveDown(2);
+
+      // Faculty Details
+      doc.fontSize(12).text(`NAME OF THE FACULTY     : ${faculty.name}`);
+      doc.text(`DESIGNATION                     : ${faculty.designation}`);
+      doc.text(`ACADEMIC YEAR                 : ${academic_year}`);
+      // doc.text(`SEMESTER                            : ODD/EVEN`);
+      doc.moveDown(2);
+
+      doc.fontSize(14).text("STUDENTS FEEDBACK", { underline: true });
+      doc.moveDown();
+
+      // Table Header
+      doc.fontSize(10).text("S.NO", 50, doc.y, { continued: true })
+        .text("ACADEMIC YEAR", 90, doc.y, { continued: true })
+        .text("SEMESTER", 170, doc.y, { continued: true })
+        .text("SUBJECT CODE", 200, doc.y, { continued: true })
+        .text("SUBJECT NAME", 260, doc.y, { continued: true })
+        .text("BATCH", 280, doc.y, { continued: true })
+        .text("REGULATION", 300, doc.y, { continued: true })
+        .text("AVERAGE FEEDBACK (25)", 330, doc.y);
+
+      doc.moveDown();
+
+      console.log(assignments)
+      // Table Data
+      let total = 0;
+      for (let j = 0; j < assignments.length; j++) {
+        const a = assignments[j];
+        const f = feedbacks.filter(
+          fb => fb.course === a.course &&
+                fb.semester === a.semester &&
+                fb.batch === a.batch
+        );
+
+        const sum = f.reduce((a,b) => a+b, 0)
+
+        const avg = f ? sum / f.length : 0;
+        total += avg;
+        console.log(a)
+        doc.text(j + 1, 50, doc.y, { continued: true })
+          .text(academic_year, 90, doc.y, { continued: true })
+          .text(a.semester, 170, doc.y, { continued: true })
+          .text(a.course.code, 230, doc.y, { continued: true })
+          .text(a.course.name, 320, doc.y, { continued: true })
+          .text(a.batch, 450, doc.y, { continued: true })
+          .text(a.course.regulation, 500, doc.y, { continued: true })
+          .text(avg.toFixed(2), 620, doc.y);
+      }
+
+      doc.moveDown(2);
+      doc.fontSize(12).text(`TOTAL   : ${total.toFixed(2)}`);
+      doc.text(`AVERAGE : ${(assignments.length > 0 ? (total / assignments.length).toFixed(2) : "0.00")}`);
+
+      doc.moveDown(3);
+
+      // Footer
+      doc.fontSize(8).fillColor("grey")
+        .text("This is System Generated Feedback Report from DCSE, Anna University, Chennai and does not require a signature.", { align: "center" });
+      // doc.text(`Timestamp: ${moment().format("DD-MM-YYYY HH:mm:ss")}`, { align: "center" });
+      doc.fillColor("black");
+
+      if (i < faculties.length - 1) doc.addPage();
+    }
+
+    doc.end();
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({message: "Error generating PDF", error: err});
+  }
+});
 
 // get avg score by faculty
 router.get(
