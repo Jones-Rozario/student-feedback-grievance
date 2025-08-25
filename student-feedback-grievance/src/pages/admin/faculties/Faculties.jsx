@@ -59,11 +59,11 @@ function FacultyPerformanceView({ faculty, onBack }) {
         for (const assignment of allCourses) {
           if (!assignment.course?._id || !assignment.batch || !assignment.academic_year) continue;
           const res = await apiAxios().get(
-            `/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}?academic_year=${encodeURIComponent(assignment.academic_year)}`
+            `/faculties/${faculty._id}/performance/course/${assignment.course._id}/batch/${assignment.batch}/semester/${assignment.semester}?academic_year=${encodeURIComponent(assignment.academic_year)}`
           );
           if (res.data) {
             const data = res.data;
-            stats[`${assignment.course._id}_${assignment.batch}_${assignment.academic_year}`] = data;
+            stats[`${assignment.course._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`] = data;
           }
         }
         setCourseBatchStats(stats);
@@ -87,7 +87,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
   // Compute total feedbacks for selected year  
   const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
     const stat = courseBatchStats[
-      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
     ];
     return sum + (stat?.totalFeedbacks || 0);
   }, 0);
@@ -97,7 +97,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
   let questionTexts = [];
   filteredCourses.forEach((assignment) => {
     const stat = courseBatchStats[
-      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+      `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
     ];
     if (stat?.questionRatings && stat?.questionTexts) {
       stat.questionRatings.forEach((rating, i) => {
@@ -248,7 +248,7 @@ function FacultyPerformanceView({ faculty, onBack }) {
             {filteredCourses.map((assignment, index) => {
               const stat =
                 courseBatchStats[
-                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}`
+                  `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
                 ];
               const avgRating =
                 stat && stat.questionRatings && stat.questionRatings.length > 0

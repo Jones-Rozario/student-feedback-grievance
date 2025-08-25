@@ -23,7 +23,7 @@ function calculateSemester(joinYear) {
   // Every 6 months = 1 semester
   const semester = Math.floor(monthsElapsed / 6) + 1;
 
-  return semester > 8 ? 8 : semester; // cap at 8
+  return semester; // cap at 8
 }
 
 // Login endpoint
@@ -64,15 +64,18 @@ router.post("/login", async (req, res) => {
     if (role === "student") {
       const studentInfo = await Student.findById(user.studentRef);
       if (studentInfo) {
-        // Calculate current semester
-        const calculatedSemester = calculateSemester(
+       
+	 // Calculate current semester
+        
+	let calculatedSemester = calculateSemester(
           studentInfo.joined_year || Number(studentInfo.id.slice(0, 4))
         );
-
+	calculatedSemester=(studentInfo.id.substring(4,7)!=='103')?(calculatedSemester+10):calculatedSemester
         // Check if calculated semester differs from stored semester
         if (calculatedSemester !== studentInfo.current_semester) {
           // Update the student's semester and reset feedback status
-          await Student.findByIdAndUpdate(user.studentRef, {
+          
+	await Student.findByIdAndUpdate(user.studentRef, {
             current_semester: calculatedSemester,
             isFeedbackGiven: false,
           });

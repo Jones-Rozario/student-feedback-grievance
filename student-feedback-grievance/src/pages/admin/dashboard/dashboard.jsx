@@ -100,7 +100,7 @@ const Dashboard = () => {
         const topRatedFaculty = facultiesWithRatings
           .filter(faculty => faculty.averageRating > 0)
           .sort((a, b) => b.averageRating - a.averageRating)
-          .slice(0, 3);
+          .slice(0, 10);
 
         // Calculate overall average rating
         // const overallAverageRating = facultiesWithRatings.length > 0
