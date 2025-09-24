@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./Students.css";
 import { apiAxios } from '../../../utils/api';
-
+import logoPng from "../../../assests/anna_univ_logo.png";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -13,7 +15,7 @@ const Students = () => {
   const [idFilter, setIdFilter] = useState("");
   const [batchFilter, setBatchFilter] = useState("");
   const [semesterFilter, setSemesterFilter] = useState("");
-
+  const [feedbackFilter, setFeedbackFilter] = useState("");
   // Edit states
   const [editingStudent, setEditingStudent] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -34,7 +36,7 @@ const Students = () => {
 
   useEffect(() => {
     filterStudents();
-  }, [students, nameFilter, idFilter, batchFilter, semesterFilter]);
+  }, [students, nameFilter, idFilter, batchFilter, semesterFilter,feedbackFilter]);
 
   const fetchStudents = async () => {
     try {
@@ -79,7 +81,13 @@ const Students = () => {
         (student) => student.current_semester === parseInt(semesterFilter)
       );
     }
-
+    if (feedbackFilter) {   
+      filtered = filtered.filter(
+        (student) =>
+          (feedbackFilter === "Yes" && student.isFeedbackGiven) ||
+          (feedbackFilter === "No" && !student.isFeedbackGiven)
+      );
+    }
     setFilteredStudents(filtered);
   };
 
@@ -179,6 +187,78 @@ const Students = () => {
       joined_year: "",
     });
   };
+  const handleDownloadPDF = () => {
+  const doc = new jsPDF();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Header logo + text
+  doc.addImage(logoPng, "PNG", 10, 10, 25, 25);
+  doc.setFont("times", "bold");
+  doc.setFontSize(14);
+  doc.text("ANNA UNIVERSITY :: CHENNAI - 600025", 105, 20, { align: "center" });
+  doc.setFontSize(12);
+  doc.text("STUDENTS FEEDBACK FORM", 105, 28, { align: "center" });
+  doc.setFontSize(10);
+  doc.text("(Based on Higher Education G.O(Ms).No.19, dt 14/1/20)", 105, 34, { align: "center" });
+
+  // Department header
+  doc.setFontSize(12);
+  doc.setFont("times", "bold");
+  doc.text("DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING", 105, 50, { align: "center" });
+  doc.text("COLLEGE OF ENGINEERING GUINDY CAMPUS", 105, 58, { align: "center" });
+
+  // Show filters if applied
+  let filterY = 72;
+  doc.setFontSize(10);
+  doc.setFont("times", "normal");
+  if (batchFilter) {
+    doc.text(`Batch: ${batchFilter}`, 20, filterY);
+    filterY += 6;
+  }
+  if (semesterFilter) {
+    doc.text(`Semester: ${semesterFilter}`, 20, filterY);
+    filterY += 6;
+  }
+  if (feedbackFilter) {
+    doc.text(`Feedback Status: ${feedbackFilter}`, 20, filterY);
+    filterY += 6;
+  }
+
+  // Build table data
+  const tableData = filteredStudents.map((s, i) => [
+    i + 1,
+    s.id,
+    s.name,
+    s.isFeedbackGiven ? "Yes" : "No",
+    s.current_semester,
+    s.batch,
+  ]);
+
+  autoTable(doc, {
+    startY: filterY + 6,
+    head: [["S.No", "Roll Number", "Name", "Feedback Status", "Semester", "Batch"]],
+    body: tableData,
+    styles: { font: "times", fontSize: 10, halign: "center", valign: "middle" },
+    headStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: "bold" },
+    tableLineWidth: 0.3,
+    tableLineColor: [0, 0, 0],
+  });
+
+  // Footer
+  const timestamp = new Date().toLocaleString();
+  doc.setFont("times", "normal");
+  doc.setFontSize(8);
+  doc.text(
+    `This is System Generated PDF from DCSE, Anna University, Chennai-25. ${timestamp}`,
+    105,
+    pageHeight - 10,
+    { align: "center" }
+  );
+
+  // File name
+  const filename = `Feedback_List_${batchFilter || "all"}_${semesterFilter || "all"}.pdf`;
+  doc.save(filename);
+  };
 
   if (loading) {
     return <div className="loading">Loading students...</div>;
@@ -194,6 +274,13 @@ const Students = () => {
         >
           Bulk Delete by Semester
         </button>
+      <button
+    className="download-btn"
+    onClick={handleDownloadPDF}
+    style={{ marginLeft: "10px", backgroundColor: "#007bff", color: "white", padding: "8px 12px", borderRadius: "5px", border: "none", cursor: "pointer" }}
+  >
+    Download Filtered Students
+  </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -241,8 +328,18 @@ const Students = () => {
             ))}
           </select>
         </div>
+      <div className="filter-group">   
+          <label>Feedback Status:</label>
+          <select
+            value={feedbackFilter}
+            onChange={(e) => setFeedbackFilter(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+	</div>       
       </div>
-
       {/* Students Table */}
       <div className="table-container">
         <table className="students-table">

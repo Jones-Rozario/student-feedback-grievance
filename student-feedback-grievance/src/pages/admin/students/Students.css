@@ -29,6 +29,19 @@
   .bulk-delete-btn:hover {
     background-color: #c82333;
   }
+  .download-btn {
+    background-color:  #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .download-btn:hover {
+    background-color: #c82333;
+  }
   
   .error-message {
     background-color: #f8d7da;

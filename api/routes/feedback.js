@@ -2,6 +2,7 @@ import express from "express";
 import Feedback from "../models/feedback.js";
 import { requireRole, requireRoles, verifyToken } from "../middleware/auth.js";
 import faculty from "../models/faculty.js";
+import Assignments from "../models/courseFacultyAssignment.js";
 
 const router = express.Router();
 
@@ -296,6 +297,85 @@ router.get(
 //     res.status(500).json({ error: error.message });
 //   }
 // });
+
+
+// Route to get consolidated feedback report data (JSON)
+router.get("/faculty-feedback-report",verifyToken, requireRoles("admin"),  async (req, res) => {
+  const academic_year = req.query.academic_year;
+
+  try {
+    const faculties = await faculty.find();
+
+    const facultyReports = [];
+
+    for (let i = 0; i < faculties.length; i++) {
+      const faculty = faculties[i];
+
+      // Get assignments for this faculty in that academic year
+      const assignments = await Assignments.find({
+        faculty: faculty._id,
+        academic_year: academic_year,
+      }).populate("course");
+
+      const assignmentData = [];
+
+      for (let j = 0; j < assignments.length; j++) {
+        const a = assignments[j];
+
+        // Find feedbacks matching assignment
+        const feedbacks = await Feedback.find({
+          faculty: faculty._id,
+          course: a.course._id,
+          batch: a.batch,
+          semester: a.semester,
+          academic_year,
+        });
+
+        // Compute average feedback
+        let avgFeedback = 0;
+        if (feedbacks.length > 0) {
+          const sum = feedbacks.reduce((acc, fb) => acc + (fb.totalScore || 0), 0);
+          avgFeedback = sum / feedbacks.length;
+        }
+
+        assignmentData.push({
+          semester: a.semester,
+          batch: a.batch,
+          course: {
+            code: a.course.code,
+            name: a.course.name,
+            regulation: a.course.regulation,
+          },
+          avgFeedback: Number(avgFeedback.toFixed(2)),
+        });
+      }
+
+      // Compute totals
+      const total = assignmentData.reduce((sum, a) => sum + a.avgFeedback, 0);
+      const avg =
+        assignmentData.length > 0 ? total / assignmentData.length : 0;
+
+      facultyReports.push({
+        name: faculty.name,
+        designation: faculty.designation,
+        academic_year,
+        assignments: assignmentData,
+        total: Number(total.toFixed(2)),
+        average: Number(avg.toFixed(2)),
+      });
+    }
+
+    res.json({
+      success: true,
+      data: facultyReports,
+    });
+  } catch (err) {
+    console.error("Error fetching report data:", err);
+    res.status(500).json({ message: "Error fetching report data", error: err });
+  }
+});
+
+
 
 // Check if feedback already given for student-course combination
 router.get(

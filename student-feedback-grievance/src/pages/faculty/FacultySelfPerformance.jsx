@@ -20,7 +20,7 @@ const FacultySelfPerformance = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [error, setError] = useState(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState("");
-
+  const [semesterType, setSemesterType] = useState("");
   useEffect(() => {
     const fetchFacultyData = async () => {
       try {
@@ -104,9 +104,355 @@ const FacultySelfPerformance = () => {
     return `${startYear}-${endYear.substring(2, 4)}`;
   }
 
+  //Year wise downloader
+/*
+  const handleDownloadPDFForYear = () => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Colors
+  const primaryColor = "#4e73df"; // blue for headers
+  const secondaryColor = "#f1f3f7"; // light grey background for rows
+  const textColor = "#333333";
+
+  // Fonts
+  const fontNormal = "helvetica";
+  const fontBold = "helvetica";
+
+  // Helper function: draw section header with background and icon
+  const drawSectionHeader = (y, text) => {
+    const padding = 2;
+    const fontSize = 12;
+    doc.setFillColor(primaryColor);
+    doc.setDrawColor(primaryColor);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(fontBold, "bold");
+    doc.setFontSize(fontSize);
+
+    const textX = 10; // icon + margin
+    const textWidth = doc.getTextWidth(text);
+    const rectWidth = textWidth + 10;
+
+    // Background rectangle
+    doc.rect(10, y - fontSize, rectWidth, fontSize * 1.1, "F");
+
+    // Icon
+    //doc.text(icon, 12, y);
+
+    // Text
+    doc.text(text, textX, y);
+
+    // Reset color for text below
+    doc.setTextColor(textColor);
+  };
+
+  // Add logo (assuming logoPng is imported and accessible)
+  const imgProps = doc.getImageProperties(logoPng);
+  const logoWidth = 40;
+  const logoHeight = (imgProps.height * logoWidth) / imgProps.width;
+  doc.addImage(logoPng, "PNG", 10, 10, logoWidth, logoHeight);
+
+  let y = logoHeight + 20;
+
+  // Faculty Info Section
+  doc.setFont(fontBold, "bold");
+  doc.text(`Faculty Performance Report - ${currentUser?.name || "Faculty"}`, 12, y);
+  y += 12;
+  doc.setFontSize(12);
+  doc.setFont(fontNormal, "normal");
+  doc.text(`Designation: ${currentUser?.designation || "N/A"}`, 12, y);
+  y += 7;
+  doc.text(`Faculty ID: ${currentUser?.facultyRef || "N/A"}`, 12, y);
+  y += 14;
+
+  // Academic Year & Semester Section
+  doc.setFont(fontBold, "bold");
+  doc.text("Academic Details", 12, y);
+  y += 12;
+  doc.text(`Academic Year: ${selectedAcademicYear}`, 12, y);
+  doc.text(`Semester: ${semesterType || "All"}`, pageWidth / 2, y);
+  y += 14;
+
+  // Overall Performance Section
+  doc.setFont(fontBold, "bold");
+  doc.text("Overall Performance", 12, y);
+  y += 12;
+  const overallScore = yearlyPerformance[selectedAcademicYear];
+  doc.setFontSize(13);
+  doc.text(
+    `Overall Performance Score: ${
+      typeof overallScore === "number" ? overallScore.toFixed(2) : "N/A"
+    } / 25`,
+    12,
+    y
+  );
+  y += 12;
+
+  // Overall Question-wise Average Ratings - table style
+  doc.setFontSize(12);
+  doc.setFont(fontBold, "bold");
+  doc.text("Average Question-wise Ratings:", 12, y);
+  y += 8;
+
+  // Draw table headers background
+  doc.setFillColor(primaryColor);
+  doc.rect(12, y - 7, pageWidth - 24, 10, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.text("Question", 14, y);
+  doc.text("Avg Rating", pageWidth - 40, y);
+  doc.setTextColor(textColor);
+  y += 10;
+
+  // Note: Make sure overallQuestionAverages and questionTexts are available in the component
+  overallQuestionAverages.forEach((avg, i) => {
+    if (y > 270) {
+      doc.addPage();
+      y = 10;
+    }
+    // Alternating row shading
+    if (i % 2 === 0) {
+      doc.setFillColor(secondaryColor);
+      doc.rect(12, y - 6, pageWidth - 24, 8, "F");
+    }
+    doc.text(questionTexts[i], 14, y);
+    doc.text(`${avg} / 5`, pageWidth - 40, y);
+    y += 8;
+  });
+
+  y += 12;
+
+  // Courses Section
+  doc.setFont(fontBold, "bold"); 
+  doc.text(`Course-wise Performance (${filteredCourses.length})`, 12, y);
+  y += 14;
+
+  filteredCourses.forEach((assignment, idx) => {
+    if (y > 250) {
+      doc.addPage();
+      y = 10;
+    }
+
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
+      ];
+
+    // Course Title
+    doc.setFont(fontBold, "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(primaryColor);
+    const courseTitle = `${idx + 1}. ${assignment.course?.name || "Unknown Course"} ${
+      assignment.isElective ? "(Elective)" : ""
+    }`;
+    doc.text(courseTitle, 12, y);
+    y += 9;
+
+    doc.setFont(fontNormal, "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(textColor);
+    doc.text(`Course Code: ${assignment.course?.code || "N/A"}`, 14, y);
+    y += 6;
+
+    doc.text(
+      `Semester: ${
+        assignment.semester > 10 ? assignment.semester - 10 : assignment.semester
+      }`,
+      14,
+      y
+    );
+    y += 6;
+
+    doc.text(
+      `Batch: ${
+        assignment.semester > 10
+          ? {
+              1: "M.E CSE",
+              2: "M.E SE",
+              3: "M.E CSE (SP.) BDA",
+              4: "M.E CSE (SP.) Cyber security and Data Science",
+            }[assignment.batch] || assignment.batch
+          : assignment.batch
+      }`,
+      14,
+      y
+    );
+    y += 6;
+
+    doc.text(`Academic Year: ${assignment.academic_year}`, 14, y);
+    y += 6;
+
+    doc.text(`Total Feedbacks: ${stat?.totalFeedbacks ?? "N/A"}`, 14, y);
+    y += 8;
+
+    if (stat?.avgScore) {
+      doc.text(`Batch Avg Score: ${stat.avgScore.toFixed(2)} / 25`, 14, y);
+      y += 6;
+    }
+
+    if (stat?.questionRatings && stat?.questionTexts) {
+      // Draw question ratings in table form
+      doc.setFont(fontBold, "bold");
+      doc.text("Question Ratings:", 14, y);
+      y += 8;
+
+      // Header background for ratings
+      doc.setFillColor(primaryColor);
+      doc.rect(14, y - 6, pageWidth - 28, 8, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.text("Question", 16, y);
+      doc.text("Rating", pageWidth - 50, y);
+      doc.setTextColor(textColor);
+      y += 8;
+
+      doc.setFont(fontNormal, "normal");
+      stat.questionRatings.forEach((rating, i) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 10;
+        }
+        if (i % 2 === 0) {
+          doc.setFillColor(secondaryColor);
+          doc.rect(14, y - 6, pageWidth - 28, 8, "F");
+        }
+        doc.text(stat.questionTexts[i], 16, y);
+        doc.text(rating.toFixed(1), pageWidth - 50, y);
+        y += 8;
+      });
+      y += 8;
+    }
+
+    // Divider line
+    doc.setDrawColor("#cccccc");
+    doc.line(12, y, pageWidth - 12, y);
+    y += 12;
+  });
+
+  // Save file with filename safe format
+  const safeFacultyName = (currentUser?.name || "faculty").replace(/\s+/g, "_");
+  doc.save(`Faculty_Report_${safeFacultyName}_${selectedAcademicYear}.pdf`);
+};
+
+*/
+const handleDownloadPDFForYear = () => {
+  const doc = new jsPDF();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  filteredCourses.forEach((assignment, index) => {
+    if (index !== 0) {
+      doc.addPage();
+    }
+
+    const stat =
+      courseBatchStats[
+        `${assignment.course?._id}_${assignment.batch}_${assignment.academic_year}_${assignment.semester}`
+      ];
+
+    // Header & Logo
+    doc.addImage(logoPng, "PNG", 10, 10, 30, 28);
+    doc.setFontSize(14);
+    doc.text("ANNA UNIVERSITY :: CHENNAI - 600025", 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.text("STUDENTS FEEDBACK FORM", 105, 28, { align: "center" });
+    doc.setFontSize(10);
+    doc.text("(Based on Higher Education G.O(Ms).No.19, dt 14/1/20)", 105, 34, {
+      align: "center",
+    });
+
+    // Program name string
+    let programStr = "";
+    if (assignment.semester > 10) {
+      if (assignment.batch === 1)
+        programStr = "M.E - COMPUTER SCIENCE AND ENGINEERING";
+      else if (assignment.batch === 2)
+        programStr = "M.E - SOFTWARE ENGINEERING";
+      else if (assignment.batch === 3)
+        programStr = "M.E - CSE SPLN.IN BIG DATA ANALYTICS";
+      else
+        programStr =
+          "M.E - CSE SPLN.IN CYBER SECURITY AND DATA SCIENCE";
+    } else {
+      programStr = "B.E - COMPUTER SCIENCE AND ENGINEERING [FULL TIME]";
+    }
+
+    const bodyRows = [
+      ["Course", ":", programStr],
+      [
+        "Academic Year & Semester",
+        ":",
+        assignment.academic_year +
+          " - " +
+          (assignment.semester > 10
+            ? assignment.semester - 10
+            : assignment.semester || "-"),
+      ],
+      ["Subject", ":", assignment.course?.name || "-"],
+      ["Instructor", ":", currentUser?.name || "-"],
+      ["Batch", ":", assignment.batch || "-"],
+    ];
+
+    autoTable(doc, {
+      startY: 40,
+      theme: "plain",
+      styles: { fontSize: 10 },
+      body: bodyRows,
+      tableLineWidth: 0.1,
+      tableLineColor: [0, 0, 0],
+      margin: { left: 20, right: 20 },
+    });
+
+    // Feedback table
+    const feedbackRows = (stat?.questionTexts || []).map((q, i) => [
+      `${i + 1}. ${q}`,
+      typeof stat?.questionRatings?.[i] === "number"
+        ? stat.questionRatings[i].toFixed(2)
+        : "N/A",
+    ]);
+
+    feedbackRows.push([
+      "Average Score",
+      stat?.questionRatings
+        ? (
+            stat.questionRatings.reduce((sum, q) => sum + q, 0) /
+            stat.questionRatings.length
+          ).toFixed(2)
+        : "N/A",
+    ]);
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 5,
+      head: [["", "Out of 5"]],
+      body: feedbackRows,
+      styles: { fontSize: 10 },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: "bold",
+      },
+      columnStyles: { 1: { halign: "center" } },
+      margin: { left: 20, right: 20, top: 20 },
+    });
+
+    // Footer with timestamp
+    const timestamp = new Date().toLocaleString();
+    doc.setFont("times", "normal");
+    doc.setFontSize(8);
+    doc.text(
+      `This is system generated report from DCSE, Anna University, Chennai-25, and does not require signature. ${timestamp}`,
+      105,
+      pageHeight - 10,
+      { align: "center" }
+    );
+  });
+
+  const safeFacultyName = (currentUser?.name || "faculty").replace(/\s+/g, "_");
+  doc.save(`Faculty_Report_${safeFacultyName}_${selectedAcademicYear}.pdf`);
+};
+
   // PDF Download Handler for a course+batch
   const handleDownloadPDF = (assignment, stat) => {
     const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.getHeight();
     doc.addImage(logoPng, "PNG", 10, 10, 30, 28);
     doc.setFontSize(14);
     doc.text("ANNA UNIVERSITY :: CHENNAI - 600025", 105, 20, {
@@ -185,6 +531,16 @@ const FacultySelfPerformance = () => {
       columnStyles: { 1: { halign: "center" } },
       margin: { left: 20, right: 20, top: 20 },
     });
+     const timestamp = new Date().toLocaleString();
+  doc.setFont("times", "normal");
+  doc.setFontSize(8);
+  doc.text(
+    `This is system generated report from DCSE, Anna University, Chennai-25, and does not require signature. ${timestamp}`,
+    105,
+    pageHeight - 10,
+    { align: "center" }
+  );
+
     doc.save(
       `${currentUser?.name || "faculty"}_${
         assignment.course?.name || "course"
@@ -205,9 +561,20 @@ const FacultySelfPerformance = () => {
   ).sort();
 
   // Filter courses and stats by selected academic year
-  const filteredCourses = facultyCourses.filter(
-    (c) => c.academic_year === selectedAcademicYear
-  );
+//  const filteredCourses = facultyCourses.filter(
+ //   (c) => c.academic_year === selectedAcademicYear
+ // );
+   const filteredCourses = facultyCourses.filter((c) => {
+    const matchesYear = c.academic_year === selectedAcademicYear;
+    if (!semesterType) return matchesYear; // no filter applied
+    const sem = parseInt(c.semester, 10);
+    if (semesterType === "odd") {
+      return matchesYear && sem % 2 !== 0;
+    } else if (semesterType === "even") {
+      return matchesYear && sem % 2 === 0;
+    }
+    return matchesYear;
+  });
   // Compute total feedbacks for selected year
   const totalFeedbacks = filteredCourses.reduce((sum, assignment) => {
     const stat =
@@ -310,6 +677,36 @@ const FacultySelfPerformance = () => {
             </option>
           ))}
         </select>
+	<label
+          htmlFor="semesterSelect"
+          style={{ marginLeft: "16px", fontWeight: 600 }}
+        >
+          Semester:
+        </label>
+        <select
+          value={semesterType}
+          onChange={(e) => setSemesterType(e.target.value)}
+          style={{ padding: "8px 16px", borderRadius: 4, fontSize: 16 }}
+        >
+          <option value="">All</option>
+          <option value="odd">Odd</option>
+          <option value="even">Even</option>
+        </select>
+	<button
+    onClick={handleDownloadPDFForYear}
+    style={{
+      marginLeft: 16,
+      padding: "8px 20px",
+      borderRadius: 4,
+      backgroundColor: "#4e73df",
+      color: "white",
+      fontWeight: "bold",
+      cursor: "pointer",
+      border: "none",
+    }}
+  >
+    Download Yearly Report (PDF)
+  </button>
       </div>
       {/* Overall Performance Score */}
       <div className={styles.overallScoreSection}>

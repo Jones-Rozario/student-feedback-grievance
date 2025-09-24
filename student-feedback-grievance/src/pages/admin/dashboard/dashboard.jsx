@@ -109,7 +109,7 @@ const Dashboard = () => {
 
         // Get recent grievances (last 5)
         const recentGrievances = Array.isArray(grievances) 
-          ? grievances.slice(0, 5).map(grievance => ({
+          ? grievances.slice(0, 12).map(grievance => ({
               ...grievance,
               date: new Date(grievance.createdAt).toLocaleDateString()
             }))

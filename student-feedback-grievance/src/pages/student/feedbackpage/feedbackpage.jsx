@@ -713,7 +713,7 @@ const FeedbackPage = () => {
                 {selectedYear?.semesters
                   ?.map((sem, i) => (
                     <option key={i} value={sem}>
-                      {sem}
+                       {(currentUser.id.substring(4, 7) !== "103") ? sem - 10 : sem}
                     </option>
                   ))}
               </select>
